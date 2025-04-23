@@ -1,0 +1,66 @@
+ubody{
+  margin: 0,
+}
+.navbar {
+  background-color: #ffffff !important;
+  padding-top: 1rem; 
+  padding-bottom: 1rem;
+}
+.navbar .nav-link {
+  transition: ease-in-out 0.2s;
+}
+.navbar .navbar-brand {
+  transition: ease-in-out 0.2s;
+}
+.navbar .nav-link.active, .navbar .nav-link:hover, .navbar .navbar-brand:hover {
+  color: rgb(64, 0, 255); 
+}
+
+.navbar-toggler {   
+  color: #070707; 
+  border: 1px solid #000000; 
+  transition: ease-in-out 0.2s;
+}
+
+.navbar-toggler:hover,
+.navbar-toggler:focus {
+  color: #070707; 
+  border: 1px solid rgb(64, 0, 255); 
+  outline: none; 
+}
+
+.navbar-toggler:focus, .navbar-toggler:active { 
+  outline: none; 
+  box-shadow: none; 
+}
+
+.bg-gradient-primary-to-secondary {
+  background: linear-gradient(45deg, #1924c6, #007bff) !important;
+}
+aside, section {
+padding-top: 5rem;
+padding-bottom: 5rem;
+}
+footer a {
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+}
+footer a:hover, footer a:active, footer a:focus {
+  color: rgb(64, 0, 255);
+  text-decoration: none;
+}
+.display-1 {
+  font-size: calc(1.625rem + 4.5vw);
+  font-weight: 300;
+  line-height: 1.2;
+}
+@media (min-width: 1200px) {
+  .display-1 {
+      font-size: 5rem;
+  }
+}
+#mainTop {
+  padding-top: 5rem;
+  margin-top: 5rem;
+  margin-bottom: 5rem;
+}
