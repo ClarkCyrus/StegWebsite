@@ -77,14 +77,14 @@ class MultiLayerLSB:
         else:
             raise ValueError("Unsupported message type.")
 
-    def embed_message(self, file_path, rounds=1):
-        """Embed a message (text, audio, or image) using multiple rounds of LSB embedding."""
+    @staticmethod
+    def embed_message(cover_image_path, stego_image_path, file_path, rounds=1):
         if not 1 <= rounds <= 4:
             raise ValueError("Number of rounds must be between 1 and 4")
 
-        binary_message = self.message_to_binary(file_path)
+        binary_message = MultiLayerLSB.message_to_binary(file_path)
 
-        cover = Image.open(self.cover_image_path)
+        cover = Image.open(cover_image_path)
         is_rgb = cover.mode == 'RGB'
         if not is_rgb:
             cover = cover.convert('L')
@@ -134,7 +134,7 @@ class MultiLayerLSB:
                         break
 
         stego_image = Image.fromarray(cover_array.astype(np.uint8))
-        stego_image.save(self.stego_image_path, format='PNG')
+        stego_image.save(stego_image_path, format='PNG')
         return stego_image
 
     @staticmethod

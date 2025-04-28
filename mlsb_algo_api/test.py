@@ -6,8 +6,10 @@ from PIL import Image
 import os
 
 def embed_and_analyze(cover_image, message_file, rounds=3):
-    lsb = MultiLayerLSB(cover_image, stego_image)
-    lsb.embed_message(message_file, rounds=rounds)
+    base_name = os.path.splitext(cover_image)[0]
+    stego_image = f"{base_name}_stego{os.path.splitext(cover_image)[1]}"
+    
+    MultiLayerLSB.embed_message(cover_image, stego_image, message_file, rounds=rounds)
     print("Message embedded successfully.")
 
     psnr = MultiLayerLSB.calculate_psnr(cover_image, stego_image)
@@ -22,7 +24,7 @@ def embed_and_analyze(cover_image, message_file, rounds=3):
 
 def extract_message(stego_image, output_extracted_file, rounds=3):
     extracted = MultiLayerLSB.extract_message(stego_image, rounds=rounds, output_path=output_extracted_file)
-    print(f"Extracted message: {extracted}")
+    #print(f"Extracted message: {extracted}")
     
     return output_extracted_file
 
@@ -36,19 +38,19 @@ def display_images(original_path, stego_path):
     ax2.axis('off')
     plt.show()
 
-if __name__ == "__main__":
-    cover_image = "tests/input/peppers.tiff"
-    message_file = "tests/input/lsbpayload.txt"
 
-    base_name = os.path.splitext(cover_image)[0]
-    stego_image = f"{base_name}_stego{os.path.splitext(cover_image)[1]}"
-
-    base_message_name = os.path.splitext(message_file)[0]
-    output_extracted_file = f"{base_message_name}_extracted{os.path.splitext(message_file)[1]}"
-
+def embed():
+    cover_image = "tests/cover_image/peppers.tiff"
+    message_file = "tests/text_message/lsbpayload.txt"
     
-    stego_image = embed_and_analyze(cover_image, message_file)
+    return embed_and_analyze(cover_image, message_file)
 
-    extracted_file = extract_message(stego_image, output_extracted_file)
+def extract():
+    
+    return extract_message("tests/steg_image/peppers.tiff", "tests/output/clark.txt")
 
-    display_images(cover_image, stego_image)
+
+if __name__ == "__main__":
+
+    embed()
+    #display_images(cover_image, stego_image)
