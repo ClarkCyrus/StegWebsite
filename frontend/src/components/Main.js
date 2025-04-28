@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import DragAndDropFileUpload from './DragDrop';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import './Main.css';
 
 const Main = () => {
 
   const [user, setUser] = useState(null);
-
-  const [stegRooms, setStegRooms] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [selectedRoomId, setSelectedRoomId] = useState(null);
+  const [search, setSearch] = useState("");
 
   const [file, setFile] = useState(null);
   const [error, setError] = useState(null);
@@ -31,33 +32,26 @@ const Main = () => {
     if (event && event.preventDefault){
         event.preventDefault();
     }
-
     if (!file) 
     { setError('No file selected'); 
         return;
     }
-
     setLoading(true);
-
     try {
         const response = await fetch('http://localhost:5000/upload', {
             method: 'POST',
         });
         const data = await response.json();
-
-        
         console.log('API Response:', data);
-
-       
     } catch (error) {
         console.error('Error fetching questions and answers:', error);
         setError('Error: Unable to fetch questions and answers.');
     } 
   };
 
-
-
-
+  const handleCardClick = (roomId) => {
+    navigate(`/rooms/${roomId}`);
+  };
 
   const getCurrentUser = async () => {
     try {
@@ -92,7 +86,7 @@ const Main = () => {
         throw new Error(errData.error || "Failed to fetch stego rooms");
       }
       const data = await res.json();
-      setStegRooms(data);
+      setRooms(data);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -103,9 +97,9 @@ const Main = () => {
     fetchStegRooms();
   }, []);
 
-
-
-
+  const filteredRooms = rooms.filter((room) =>
+    room.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   const handleModalSubmit = () => { 
     handleSubmit()
@@ -114,6 +108,12 @@ const Main = () => {
   const toggleFeedbackModal = () => { 
     setShowFeedback(!showFeedback); 
   };
+
+  const handleCreateStegImage = () => {
+    navigate("/create");
+  };
+
+
 
   return (
     <div>
@@ -126,26 +126,76 @@ const Main = () => {
                 <div>Please log in to access your dashboard.</div>
             )}
         </div>
+        <div    
+            style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "16px",
+            padding: "16px",
+            }}
+        >
+        </div>
 
-        <div style={{ margin: "20px" }}>
-            <h2>Your Stego Rooms</h2>
-            {stegRooms.length === 0 ? (
-                <div>No stego rooms found for your account.</div>
-            ) : (
-                <ul>
-                {stegRooms.map(room => (
-                    <li key={room.id} style={{ marginBottom: "10px" }}>
-                    <strong>{room.name}</strong><br />
-                    Encrypted: {room.is_encrypted ? "Yes" : "No"}<br />
-                    Message: {room.message}<br />
-                    Metrics: {room.metrics}
-                    {/* You can later include image previews if desired */}
-                    </li>
-                ))}
-                </ul>
-            )}
+        <div className="container px-5" id="mainTop">
+            <div className="row gx-5 align-items-center">
+                <div className="col-lg-12">
+                    <div className="mb-5 mb-lg-0 text-center text-lg-start">
+                        <h1 className="display-1 lh-1 mb-3 fw-bold">ML-LSB Steg with AES Encryption </h1>
+                        <p className="lead fw-normal text-muted mb-5">
+                            Securely hide data within images using the Multi Layered Least Significant Bit (ML-LSB) technique, 
+                            while also encrypting the data with the Advanced Encryption Standard (AES) for added security 
+                        </p>
+                        <div className="d-flex flex-column flex-lg-row align-items-center">
+                        </div>
+                    </div>
+                </div>
             </div>
+        </div>
 
+        <div className="container px-5" id="mainTop">  
+            <div className="row gx-5 align-items-center">
+            <div className="col-lg-12 mb-3 search">
+                <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Search Rooms..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+            />
+            </div>
+            <div className="col-lg-12 d-flex flex-wrap justify-content-center">
+                {filteredRooms.map((room) => (
+                    <div
+                    className="card reviewer-card mb-3"
+                    key={room.id}
+                    onClick={() => setSelectedRoomId(room.id)}
+                    >
+                    <img
+                        src={`data:image/png;base64,${room.image}`}
+                        className="card-img-top reviewer-img"
+                        alt="Room Avatar"
+                    />
+                    <div className="card-body">
+                        <h5 className="card-title">{room.name}</h5>
+                        <p className="card-text">{room.message}</p>
+                        <p className="card-text">
+                        <small className="text-muted">
+                            Last updated {room.metrics}
+                        </small>
+                        </p>
+                        <Link to={`/room/${room.id}`} className="btn btn-primary">
+                        Open Room
+                        </Link>
+                    </div>
+                    </div>
+                ))}
+                </div>
+            </div>
+        </div>
+
+        <button className='btn btn-primary' style={{marginLeft: '500px', padding: '10px 20px' }} onClick={handleCreateStegImage}>
+            Create Steg Image
+        </button>
 
         <div>
             <nav className="navbar navbar-expand-lg navbar-light fixed-top shadow-sm" id="mainNav">
@@ -162,29 +212,6 @@ const Main = () => {
                     </div>
                 </div>
             </nav>
-
-            <div className="container px-5" id="mainTop">
-                <div className="row gx-5 align-items-center">
-                    <div className="col-lg-6">
-                        <div className="mb-5 mb-lg-0 text-center text-lg-start">
-                            <h1 className="display-1 lh-1 mb-3 fw-bold">ML-LSB Steg with AES Encryption </h1>
-                            <p className="lead fw-normal text-muted mb-5">
-                                Securely hide data within images using the Multi Layered Least Significant Bit (ML-LSB) technique, 
-                                while also encrypting the data with the Advanced Encryption Standard (AES) for added security 
-                            </p>
-                            <div className="d-flex flex-column flex-lg-row align-items-center">
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-lg-6 d-flex justify-content-center">
-                        <DragAndDropFileUpload 
-                            onFileSelect={handleFileSelect}
-                            onSubmit={handleSubmit} 
-                            loading={loading}
-                        />
-                    </div>
-                </div>
-            </div>
 
             <section id="features">
             <div className="container px-5">

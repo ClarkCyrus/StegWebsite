@@ -100,3 +100,77 @@ ubody{
   font-size: 2rem;  
   cursor: pointer;
 }
+
+
+.form-control {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 10px;
+  margin-bottom: 50px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  background-color: #f7f7f7;
+}
+
+.search{
+  margin-top: -30px;
+}
+
+.card {
+  width: 300px; 
+  height: 450px;
+  min-height: 200px; 
+  margin-left: 50px;
+  margin-right: 50px;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+  overflow: hidden; 
+  transition: transform 0.2s ease-in-out; 
+}
+
+.reviewer-card:hover {
+  transform: translateY(-5px);
+}
+
+.reviewer-img {
+  width: 100%;
+  height: auto;
+  max-height: 35%; 
+  object-fit: cover; 
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.card-title {
+  font-size: 1.25rem; /* Adjust font size */
+  margin-bottom: 10px;
+}
+
+.card-text {
+  color: #6c757d; /* Medium gray text */
+}
+
+.btn-primary {
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 1rem;
+  margin-top: 10px;
+  border-radius: 5px;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+
+

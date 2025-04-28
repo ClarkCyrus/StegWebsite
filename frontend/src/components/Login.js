@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const Login = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState("");
@@ -54,6 +54,27 @@ const Login = ({ onLoginSuccess }) => {
       setError("Network error during logout.");
     }
   };
+
+  useEffect(() => {
+    const checkLoggedIn = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/current_user", {
+          method: "GET",
+          credentials: "include", // ensure cookies are sent
+        });
+        if (response.ok) {
+          const data = await response.json();
+          // If a user object is returned, you're logged in.
+          setLoggedIn(true);
+          onLoginSuccess && onLoginSuccess(data);
+        }
+      } catch (err) {
+        console.error("User is not logged in", err);
+      }
+    };
+
+    checkLoggedIn();
+  }, [onLoginSuccess]);
 
   return (
     <div style={{ margin: "20px" }}>

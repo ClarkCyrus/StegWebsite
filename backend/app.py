@@ -3,13 +3,13 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_cors import CORS
+import base64
+
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "http://localhost:3000"}})
 
-
-
-app.config['SECRET_KEY'] = '123'
+app.config['SECRET_KEY'] = '123'    
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -91,6 +91,7 @@ def get_steg_rooms():
 
 @app.route('/api/current_user', methods=['GET'])
 def current_user():
+
     if "user_id" not in session:
         return jsonify({"error": "Unauthorized"}), 401
 
@@ -103,6 +104,71 @@ def current_user():
         "email": user.email,
         "google_id": user.google_id
     })
+
+@app.route("/api/create_stego_room", methods=["POST"])
+def create_stego_room():
+
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    name = request.form.get("name")
+    encrypted_str = request.form.get("encrypted", "false")  
+    store_key_str = request.form.get("storeKey", "false")    
+
+    is_encrypted = encrypted_str.lower() in ["true", "1", "yes"]
+    store_key = store_key_str.lower() in ["true", "1", "yes"]
+
+    key = "dummy_key_value" if store_key else None
+
+    message_file = request.files.get("message")
+    if message_file:
+        try:
+            message_content = message_file.read().decode("utf-8", errors="ignore")
+        except Exception as e:
+            message_content = "Error reading message file."
+    else:
+        message_content = ""
+
+    image_file = request.files.get("image")
+    if image_file:
+        image_bytes = image_file.read()
+        image_data = base64.b64encode(image_bytes).decode("utf-8")
+    else:
+        image_data = None
+
+    stegoed_image = None
+    metrics = ""
+
+    user_id = session["user_id"]
+
+    new_room = StegoRoom(
+        name=name,
+        is_encrypted=is_encrypted,
+        key=key,
+        message=message_content,
+        image=image_data,
+        stegoed_image=stegoed_image,
+        metrics=metrics,
+        user_id=user_id
+    )
+    try:
+        db.session.add(new_room)
+        db.session.commit()
+        return jsonify({
+            "message": "Stego room created successfully!",
+            "room": {
+                "id": new_room.id,
+                "name": new_room.name,
+                "is_encrypted": new_room.is_encrypted,
+                "key": new_room.key,
+                "message": new_room.message,
+                "image": new_room.image,
+                "user_id": new_room.user_id
+            }
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "Failed to create stego room."}), 500
 
 if __name__ == '__main__':     
     with app.app_context():
