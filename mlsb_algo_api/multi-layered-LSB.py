@@ -28,7 +28,7 @@ class MultiLayerLSB:
 
     @staticmethod
     def message_to_binary(file_path):
-        """Convert a file (text, audio, or image) to binary with metadata."""
+        """Convert a file (text, audio, image, or TIFF) to binary with metadata."""
         # Infer message type from file extension
         _, file_extension = os.path.splitext(file_path)
         file_extension = file_extension.lower()
@@ -41,11 +41,11 @@ class MultiLayerLSB:
         elif file_extension == '.mp3':
             message_type = 'audio'
             binary_message = MultiLayerLSB.file_to_binary(file_path)
-        elif file_extension == '.png':
+        elif file_extension in ['.png', '.tiff']:
             message_type = 'image'
             binary_message = MultiLayerLSB.file_to_binary(file_path)
         else:
-            raise ValueError("Unsupported file type. Supported types: .txt, .mp3, .png")
+            raise ValueError("Unsupported file type. Supported types: .txt, .mp3, .png, .tiff")
 
         # Add metadata: message type (3 bits) + message length (32 bits)
         type_map = {'text': '001', 'audio': '010', 'image': '011'}
@@ -55,7 +55,7 @@ class MultiLayerLSB:
 
     @staticmethod
     def binary_to_message(binary_data, output_path=None):
-        """Extract a message (text, audio, or image) from binary data."""
+        """Extract a message (text, audio, image, or TIFF) from binary data."""
         # Extract metadata
         message_type_binary = binary_data[:3]
         message_length_binary = binary_data[3:35]
@@ -172,23 +172,82 @@ class MultiLayerLSB:
         binary_message = ''.join(extracted_bits)
         return self.binary_to_message(binary_message, output_path)
 
+    @staticmethod
+    def calculate_psnr(original_path, stego_path):
+        """Calculate PSNR between original and stego images."""
+        original = np.array(Image.open(original_path).convert('RGB'))
+        stego = np.array(Image.open(stego_path).convert('RGB'))
+        
+        mse = np.mean((original - stego) ** 2)
+        if mse == 0:
+            return float('inf')  # No difference between images
+        
+        max_pixel = 255.0
+        psnr = 20 * np.log10(max_pixel / np.sqrt(mse))
+        return psnr
+
+    @staticmethod
+    def calculate_capacity(image_path, rounds=1):
+        """Calculate maximum capacity in bytes based on image size, channels, and embedding rounds."""
+        img = Image.open(image_path)
+        is_rgb = img.mode == 'RGB'
+        if not is_rgb:
+            img = img.convert('L')  # Convert to grayscale if not RGB
+        channels = 3 if is_rgb else 1
+        total_pixels = img.size[0] * img.size[1]  # width * height
+        max_bits = total_pixels * rounds * channels
+        max_bytes = max_bits // 8  # Convert bits to bytes
+        return max_bytes
+
+    @staticmethod
+    def calculate_bpp(message_file, image_path, rounds=1):
+        """Calculate bits per pixel (BPP) for the embedding."""
+        binary_message = MultiLayerLSB.message_to_binary(message_file)
+        img = Image.open(image_path)
+        is_rgb = img.mode == 'RGB'
+        if not is_rgb:
+            img = img.convert('L')  # Convert to grayscale if not RGB
+
+        total_pixels = img.size[0] * img.size[1]  # width * height
+        total_bits_available = total_pixels * rounds * (3 if is_rgb else 1)
+        
+        # Calculate BPP
+        bpp = len(binary_message) / total_bits_available if total_bits_available > 0 else 0
+        return bpp
+
 
 if __name__ == "__main__":
     cover_image = "tests/lena.tiff"
-    stego_image = "stego.png"
-    message_file = "tests/baboon.tiff"  # Change this to your message file (e.g., .mp3 or .png)
-    output_extracted_file = "extracted_image.png"  # Output path for extracted file
+    stego_image = "tests/stego.png"
+    message_file = "tests/lsbpayload.txt"  # Change this to your message file (e.g., .mp3 or .png)
+    output_extracted_file = "thisisoutput.txt"  # Output path for extracted file
 
     lsb = MultiLayerLSB(cover_image, stego_image)
 
-    try:
-        # Embed message
-        lsb.embed_message(message_file, rounds=3)
-        print("Message embedded successfully.")
+    # Embed message
+    lsb.embed_message(message_file, rounds=3)
+    print("Message embedded successfully.")
 
-        # Extract message
-        extracted = lsb.extract_message(rounds=3, output_path=output_extracted_file)
-        print(f"Extracted message: {extracted}")
+    # Extract message
+    extracted = lsb.extract_message(rounds=3, output_path=output_extracted_file)
+    print(f"Extracted message: {extracted}")
 
-    except Exception as e:
-        print(f"Error: {str(e)}")
+    # Calculate PSNR
+    psnr = MultiLayerLSB.calculate_psnr(cover_image, stego_image)
+    # Calculate and display capacity and BPP
+    max_capacity = MultiLayerLSB.calculate_capacity(cover_image, rounds=3)
+    bpp = MultiLayerLSB.calculate_bpp(message_file, cover_image, rounds=3)
+
+    print(f"PSNR: {psnr:.2f} dB")
+    print(f"Maximum capacity: {max_capacity} bytes")
+    print(f"Bits per pixel (BPP): {bpp:.4f}")
+
+    # Display original and stego images side by side
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+    ax1.imshow(Image.open(cover_image))
+    ax1.set_title('Original Image')
+    ax1.axis('off')
+    ax2.imshow(Image.open(stego_image))
+    ax2.set_title('Stego Image')
+    ax2.axis('off')
+    plt.show()
