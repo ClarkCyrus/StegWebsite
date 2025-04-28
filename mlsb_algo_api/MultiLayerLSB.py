@@ -163,14 +163,17 @@ class MultiLayerLSB:
                     message_length = int(binary_message[:32], 2)
                     binary_message = binary_message[32:]
                 
-                if message_length is not None and len(binary_message) >= message_length * 8:
-                    binary_message = binary_message[:message_length * 8]
+                if message_length is not None and len(binary_message) >= message_length:
+                    binary_message = binary_message[:message_length]
                     break
-            if message_length is not None and len(binary_message) >= message_length * 8:
+            if message_length is not None and len(binary_message) >= message_length:
                 break
         
         if message_type is None or message_length is None:
             raise ValueError("Could not extract message metadata")
+        
+        # Ensure binary_message length is exactly message_length * 8
+        binary_message = binary_message[:message_length * 8]
         
         message_bytes = [int(binary_message[i:i+8], 2) for i in range(0, len(binary_message), 8)]
         
@@ -214,8 +217,16 @@ class MultiLayerLSB:
             img = img.convert('L')  # Convert to grayscale if not RGB
         channels = 3 if is_rgb else 1
         total_pixels = img.size[0] * img.size[1]  # width * height
-        max_bits = total_pixels * rounds * channels
-        max_bytes = max_bits // 8  # Convert bits to bytes
+        
+        # Calculate total bits available
+        total_bits_available = total_pixels * rounds * channels
+        
+        # Subtract metadata bits (3 bits for type + 32 bits for length)
+        metadata_bits = 35
+        available_bits = total_bits_available - metadata_bits
+        
+        # Convert to bytes (8 bits per byte)
+        max_bytes = available_bits // 8
         return max_bytes
 
     @staticmethod
@@ -228,10 +239,13 @@ class MultiLayerLSB:
             img = img.convert('L')  # Convert to grayscale if not RGB
 
         total_pixels = img.size[0] * img.size[1]  # width * height
-        total_bits_available = total_pixels * rounds * (3 if is_rgb else 1)
+        channels = 3 if is_rgb else 1
         
-        # Calculate BPP
-        bpp = len(binary_message) / total_bits_available if total_bits_available > 0 else 0
+        # Calculate total bits available (including metadata)
+        total_bits_available = total_pixels * rounds * channels
+        
+        # Calculate BPP (total message bits / total pixels)
+        bpp = len(binary_message) / total_pixels
         return bpp
 
 
