@@ -3,39 +3,89 @@ from PIL import Image
 import matplotlib
 matplotlib.use('Qt5Agg')  # for Linux
 import matplotlib.pyplot as plt
+import os
 
 
 class MultiLayerLSB:
     def __init__(self, cover_image_path, stego_image_path):
         self.cover_image_path = cover_image_path
         self.stego_image_path = stego_image_path
-       
-    @staticmethod
-    def set_message_type(message):
-        pass
 
     @staticmethod
-    def message_to_binary(message):
-        """Convert text message to binary string."""
-        return ''.join(format(ord(char), '08b') for char in message)
+    def file_to_binary(file_path):
+        """Convert a file (e.g., .mp3, .png) to binary data."""
+        with open(file_path, 'rb') as f:
+            file_data = f.read()
+        binary_data = ''.join(format(byte, '08b') for byte in file_data)
+        return binary_data
 
     @staticmethod
-    def binary_to_message(binary_string):
-        """Convert binary string back to text message."""
-        message = ''
-        for i in range(0, len(binary_string), 8):
-            byte = binary_string[i:i+8]
-            if byte == '00000000':  # Check for termination sequence
-                break
-            message += chr(int(byte, 2))
-        return message
+    def binary_to_file(binary_data, output_path):
+        """Convert binary data back to a file."""
+        byte_data = bytearray(int(binary_data[i:i+8], 2) for i in range(0, len(binary_data), 8))
+        with open(output_path, 'wb') as f:
+            f.write(byte_data)
 
-    def embed_message(self, message, rounds=1):
-        """Embed message using multiple rounds of LSB embedding."""
+    @staticmethod
+    def message_to_binary(file_path):
+        """Convert a file (text, audio, or image) to binary with metadata."""
+        # Infer message type from file extension
+        _, file_extension = os.path.splitext(file_path)
+        file_extension = file_extension.lower()
+
+        if file_extension == '.txt':
+            message_type = 'text'
+            with open(file_path, 'r') as f:
+                message = f.read()
+            binary_message = ''.join(format(ord(char), '08b') for char in message)
+        elif file_extension == '.mp3':
+            message_type = 'audio'
+            binary_message = MultiLayerLSB.file_to_binary(file_path)
+        elif file_extension == '.png':
+            message_type = 'image'
+            binary_message = MultiLayerLSB.file_to_binary(file_path)
+        else:
+            raise ValueError("Unsupported file type. Supported types: .txt, .mp3, .png")
+
+        # Add metadata: message type (3 bits) + message length (32 bits)
+        type_map = {'text': '001', 'audio': '010', 'image': '011'}
+        message_type_binary = type_map[message_type]
+        message_length_binary = format(len(binary_message), '032b')
+        return message_type_binary + message_length_binary + binary_message
+
+    @staticmethod
+    def binary_to_message(binary_data, output_path=None):
+        """Extract a message (text, audio, or image) from binary data."""
+        # Extract metadata
+        message_type_binary = binary_data[:3]
+        message_length_binary = binary_data[3:35]
+        message_length = int(message_length_binary, 2)
+        message_binary = binary_data[35:35 + message_length]
+
+        # Determine message type
+        type_map = {'001': 'text', '010': 'audio', '011': 'image'}
+        message_type = type_map.get(message_type_binary, None)
+        if not message_type:
+            raise ValueError("Unsupported message type in extracted data.")
+
+        # Reconstruct the message
+        if message_type == 'text':
+            message = ''.join(chr(int(message_binary[i:i+8], 2)) for i in range(0, len(message_binary), 8))
+            return message
+        elif message_type in ['audio', 'image']:
+            if not output_path:
+                raise ValueError("Output path is required to save extracted audio or image.")
+            MultiLayerLSB.binary_to_file(message_binary, output_path)
+            return f"{message_type.capitalize()} file saved to {output_path}."
+        else:
+            raise ValueError("Unsupported message type.")
+
+    def embed_message(self, file_path, rounds=1):
+        """Embed a message (text, audio, or image) using multiple rounds of LSB embedding."""
         if not 1 <= rounds <= 4:
             raise ValueError("Number of rounds must be between 1 and 4")
 
-        binary_message = self.message_to_binary(message) + '00000000'
+        binary_message = self.message_to_binary(file_path)
 
         cover = Image.open(self.cover_image_path)
         is_rgb = cover.mode == 'RGB'
@@ -90,8 +140,8 @@ class MultiLayerLSB:
         stego_image.save(self.stego_image_path, format='PNG')
         return stego_image
 
-    def extract_message(self, rounds=1):
-        """Extract message from stego image."""
+    def extract_message(self, rounds=1, output_path=None):
+        """Extract a message (text, audio, or image) from the stego image."""
         if not 1 <= rounds <= 4:
             raise ValueError("Number of rounds must be between 1 and 4")
 
@@ -120,95 +170,25 @@ class MultiLayerLSB:
                         extracted_bits.append(str(bit))
 
         binary_message = ''.join(extracted_bits)
-        try:
-            return self.binary_to_message(binary_message)
-        except:
-            return ""
-
-    @staticmethod
-    def calculate_psnr(original_path, stego_path):
-        """Calculate PSNR between original and stego images."""
-        original = np.array(Image.open(original_path))
-        stego = np.array(Image.open(stego_path))
-
-        mse = np.mean((original - stego) ** 2)
-        if mse == 0:
-            return float('inf')
-
-        max_pixel = 255.0
-        psnr = 20 * np.log10(max_pixel / np.sqrt(mse))
-        return psnr
-
-    @staticmethod
-    def calculate_capacity(image_path, rounds=1):
-        """Calculate maximum capacity in bytes."""
-        img = Image.open(image_path)
-        is_rgb = img.mode == 'RGB'
-        if not is_rgb:
-            img = img.convert('L')
-        channels = 3 if is_rgb else 1
-        total_pixels = np.array(img).size
-        max_bits = total_pixels * rounds * channels
-        return max_bits // 8
-
-    @staticmethod
-    def calculate_bpp(message, image_path, rounds):
-        """Calculate bits per pixel (BPP)."""
-        binary_message = MultiLayerLSB.message_to_binary(message)
-        img = Image.open(image_path)
-        is_rgb = img.mode == 'RGB'
-        if not is_rgb:
-            img = img.convert('L')
-
-        total_pixels = img.size[0] * img.size[1]
-        total_bits_available = total_pixels * rounds * (3 if is_rgb else 1)
-        return len(binary_message) / total_bits_available if total_bits_available > 0 else 0
+        return self.binary_to_message(binary_message, output_path)
 
 
 if __name__ == "__main__":
     cover_image = "tests/lena.tiff"
     stego_image = "stego.png"
-    message_file = "tests/lsbpayload.txt"
+    message_file = "tests/baboon.tiff"  # Change this to your message file (e.g., .mp3 or .png)
+    output_extracted_file = "extracted_image.png"  # Output path for extracted file
 
-    with open(message_file, "r") as f:
-        message = f.read().strip()
-
-    rounds = 3
     lsb = MultiLayerLSB(cover_image, stego_image)
 
     try:
         # Embed message
-        lsb.embed_message(message, rounds=rounds)
-        print("Message embedded successfully")
+        lsb.embed_message(message_file, rounds=3)
+        print("Message embedded successfully.")
 
         # Extract message
-        extracted = lsb.extract_message(rounds=rounds)
-        print(f"Extracted message: {extracted[-10:]}")
-
-        # Calculate PSNR
-        psnr = lsb.calculate_psnr(cover_image, stego_image)
-        print(f"PSNR: {psnr:.2f} dB")
-
-        # Calculate capacity and BPP
-        max_capacity = lsb.calculate_capacity(cover_image, rounds)
-        bpp = lsb.calculate_bpp(message, cover_image, rounds)
-        print(f"Maximum capacity: {max_capacity} bytes")
-        print(f"Bits per pixel (BPP): {bpp:.4f}")
-
-        # Display original and stego images
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
-        ax1.imshow(Image.open(cover_image))
-        ax1.set_title('Original Image')
-        ax1.axis('off')
-        ax2.imshow(Image.open(stego_image))
-        ax2.set_title('Stego Image')
-        ax2.axis('off')
-        plt.show()
+        extracted = lsb.extract_message(rounds=3, output_path=output_extracted_file)
+        print(f"Extracted message: {extracted}")
 
     except Exception as e:
         print(f"Error: {str(e)}")
-
-
-
-
-
