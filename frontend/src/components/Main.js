@@ -4,6 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import './Main.css';
 
 const Main = () => {
+
+  const [user, setUser] = useState(null);
+
+  const [stegRooms, setStegRooms] = useState([]);
+
   const [file, setFile] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -50,6 +55,58 @@ const Main = () => {
     } 
   };
 
+
+
+
+
+  const getCurrentUser = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/current_user", {
+        credentials: "include" 
+      });
+      if (!response.ok) {
+        setLoading(false);
+        return;
+      }
+      const data = await response.json();
+      setUser(data);
+    } catch (err) {
+      console.error("Error fetching current user:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getCurrentUser();
+  }, []);
+
+  const fetchStegRooms = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/steg_rooms", {
+        method: "GET",
+        credentials: "include" 
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to fetch stego rooms");
+      }
+      const data = await res.json();
+      setStegRooms(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchStegRooms();
+  }, []);
+
+
+
+
+
   const handleModalSubmit = () => { 
     handleSubmit()
   };
@@ -58,9 +115,38 @@ const Main = () => {
     setShowFeedback(!showFeedback); 
   };
 
-
   return (
     <div>
+
+        <div style={{ margin: "20px" }}>
+            <h1>Dashboard</h1>
+            {user ? (
+                <div>Welcome, {user.email}!</div>
+            ) : (
+                <div>Please log in to access your dashboard.</div>
+            )}
+        </div>
+
+        <div style={{ margin: "20px" }}>
+            <h2>Your Stego Rooms</h2>
+            {stegRooms.length === 0 ? (
+                <div>No stego rooms found for your account.</div>
+            ) : (
+                <ul>
+                {stegRooms.map(room => (
+                    <li key={room.id} style={{ marginBottom: "10px" }}>
+                    <strong>{room.name}</strong><br />
+                    Encrypted: {room.is_encrypted ? "Yes" : "No"}<br />
+                    Message: {room.message}<br />
+                    Metrics: {room.metrics}
+                    {/* You can later include image previews if desired */}
+                    </li>
+                ))}
+                </ul>
+            )}
+            </div>
+
+
         <div>
             <nav className="navbar navbar-expand-lg navbar-light fixed-top shadow-sm" id="mainNav">
                 <div className="container px-5">
