@@ -1,10 +1,16 @@
-from flask import Flask, jsonify, request, session, abort
+from flask import Flask, jsonify, request, session, abort, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_cors import CORS
 import base64
 
+import os
+import base64
+from werkzeug.utils import secure_filename
+import sys
+sys.path.append('..')
+from mlsb_algo_api.MultiLayerLSB import MultiLayerLSB
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "http://localhost:3000"}})
@@ -12,6 +18,8 @@ CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "http://l
 app.config['SECRET_KEY'] = '123'    
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 db = SQLAlchemy(app)
 
@@ -35,9 +43,29 @@ class StegoRoom(db.Model):
     metrics = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
+
+
+# FOR TESTING FOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTING
+class MLSBDemo(db.Model):
+    __tablename__ = 'mlsb_demo'
+    id = db.Column(db.Integer, primary_key=True)
+    cover_image = db.Column(db.Text, nullable=True)
+    message_file = db.Column(db.Text, nullable=True)
+    stego_image = db.Column(db.Text, nullable=True)
+    is_encrypted = db.Column(db.Boolean, default=False)
+    rounds = db.Column(db.Integer, default=1)
+    metrics = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+# FOR TESTING FOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTING
+
 admin = Admin(app, name='Admin Panel', template_mode='bootstrap3')
 admin.add_view(ModelView(User, db.session))
 admin.add_view(ModelView(StegoRoom, db.session))
+admin.add_view(ModelView(MLSBDemo, db.session))
+
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
+
 
 @app.route('/')
 def index():
@@ -169,6 +197,119 @@ def create_stego_room():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": "Failed to create stego room."}), 500
+
+
+# FOR TESTING FOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTING
+
+@app.route('/api/mlsb/embed', methods=['POST'])
+def embed_message():
+    if 'cover_image' not in request.files or 'message_file' not in request.files:
+        return jsonify({'error': 'Missing required files'}), 400
+
+    cover_image = request.files['cover_image']
+    message_file = request.files['message_file']
+    is_encrypted = request.form.get('is_encrypted', 'false').lower() == 'true'
+    rounds = int(request.form.get('rounds', 1))
+
+    if cover_image.filename == '' or message_file.filename == '':
+        return jsonify({'error': 'No selected files'}), 400
+
+    try:
+        cover_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(cover_image.filename))
+        message_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(message_file.filename))
+        stego_path = os.path.join(app.config['UPLOAD_FOLDER'], f'stego_{cover_image.filename}')
+
+        cover_image.save(cover_path)
+        message_file.save(message_path)
+
+        mlsb = MultiLayerLSB(cover_path, stego_path)
+        mlsb.embed_message(cover_path, stego_path, message_path, rounds=rounds, is_encrypted=is_encrypted)
+
+        with open(stego_path, 'rb') as f:
+            stego_image = base64.b64encode(f.read()).decode('utf-8')
+
+        metrics = {
+            'psnr': mlsb.calculate_psnr(cover_path, stego_path),
+            'bpp': mlsb.calculate_bpp(message_path, cover_path, rounds),
+            'capacity': mlsb.calculate_capacity(cover_path, rounds)
+        }
+
+        demo = MLSBDemo(
+            cover_image=cover_path,
+            message_file=message_path,
+            stego_image=stego_path,
+            is_encrypted=is_encrypted,
+            rounds=rounds,
+            metrics=str(metrics)
+        )
+        db.session.add(demo)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'stego_image': stego_image,
+            'metrics': metrics
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/mlsb/extract', methods=['POST'])
+def extract_message():
+    if 'stego_image' not in request.files:
+        return jsonify({'error': 'Missing stego image'}), 400
+
+    stego_image = request.files['stego_image']
+    is_encrypted = request.form.get('is_encrypted', 'false').lower() == 'true'
+    rounds = int(request.form.get('rounds', 1))
+
+    if stego_image.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    try:
+        stego_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(stego_image.filename))
+        output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'extracted_message.txt')
+
+        stego_image.save(stego_path)
+
+        mlsb = MultiLayerLSB(None, stego_path)
+        message = mlsb.extract_message(stego_path, output_path=output_path, rounds=rounds, is_encrypted=is_encrypted)
+
+        return jsonify({
+            'success': True,
+            'message': message.decode('utf-8') if isinstance(message, bytes) else message
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/mlsb/capacity', methods=['POST'])
+def calculate_capacity():
+    if 'image' not in request.files:
+        return jsonify({'error': 'Missing image file'}), 400
+
+    image = request.files['image']
+    rounds = int(request.form.get('rounds', 1))
+
+    if image.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    try:
+        image_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(image.filename))
+        image.save(image_path)
+
+        mlsb = MultiLayerLSB(image_path, None)
+        capacity = mlsb.calculate_capacity(image_path, rounds)
+
+        return jsonify({
+            'success': True,
+            'capacity': capacity
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# FOR TESTING FOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTING
 
 if __name__ == '__main__':     
     with app.app_context():
