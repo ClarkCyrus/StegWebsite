@@ -206,7 +206,7 @@ class MultiLayerLSB:
         return data
 
     @staticmethod
-    def embed_message(cover_image_path, stego_image_path, file_path, rounds=1, termination_sequence=b'<<END_OF_MESSAGE>>', is_encrypted=True):
+    def embed_message(cover_image_path, stego_image_path, file_path, rounds=4, termination_sequence=b'<<END_OF_MESSAGE>>', is_encrypted=True):
         """
         Embeds a message into an image using multi-layer LSB, with optional AES encryption.
         Args:
@@ -296,7 +296,7 @@ class MultiLayerLSB:
         return stego_image_path, key, iv
 
     @staticmethod
-    def extract_message(stego_image_path, output_path=None, rounds=1, key=None, iv=None, termination_sequence=b'<<END_OF_MESSAGE>>', is_encrypted=True):
+    def extract_message(stego_image_path, output_path=None, rounds=4, key=None, iv=None, termination_sequence=b'<<END_OF_MESSAGE>>', is_encrypted=True):
         """
         Extracts a message from a stego image, with optional AES decryption.
         Args:
@@ -380,7 +380,7 @@ class MultiLayerLSB:
         return psnr
 
     @staticmethod
-    def calculate_capacity(image_path, rounds=1):
+    def calculate_capacity(image_path, rounds=4):
         """Calculate maximum capacity in bytes based on image size, channels, and embedding rounds."""
         img = Image.open(image_path)
         is_rgb = img.mode == 'RGB'
@@ -401,7 +401,7 @@ class MultiLayerLSB:
         return max_bytes
 
     @staticmethod
-    def calculate_bpp(message_file, image_path, rounds=1):
+    def calculate_bpp(message_file, image_path, rounds=4):
         """Calculate bits per pixel (BPP) for the embedding."""
         binary_message = MultiLayerLSB.message_to_binary(message_file)
         img = Image.open(image_path)

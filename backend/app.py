@@ -11,6 +11,7 @@ from werkzeug.utils import secure_filename
 import sys
 sys.path.append('..')
 from mlsb_algo_api.MultiLayerLSB import MultiLayerLSB
+import secrets
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "http://localhost:3000"}})
@@ -208,8 +209,7 @@ def embed_message():
 
     cover_image = request.files['cover_image']
     message_file = request.files['message_file']
-    is_encrypted = request.form.get('is_encrypted', 'false').lower() == 'true'
-    rounds = int(request.form.get('rounds', 1))
+    is_encrypted = request.form.get('is_encrypted', 'true').lower() == 'true'
 
     if cover_image.filename == '' or message_file.filename == '':
         return jsonify({'error': 'No selected files'}), 400
@@ -222,16 +222,23 @@ def embed_message():
         cover_image.save(cover_path)
         message_file.save(message_path)
 
-        mlsb = MultiLayerLSB(cover_path, stego_path)
-        mlsb.embed_message(cover_path, stego_path, message_path, rounds=rounds, is_encrypted=is_encrypted)
+        # Let the MultiLayerLSB class handle key and IV generation
+        stego_path, key, iv = MultiLayerLSB.embed_message(
+            cover_path, 
+            stego_path, 
+            message_path, 
+            is_encrypted=is_encrypted
+        )
 
         with open(stego_path, 'rb') as f:
             stego_image = base64.b64encode(f.read()).decode('utf-8')
 
+        message_size = os.path.getsize(message_path)
         metrics = {
-            'psnr': mlsb.calculate_psnr(cover_path, stego_path),
-            'bpp': mlsb.calculate_bpp(message_path, cover_path, rounds),
-            'capacity': mlsb.calculate_capacity(cover_path, rounds)
+            'psnr': MultiLayerLSB.calculate_psnr(cover_path, stego_path),
+            'bpp': MultiLayerLSB.calculate_bpp(message_path, cover_path),
+            'capacity': MultiLayerLSB.calculate_capacity(cover_path),
+            'message_size': message_size
         }
 
         demo = MLSBDemo(
@@ -239,17 +246,22 @@ def embed_message():
             message_file=message_path,
             stego_image=stego_path,
             is_encrypted=is_encrypted,
-            rounds=rounds,
             metrics=str(metrics)
         )
         db.session.add(demo)
         db.session.commit()
 
-        return jsonify({
+        response = {
             'success': True,
             'stego_image': stego_image,
             'metrics': metrics
-        })
+        }
+
+        if is_encrypted:
+            response['key'] = key.hex()
+            response['iv'] = iv.hex()
+
+        return jsonify(response)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -260,24 +272,39 @@ def extract_message():
         return jsonify({'error': 'Missing stego image'}), 400
 
     stego_image = request.files['stego_image']
-    is_encrypted = request.form.get('is_encrypted', 'false').lower() == 'true'
-    rounds = int(request.form.get('rounds', 1))
+    is_encrypted = request.form.get('is_encrypted', 'true').lower() == 'true'
+    key = request.form.get('key', '')
+    iv = request.form.get('iv', '')
 
     if stego_image.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
+    if is_encrypted and (not key or not iv):
+        return jsonify({'error': 'Encryption key and IV are required when encryption is enabled'}), 400
+
     try:
         stego_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(stego_image.filename))
-        output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'extracted_message.txt')
+        output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'extracted_message')
 
         stego_image.save(stego_path)
 
-        mlsb = MultiLayerLSB(None, stego_path)
-        message = mlsb.extract_message(stego_path, output_path=output_path, rounds=rounds, is_encrypted=is_encrypted)
+        # Convert hex strings to bytes if encryption is enabled
+        key_bytes = bytes.fromhex(key) if is_encrypted else None
+        iv_bytes = bytes.fromhex(iv) if is_encrypted else None
+
+        # Let MultiLayerLSB handle the extraction and file saving
+        message = MultiLayerLSB.extract_message(
+            stego_path, 
+            output_path=output_path, 
+            is_encrypted=is_encrypted, 
+            key=key_bytes, 
+            iv=iv_bytes
+        )
 
         return jsonify({
             'success': True,
-            'message': message.decode('utf-8') if isinstance(message, bytes) else message
+            'message': message if isinstance(message, str) else 'Binary data extracted successfully',
+            'output_path': output_path
         })
 
     except Exception as e:
@@ -310,6 +337,17 @@ def calculate_capacity():
         return jsonify({'error': str(e)}), 500
 
 # FOR TESTING FOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTING
+
+@app.route('/api/mlsb/download', methods=['GET'])
+def download_file():
+    file_path = request.args.get('path')
+    if not file_path:
+        return jsonify({'error': 'No file path provided'}), 400
+    
+    try:
+        return send_file(file_path, as_attachment=True)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':     
     with app.app_context():
