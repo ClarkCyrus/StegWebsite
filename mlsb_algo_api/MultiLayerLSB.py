@@ -8,6 +8,104 @@ import secrets
 
 
 class MultiLayerLSB:
+    """
+    MultiLayerLSB provides methods for multi-layer least significant bit (LSB) steganography with AES encryption.
+
+    Methods:
+        file_to_binary(file_path):
+            Converts a file to a binary string.
+            Args:
+                file_path (str): Path to the input file.
+            Returns:
+                str: Binary string representation of the file.
+
+        binary_to_file(binary_data, output_path):
+            Converts a binary string back to a file and saves it.
+            Args:
+                binary_data (str): Binary string to convert.
+                output_path (str): Path to save the output file.
+            Returns:
+                None
+
+        message_to_binary(file_path):
+            Converts a file to a binary string with metadata (type and length).
+            Args:
+                file_path (str): Path to the input file.
+            Returns:
+                str: Binary string with metadata.
+
+        binary_to_message(binary_data, output_path=None):
+            Converts a binary string with metadata back to the original message and optionally saves it.
+            Args:
+                binary_data (str): Binary string with metadata.
+                output_path (str, optional): Path to save the output file.
+            Returns:
+                str or bytes: The extracted message (text or binary).
+
+        aes_encrypt(data):
+            Encrypts data using AES-CBC with PKCS7 padding.
+            Args:
+                data (bytes): Data to encrypt.
+            Returns:
+                tuple: (ciphertext (bytes), key (bytes), iv (bytes))
+
+        aes_decrypt(ciphertext, key, iv):
+            Decrypts AES-CBC encrypted data with PKCS7 padding.
+            Args:
+                ciphertext (bytes): Encrypted data.
+                key (bytes): AES key.
+                iv (bytes): Initialization vector.
+            Returns:
+                bytes: Decrypted data.
+
+        embed_message(cover_image_path, stego_image_path, file_path, rounds=1, termination_sequence=b'<<END_OF_MESSAGE>>'):
+            Embeds an encrypted message into an image using multi-layer LSB.
+            Args:
+                cover_image_path (str): Path to the cover image.
+                stego_image_path (str): Path to save the stego image.
+                file_path (str): Path to the message file.
+                rounds (int, optional): Number of LSB layers to use (1-4). Default is 1.
+                termination_sequence (bytes, optional): Sequence to mark end of message. Default is b'<<END_OF_MESSAGE>>'.
+            Returns:
+                tuple: (stego_image_path (str), key (bytes), iv (bytes))
+
+        extract_message(stego_image_path, output_path=None, rounds=1, key=None, iv=None, termination_sequence=b'<<END_OF_MESSAGE>>'):
+            Extracts and decrypts a message from a stego image.
+            Args:
+                stego_image_path (str): Path to the stego image.
+                output_path (str, optional): Path to save the extracted message.
+                rounds (int, optional): Number of LSB layers used. Default is 1.
+                key (bytes): AES key for decryption.
+                iv (bytes): Initialization vector for decryption.
+                termination_sequence (bytes, optional): Sequence marking end of message. Default is b'<<END_OF_MESSAGE>>'.
+            Returns:
+                bytes: The original extracted message.
+
+        calculate_psnr(original_path, stego_path):
+            Calculates the PSNR between the original and stego images.
+            Args:
+                original_path (str): Path to the original image.
+                stego_path (str): Path to the stego image.
+            Returns:
+                float: PSNR value in dB.
+
+        calculate_capacity(image_path, rounds=1):
+            Calculates the maximum embedding capacity in bytes for a given image and number of rounds.
+            Args:
+                image_path (str): Path to the image.
+                rounds (int, optional): Number of LSB layers. Default is 1.
+            Returns:
+                int: Maximum capacity in bytes.
+
+        calculate_bpp(message_file, image_path, rounds=1):
+            Calculates the bits per pixel (BPP) for the embedding.
+            Args:
+                message_file (str): Path to the message file.
+                image_path (str): Path to the image.
+                rounds (int, optional): Number of LSB layers. Default is 1.
+            Returns:
+                float: Bits per pixel value.
+    """
     def __init__(self, cover_image_path, stego_image_path):
         self.cover_image_path = cover_image_path
         self.stego_image_path = stego_image_path
@@ -39,7 +137,7 @@ class MultiLayerLSB:
             with open(file_path, 'r') as f:
                 message = f.read()
             binary_message = ''.join(format(ord(char), '08b') for char in message)
-        elif file_extension in ['.mp3', '.wav', '.bin']:
+        elif file_extension in ['.mp3', '.wav']:
             message_type = 'audio'
             binary_message = MultiLayerLSB.file_to_binary(file_path)
         elif file_extension in ['.png', '.tiff', '.jpg', '.jpeg', '.bmp']:
