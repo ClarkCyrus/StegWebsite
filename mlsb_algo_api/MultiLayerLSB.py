@@ -1,6 +1,10 @@
 import numpy as np
 from PIL import Image
 import os
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.backends import default_backend
+import secrets
 
 
 class MultiLayerLSB:
@@ -35,14 +39,16 @@ class MultiLayerLSB:
             with open(file_path, 'r') as f:
                 message = f.read()
             binary_message = ''.join(format(ord(char), '08b') for char in message)
-        elif file_extension == '.mp3':
+        elif file_extension in ['.mp3', '.wav', '.bin']:
             message_type = 'audio'
             binary_message = MultiLayerLSB.file_to_binary(file_path)
-        elif file_extension == '.png':
+        elif file_extension in ['.png', '.tiff', '.jpg', '.jpeg', '.bmp']:
             message_type = 'image'
             binary_message = MultiLayerLSB.file_to_binary(file_path)
         else:
-            raise ValueError("Unsupported file type. Supported types: .txt, .mp3, .png, .tiff")
+            # Default: treat as binary (audio type is fine for generic binary)
+            message_type = 'audio'
+            binary_message = MultiLayerLSB.file_to_binary(file_path)
 
         # Add metadata: message type (3 bits) + message length (32 bits)
         type_map = {'text': '001', 'audio': '010', 'image': '011'}
@@ -80,11 +86,42 @@ class MultiLayerLSB:
         return message
 
     @staticmethod
-    def embed_message(cover_image_path, stego_image_path, file_path, rounds=1):
+    def aes_encrypt(data):
+        key = secrets.token_bytes(16)  # AES-128
+        iv = secrets.token_bytes(16)
+        padder = padding.PKCS7(128).padder()
+        padded_data = padder.update(data) + padder.finalize()
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+        encryptor = cipher.encryptor()
+        ct = encryptor.update(padded_data) + encryptor.finalize()
+        return ct, key, iv
+
+    @staticmethod
+    def aes_decrypt(ciphertext, key, iv):
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+        decryptor = cipher.decryptor()
+        padded_data = decryptor.update(ciphertext) + decryptor.finalize()
+        unpadder = padding.PKCS7(128).unpadder()
+        data = unpadder.update(padded_data) + unpadder.finalize()
+        return data
+
+    @staticmethod
+    def embed_message(cover_image_path, stego_image_path, file_path, rounds=1, termination_sequence=b'<<END_OF_MESSAGE>>'):
         if not 1 <= rounds <= 4:
             raise ValueError("Number of rounds must be between 1 and 4")
 
-        binary_message = MultiLayerLSB.message_to_binary(file_path)
+        with open(file_path, 'rb') as f:
+            message_data = f.read()
+        message_with_term = message_data + termination_sequence
+
+        encrypted_data, key, iv = MultiLayerLSB.aes_encrypt(message_with_term)
+
+        # Save encrypted data to a temp file for binary conversion
+        temp_enc_file = "temp_encrypted_payload.bin"
+        with open(temp_enc_file, 'wb') as f:
+            f.write(encrypted_data)
+        binary_message = MultiLayerLSB.message_to_binary(temp_enc_file)
+        os.remove(temp_enc_file)
 
         cover = Image.open(cover_image_path)
         is_rgb = cover.mode == 'RGB'
@@ -137,14 +174,13 @@ class MultiLayerLSB:
 
         stego_image = Image.fromarray(cover_array.astype(np.uint8))
         stego_image.save(stego_image_path, format='PNG')
-        return stego_image
+        return stego_image_path, key, iv
 
     @staticmethod
-    def extract_message(stego_image_path, output_path=None, rounds=1):
+    def extract_message(stego_image_path, output_path=None, rounds=1, key=None, iv=None, termination_sequence=b'<<END_OF_MESSAGE>>'):
         stego_image = Image.open(stego_image_path)
         stego_array = np.array(stego_image)
         is_rgb = stego_image.mode == 'RGB'
-        
         if not is_rgb:
             stego_array = stego_array[..., np.newaxis]
 
@@ -153,10 +189,8 @@ class MultiLayerLSB:
         message_length = None
 
         for round_num in range(rounds):
-            # Vectorized extraction for all pixels and channels in this round
             bits = ((stego_array >> round_num) & 1).flatten()
             binary_message += ''.join(str(b) for b in bits)
-            # Now process metadata and check if we have enough bits
             if message_type is None and len(binary_message) >= 3:
                 message_type_binary = binary_message[:3]
                 binary_message = binary_message[3:]
@@ -169,7 +203,6 @@ class MultiLayerLSB:
                 binary_message = binary_message[32:]
             if message_length is not None and len(binary_message) >= message_length:
                 binary_message = binary_message[:message_length]
-                done = True
                 break
         if message_type is None or message_length is None:
             raise ValueError("Could not extract message metadata")
@@ -179,15 +212,21 @@ class MultiLayerLSB:
             message = bytes(int(binary_message[i:i+8], 2) for i in range(0, len(binary_message), 8))
         else:
             raise ValueError("Invalid message type")
+
+        # Decrypt the message
+        if key is None or iv is None:
+            raise ValueError("AES key and IV must be provided for decryption.")
+        decrypted_data = MultiLayerLSB.aes_decrypt(message, key, iv)
+        idx = decrypted_data.find(termination_sequence)
+        if idx == -1:
+            raise ValueError("Termination sequence not found in decrypted data!")
+        original_message = decrypted_data[:idx]
+
         if output_path:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            if message_type == 'text':
-                with open(output_path, 'w', encoding='utf-8') as f:
-                    f.write(message)
-            else:
-                with open(output_path, 'wb') as f:
-                    f.write(message)
-        return message
+            with open(output_path, 'wb') as f:
+                f.write(original_message)
+        return original_message
 
     @staticmethod
     def calculate_psnr(original_path, stego_path):

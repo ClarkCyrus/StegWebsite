@@ -21,7 +21,8 @@ def embed_and_analyze(cover_image, message_file, rounds=3):
     if message_size > max_capacity:
         print(f"Warning: Message size ({message_size} bytes) exceeds maximum capacity ({max_capacity} bytes)")
     
-    MultiLayerLSB.embed_message(cover_image, stego_image, message_file, rounds=rounds)
+    # Embed and get key, iv
+    stego_image, key, iv = MultiLayerLSB.embed_message(cover_image, stego_image, message_file, rounds=rounds)
     print("Message embedded successfully.")
 
     psnr = MultiLayerLSB.calculate_psnr(cover_image, stego_image)
@@ -30,10 +31,10 @@ def embed_and_analyze(cover_image, message_file, rounds=3):
     print(f"PSNR: {psnr:.2f} dB")
     print(f"Bits per pixel (BPP): {bpp:.4f}")
 
-    return stego_image, message_size, max_capacity, psnr, bpp
+    return stego_image, message_size, max_capacity, psnr, bpp, key, iv
 
-def extract_message(stego_image, output_extracted_file, rounds=3):
-    extracted = MultiLayerLSB.extract_message(stego_image, rounds=rounds, output_path=output_extracted_file)
+def extract_message(stego_image, output_extracted_file, rounds=3, key=None, iv=None):
+    extracted = MultiLayerLSB.extract_message(stego_image, output_path=output_extracted_file, rounds=rounds, key=key, iv=iv)
     
     # Get extracted message size
     with open(output_extracted_file, 'rb') as f:
@@ -64,9 +65,9 @@ def test_all_types():
     # Text
     print("\n--- Testing TEXT message ---")
     text_file = "tests/text_message/lsbpayload.txt"
-    stego_text, msg_size, max_cap, psnr, bpp = embed_and_analyze(cover_image, text_file, rounds)
+    stego_text, msg_size, max_cap, psnr, bpp, key, iv = embed_and_analyze(cover_image, text_file, rounds)
     extracted_text = "tests/output/lsbpayload_extracted.txt"
-    extracted_size = extract_message(stego_text, extracted_text, rounds)
+    extracted_size = extract_message(stego_text, extracted_text, rounds, key, iv)
     metrics = [
         f"Message size: {msg_size} bytes\nMax capacity: {max_cap} bytes",
         f"PSNR: {psnr:.2f} dB\nBPP: {bpp:.4f}\nExtracted size: {extracted_size} bytes"
@@ -76,9 +77,9 @@ def test_all_types():
     # Audio
     print("\n--- Testing AUDIO message ---")
     audio_file = "tests/audio_message/notif.mp3"
-    stego_audio, msg_size, max_cap, psnr, bpp = embed_and_analyze(cover_image, audio_file, rounds)
+    stego_audio, msg_size, max_cap, psnr, bpp, key, iv = embed_and_analyze(cover_image, audio_file, rounds)
     extracted_audio = "tests/output/notif_extracted.mp3"
-    extracted_size = extract_message(stego_audio, extracted_audio, rounds)
+    extracted_size = extract_message(stego_audio, extracted_audio, rounds, key, iv)
     metrics = [
         f"Message size: {msg_size} bytes\nMax capacity: {max_cap} bytes",
         f"PSNR: {psnr:.2f} dB\nBPP: {bpp:.4f}\nExtracted size: {extracted_size} bytes"
@@ -88,9 +89,9 @@ def test_all_types():
     # Image
     print("\n--- Testing IMAGE message ---")
     image_file = "tests/image_message/lena.png"
-    stego_image, msg_size, max_cap, psnr, bpp = embed_and_analyze(cover_image, image_file, rounds)
+    stego_image, msg_size, max_cap, psnr, bpp, key, iv = embed_and_analyze(cover_image, image_file, rounds)
     extracted_image = "tests/output/lena_extracted.png"
-    extracted_size = extract_message(stego_image, extracted_image, rounds)
+    extracted_size = extract_message(stego_image, extracted_image, rounds, key, iv)
     metrics = [
         f"Message size: {msg_size} bytes\nMax capacity: {max_cap} bytes",
         f"PSNR: {psnr:.2f} dB\nBPP: {bpp:.4f}\nExtracted size: {extracted_size} bytes",
