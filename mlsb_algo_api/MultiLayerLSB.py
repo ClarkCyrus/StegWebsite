@@ -137,37 +137,59 @@ class MultiLayerLSB:
         stego_image.save(self.stego_image_path, format='PNG')
         return stego_image
 
-    def extract_message(self, rounds=1, output_path=None):
-        """Extract a message (text, audio, or image) from the stego image."""
-        if not 1 <= rounds <= 4:
-            raise ValueError("Number of rounds must be between 1 and 4")
-
-        stego = Image.open(self.stego_image_path)
-        is_rgb = stego.mode == 'RGB'
-        if not is_rgb:
-            stego = stego.convert('L')
-        stego_array = np.array(stego)
-
-        extracted_bits = []
+    @staticmethod
+    def extract_message(stego_image_path, rounds=3, output_path=None):
+        stego_image = Image.open(stego_image_path)
+        stego_array = np.array(stego_image)
+        
+        channels = 3 if stego_image.mode == 'RGB' else 1
+        if channels == 1:
+            stego_array = stego_array.reshape(*stego_array.shape, 1)
+        
+        binary_message = ""
+        message_type = None
+        message_length = None
+        
         for round_num in range(rounds):
-            if is_rgb:
-                height, width, _ = stego_array.shape
-                for y in range(height):
-                    for x in range(width):
-                        for channel in range(3):
-                            pixel = stego_array[y, x, channel]
-                            bit = (pixel >> round_num) & 1
-                            extracted_bits.append(str(bit))
+            for pixel in stego_array.flatten():
+                bit = (pixel >> round_num) & 1
+                binary_message += str(bit)
+                
+                if message_type is None and len(binary_message) >= 3:
+                    message_type = int(binary_message[:3], 2)
+                    binary_message = binary_message[3:]
+                
+                if message_type is not None and message_length is None and len(binary_message) >= 32:
+                    message_length = int(binary_message[:32], 2)
+                    binary_message = binary_message[32:]
+                
+                if message_length is not None and len(binary_message) >= message_length * 8:
+                    binary_message = binary_message[:message_length * 8]
+                    break
+            if message_length is not None and len(binary_message) >= message_length * 8:
+                break
+        
+        if message_type is None or message_length is None:
+            raise ValueError("Could not extract message metadata")
+        
+        message_bytes = [int(binary_message[i:i+8], 2) for i in range(0, len(binary_message), 8)]
+        
+        if message_type == 0:
+            message = bytes(message_bytes).decode('utf-8')
+        elif message_type == 1:
+            message = bytes(message_bytes)
+        else:
+            raise ValueError("Invalid message type")
+        
+        if output_path:
+            if message_type == 0:
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    f.write(message)
             else:
-                height, width = stego_array.shape
-                for y in range(height):
-                    for x in range(width):
-                        pixel = stego_array[y, x]
-                        bit = (pixel >> round_num) & 1
-                        extracted_bits.append(str(bit))
-
-        binary_message = ''.join(extracted_bits)
-        return self.binary_to_message(binary_message, output_path)
+                with open(output_path, 'wb') as f:
+                    f.write(message)
+        
+        return message
 
     @staticmethod
     def calculate_psnr(original_path, stego_path):
