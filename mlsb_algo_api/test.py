@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import os
 
-def embed_and_analyze(cover_image, message_file, rounds=3):
+def embed_and_analyze(cover_image, message_file, rounds=3, is_encrypted=True):
     base_name = os.path.splitext(cover_image)[0]
     stego_image = f"{base_name}_stego{os.path.splitext(cover_image)[1]}"
     
@@ -22,7 +22,7 @@ def embed_and_analyze(cover_image, message_file, rounds=3):
         print(f"Warning: Message size ({message_size} bytes) exceeds maximum capacity ({max_capacity} bytes)")
     
     # Embed and get key, iv
-    stego_image, key, iv = MultiLayerLSB.embed_message(cover_image, stego_image, message_file, rounds=rounds)
+    stego_image, key, iv = MultiLayerLSB.embed_message(cover_image, stego_image, message_file, rounds=rounds, is_encrypted=is_encrypted)
     print("Message embedded successfully.")
 
     psnr = MultiLayerLSB.calculate_psnr(cover_image, stego_image)
@@ -33,8 +33,8 @@ def embed_and_analyze(cover_image, message_file, rounds=3):
 
     return stego_image, message_size, max_capacity, psnr, bpp, key, iv
 
-def extract_message(stego_image, output_extracted_file, rounds=3, key=None, iv=None):
-    extracted = MultiLayerLSB.extract_message(stego_image, output_path=output_extracted_file, rounds=rounds, key=key, iv=iv)
+def extract_message(stego_image, output_extracted_file, rounds=3, key=None, iv=None, is_encrypted=True):
+    extracted = MultiLayerLSB.extract_message(stego_image, output_path=output_extracted_file, rounds=rounds, key=key, iv=iv, is_encrypted=is_encrypted)
     
     # Get extracted message size
     with open(output_extracted_file, 'rb') as f:
@@ -65,9 +65,9 @@ def test_all_types():
     # Text
     print("\n--- Testing TEXT message ---")
     text_file = "tests/text_message/lsbpayload.txt"
-    stego_text, msg_size, max_cap, psnr, bpp, key, iv = embed_and_analyze(cover_image, text_file, rounds)
+    stego_text, msg_size, max_cap, psnr, bpp, key, iv = embed_and_analyze(cover_image, text_file, rounds, is_encrypted=False)
     extracted_text = "tests/output/lsbpayload_extracted.txt"
-    extracted_size = extract_message(stego_text, extracted_text, rounds, key, iv)
+    extracted_size = extract_message(stego_text, extracted_text, rounds, is_encrypted=False)
     metrics = [
         f"Message size: {msg_size} bytes\nMax capacity: {max_cap} bytes",
         f"PSNR: {psnr:.2f} dB\nBPP: {bpp:.4f}\nExtracted size: {extracted_size} bytes"

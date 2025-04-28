@@ -58,26 +58,28 @@ class MultiLayerLSB:
             Returns:
                 bytes: Decrypted data.
 
-        embed_message(cover_image_path, stego_image_path, file_path, rounds=1, termination_sequence=b'<<END_OF_MESSAGE>>'):
-            Embeds an encrypted message into an image using multi-layer LSB.
+        embed_message(cover_image_path, stego_image_path, file_path, rounds=1, termination_sequence=b'<<END_OF_MESSAGE>>', is_encrypted=True):
+            Embeds a message into an image using multi-layer LSB, with optional AES encryption.
             Args:
                 cover_image_path (str): Path to the cover image.
                 stego_image_path (str): Path to save the stego image.
                 file_path (str): Path to the message file.
                 rounds (int, optional): Number of LSB layers to use (1-4). Default is 1.
                 termination_sequence (bytes, optional): Sequence to mark end of message. Default is b'<<END_OF_MESSAGE>>'.
+                is_encrypted (bool, optional): Whether to encrypt the message with AES. Default is True.
             Returns:
-                tuple: (stego_image_path (str), key (bytes), iv (bytes))
+                tuple: (stego_image_path (str), key (bytes or None), iv (bytes or None))
 
-        extract_message(stego_image_path, output_path=None, rounds=1, key=None, iv=None, termination_sequence=b'<<END_OF_MESSAGE>>'):
-            Extracts and decrypts a message from a stego image.
+        extract_message(stego_image_path, output_path=None, rounds=1, key=None, iv=None, termination_sequence=b'<<END_OF_MESSAGE>>', is_encrypted=True):
+            Extracts a message from a stego image, with optional AES decryption.
             Args:
                 stego_image_path (str): Path to the stego image.
                 output_path (str, optional): Path to save the extracted message.
                 rounds (int, optional): Number of LSB layers used. Default is 1.
-                key (bytes): AES key for decryption.
-                iv (bytes): Initialization vector for decryption.
+                key (bytes): AES key for decryption (if encrypted).
+                iv (bytes): Initialization vector for decryption (if encrypted).
                 termination_sequence (bytes, optional): Sequence marking end of message. Default is b'<<END_OF_MESSAGE>>'.
+                is_encrypted (bool, optional): Whether the embedded message is encrypted. Default is True.
             Returns:
                 bytes: The original extracted message.
 
@@ -204,7 +206,19 @@ class MultiLayerLSB:
         return data
 
     @staticmethod
-    def embed_message(cover_image_path, stego_image_path, file_path, rounds=1, termination_sequence=b'<<END_OF_MESSAGE>>'):
+    def embed_message(cover_image_path, stego_image_path, file_path, rounds=1, termination_sequence=b'<<END_OF_MESSAGE>>', is_encrypted=True):
+        """
+        Embeds a message into an image using multi-layer LSB, with optional AES encryption.
+        Args:
+            cover_image_path (str): Path to the cover image.
+            stego_image_path (str): Path to save the stego image.
+            file_path (str): Path to the message file.
+            rounds (int, optional): Number of LSB layers to use (1-4). Default is 1.
+            termination_sequence (bytes, optional): Sequence to mark end of message. Default is b'<<END_OF_MESSAGE>>'.
+            is_encrypted (bool, optional): Whether to encrypt the message with AES. Default is True.
+        Returns:
+            tuple: (stego_image_path (str), key (bytes or None), iv (bytes or None))
+        """
         if not 1 <= rounds <= 4:
             raise ValueError("Number of rounds must be between 1 and 4")
 
@@ -212,14 +226,21 @@ class MultiLayerLSB:
             message_data = f.read()
         message_with_term = message_data + termination_sequence
 
-        encrypted_data, key, iv = MultiLayerLSB.aes_encrypt(message_with_term)
-
-        # Save encrypted data to a temp file for binary conversion
-        temp_enc_file = "temp_encrypted_payload.bin"
-        with open(temp_enc_file, 'wb') as f:
-            f.write(encrypted_data)
-        binary_message = MultiLayerLSB.message_to_binary(temp_enc_file)
-        os.remove(temp_enc_file)
+        if is_encrypted:
+            encrypted_data, key, iv = MultiLayerLSB.aes_encrypt(message_with_term)
+            temp_enc_file = "temp_encrypted_payload.bin"
+            with open(temp_enc_file, 'wb') as f:
+                f.write(encrypted_data)
+            binary_message = MultiLayerLSB.message_to_binary(temp_enc_file)
+            os.remove(temp_enc_file)
+        else:
+            key = None
+            iv = None
+            temp_plain_file = "temp_plain_payload.bin"
+            with open(temp_plain_file, 'wb') as f:
+                f.write(message_with_term)
+            binary_message = MultiLayerLSB.message_to_binary(temp_plain_file)
+            os.remove(temp_plain_file)
 
         cover = Image.open(cover_image_path)
         is_rgb = cover.mode == 'RGB'
@@ -275,7 +296,20 @@ class MultiLayerLSB:
         return stego_image_path, key, iv
 
     @staticmethod
-    def extract_message(stego_image_path, output_path=None, rounds=1, key=None, iv=None, termination_sequence=b'<<END_OF_MESSAGE>>'):
+    def extract_message(stego_image_path, output_path=None, rounds=1, key=None, iv=None, termination_sequence=b'<<END_OF_MESSAGE>>', is_encrypted=True):
+        """
+        Extracts a message from a stego image, with optional AES decryption.
+        Args:
+            stego_image_path (str): Path to the stego image.
+            output_path (str, optional): Path to save the extracted message.
+            rounds (int, optional): Number of LSB layers used. Default is 1.
+            key (bytes): AES key for decryption (if encrypted).
+            iv (bytes): Initialization vector for decryption (if encrypted).
+            termination_sequence (bytes, optional): Sequence marking end of message. Default is b'<<END_OF_MESSAGE>>'.
+            is_encrypted (bool, optional): Whether the embedded message is encrypted. Default is True.
+        Returns:
+            bytes: The original extracted message.
+        """
         stego_image = Image.open(stego_image_path)
         stego_array = np.array(stego_image)
         is_rgb = stego_image.mode == 'RGB'
@@ -311,14 +345,19 @@ class MultiLayerLSB:
         else:
             raise ValueError("Invalid message type")
 
-        # Decrypt the message
-        if key is None or iv is None:
-            raise ValueError("AES key and IV must be provided for decryption.")
-        decrypted_data = MultiLayerLSB.aes_decrypt(message, key, iv)
-        idx = decrypted_data.find(termination_sequence)
-        if idx == -1:
-            raise ValueError("Termination sequence not found in decrypted data!")
-        original_message = decrypted_data[:idx]
+        if is_encrypted:
+            if key is None or iv is None:
+                raise ValueError("AES key and IV must be provided for decryption.")
+            decrypted_data = MultiLayerLSB.aes_decrypt(message, key, iv)
+            idx = decrypted_data.find(termination_sequence)
+            if idx == -1:
+                raise ValueError("Termination sequence not found in decrypted data!")
+            original_message = decrypted_data[:idx]
+        else:
+            if isinstance(message, str):
+                original_message = message.encode('utf-8')
+            else:
+                original_message = message
 
         if output_path:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
