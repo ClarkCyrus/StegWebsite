@@ -30,7 +30,7 @@ def embed_and_analyze(cover_image, message_file, rounds=3):
     print(f"PSNR: {psnr:.2f} dB")
     print(f"Bits per pixel (BPP): {bpp:.4f}")
 
-    return stego_image
+    return stego_image, message_size, max_capacity, psnr, bpp
 
 def extract_message(stego_image, output_extracted_file, rounds=3):
     extracted = MultiLayerLSB.extract_message(stego_image, rounds=rounds, output_path=output_extracted_file)
@@ -40,33 +40,63 @@ def extract_message(stego_image, output_extracted_file, rounds=3):
         extracted_size = len(f.read())
     print(f"Extracted message size: {extracted_size} bytes")
     
-    return output_extracted_file
+    return extracted_size
 
-def display_images(original_path, stego_path):
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
-    ax1.imshow(Image.open(original_path))
-    ax1.set_title('Original Image')
-    ax1.axis('off')
-    ax2.imshow(Image.open(stego_path))
-    ax2.set_title('Stego Image')
-    ax2.axis('off')
+def display_images_with_metrics(image_paths, titles, metrics):
+    n = len(image_paths)
+    fig, axes = plt.subplots(1, n, figsize=(6*n, 7))
+    if n == 1:
+        axes = [axes]
+    for i, (ax, img_path) in enumerate(zip(axes, image_paths)):
+        ax.imshow(Image.open(img_path))
+        ax.set_title(titles[i], fontsize=16)
+        ax.axis('off')
+        # Add metrics as text below the image
+        if metrics[i]:
+            ax.text(0.5, -0.15, metrics[i], fontsize=12, ha='center', va='top', transform=ax.transAxes, wrap=True)
+    plt.tight_layout()
     plt.show()
 
-
-def embed():
+def test_all_types():
     cover_image = "tests/cover_image/peppers.tiff"
-    message_file = "tests/text_message/payload1.txt"
-    
-    return embed_and_analyze(cover_image, message_file)
+    rounds = 3
 
-def extract():
-    
-    return extract_message("tests/cover_image/peppers_stego.tiff", "tests/output/payload1_extracted.txt")
+    # Text
+    print("\n--- Testing TEXT message ---")
+    text_file = "tests/text_message/lsbpayload.txt"
+    stego_text, msg_size, max_cap, psnr, bpp = embed_and_analyze(cover_image, text_file, rounds)
+    extracted_text = "tests/output/lsbpayload_extracted.txt"
+    extracted_size = extract_message(stego_text, extracted_text, rounds)
+    metrics = [
+        f"Message size: {msg_size} bytes\nMax capacity: {max_cap} bytes",
+        f"PSNR: {psnr:.2f} dB\nBPP: {bpp:.4f}\nExtracted size: {extracted_size} bytes"
+    ]
+    display_images_with_metrics([cover_image, stego_text], ["Original", "Stego (Text)"], metrics)
 
+    # Audio
+    print("\n--- Testing AUDIO message ---")
+    audio_file = "tests/audio_message/notif.mp3"
+    stego_audio, msg_size, max_cap, psnr, bpp = embed_and_analyze(cover_image, audio_file, rounds)
+    extracted_audio = "tests/output/notif_extracted.mp3"
+    extracted_size = extract_message(stego_audio, extracted_audio, rounds)
+    metrics = [
+        f"Message size: {msg_size} bytes\nMax capacity: {max_cap} bytes",
+        f"PSNR: {psnr:.2f} dB\nBPP: {bpp:.4f}\nExtracted size: {extracted_size} bytes"
+    ]
+    display_images_with_metrics([cover_image, stego_audio], ["Original", "Stego (Audio)"], metrics)
+
+    # Image
+    print("\n--- Testing IMAGE message ---")
+    image_file = "tests/image_message/lena.png"
+    stego_image, msg_size, max_cap, psnr, bpp = embed_and_analyze(cover_image, image_file, rounds)
+    extracted_image = "tests/output/lena_extracted.png"
+    extracted_size = extract_message(stego_image, extracted_image, rounds)
+    metrics = [
+        f"Message size: {msg_size} bytes\nMax capacity: {max_cap} bytes",
+        f"PSNR: {psnr:.2f} dB\nBPP: {bpp:.4f}\nExtracted size: {extracted_size} bytes",
+        f"Extracted image size: {extracted_size} bytes"
+    ]
+    display_images_with_metrics([cover_image, stego_image, extracted_image], ["Original", "Stego (Image)", "Extracted Image"], metrics)
 
 if __name__ == "__main__":
-
-    embed()
-
-    extract()
-    #display_images(cover_image, stego_image)
+    test_all_types()
