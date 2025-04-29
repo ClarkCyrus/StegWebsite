@@ -112,7 +112,8 @@ def get_steg_rooms():
             "message_file": room.message_file,
             "cover_image": room.cover_image,
             "stego_image": room.stego_image,
-            "metrics": room.metrics
+            "metrics": room.metrics,
+            "is_key_stored": room.is_key_stored
         }
         for room in stego_rooms
     ]

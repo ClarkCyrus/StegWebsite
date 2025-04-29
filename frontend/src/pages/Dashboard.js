@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import axios from 'axios';
+import { BsLockFill, BsLock } from 'react-icons/bs';
 
 function Dashboard() {
   const [rooms, setRooms] = useState([]);
@@ -54,7 +55,23 @@ function Dashboard() {
                   <span>*Image</span>
                 )}
               </div>
-              <Card.Footer className="text-center" style={{ fontWeight: 'bold', fontSize: '1rem' }}>{room.name || 'blahblah'}</Card.Footer>
+              <Card.Footer className="d-flex justify-content-between align-items-center" style={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{room.name || 'blahblah'}</span>
+                <span className="d-flex align-items-center" style={{ gap: 8 }}>
+                  {!room.is_encrypted ? (
+                    <span style={{ display: 'inline-block', width: 16, height: 16, borderRadius: '50%', background: '#28a745' }}></span>
+                  ) : (
+                    <>
+                      <span style={{ display: 'inline-block', width: 16, height: 16, borderRadius: '50%', background: '#dc3545' }}></span>
+                      {room.is_key_stored ? (
+                        <BsLockFill style={{ color: '#dc3545', marginLeft: 4 }} title="Key stored on website" />
+                      ) : (
+                        <BsLock style={{ color: '#dc3545', marginLeft: 4 }} title="Key stored locally only" />
+                      )}
+                    </>
+                  )}
+                </span>
+              </Card.Footer>
             </Card>
           </Col>
         ))}
