@@ -15,6 +15,7 @@ function CreateStegoRoom() {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(null);
+  const [newRoomId, setNewRoomId] = useState(null);
   const navigate = useNavigate();
 
   const handleCoverChange = (e) => {
@@ -76,6 +77,7 @@ function CreateStegoRoom() {
         stego_image: res.data.room.stego_image,
         metrics: res.data.room.metrics
       });
+      setNewRoomId(res.data.room.id);
       setShowModal(true);
     } catch (err) {
       setError('Failed to create stego room');
@@ -105,6 +107,16 @@ function CreateStegoRoom() {
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+  };
+
+  const handleGoToRoom = () => {
+    if (newRoomId) {
+      navigate(`/room/${newRoomId}`);
+    }
   };
 
   return (
@@ -172,7 +184,7 @@ function CreateStegoRoom() {
           </Col>
         </Row>
       </Form>
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered>
+      <Modal show={showModal} onHide={handleModalClose} size="lg" centered>
         <Modal.Header closeButton>
           <Modal.Title>Stego Room Created</Modal.Title>
         </Modal.Header>
@@ -186,6 +198,11 @@ function CreateStegoRoom() {
                   <Button className="mb-3 w-100" variant="info" onClick={() => handleTextDownload(modalData?.iv, 'encryption_iv.txt')}>Download encryption IV</Button>
                   {!storeKey && <Alert variant="warning">You must download the encryption key and IV. They will not be stored in the database.</Alert>}
                 </>
+              )}
+              {newRoomId && (
+                <Button className="mt-2 w-100" variant="primary" onClick={handleGoToRoom}>
+                  Go to Room
+                </Button>
               )}
             </Col>
             <Col md={8}>
