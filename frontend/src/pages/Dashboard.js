@@ -59,7 +59,17 @@ function Dashboard() {
           </Col>
         ))}
       </Row>
-      <div className="d-flex justify-content-center gap-4">
+      <div style={{
+        position: 'fixed',
+        left: '50%',
+        bottom: '32px',
+        transform: 'translateX(-50%)',
+        zIndex: 1000,
+        display: 'flex',
+        gap: '32px',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
         <Button
           variant="outline-primary"
           style={{ borderRadius: '50%', width: '100px', height: '100px', fontSize: '1.1rem' }}
