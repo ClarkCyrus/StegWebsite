@@ -44,8 +44,6 @@ class StegoRoom(db.Model):
     metrics = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-
-
 # FOR TESTING FOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTING
 class MLSBDemo(db.Model):
     __tablename__ = 'mlsb_demo'
@@ -199,7 +197,48 @@ def create_stego_room():
         db.session.rollback()
         return jsonify({"error": "Failed to create stego room."}), 500
 
+@app.route('/api/stegorooms/<int:room_id>', methods=['GET'])
+def get_stegoroom(room_id):
+    # Fetch the StegoRoom entry from the database (404 if not found)
+    room = StegoRoom.query.get_or_404(room_id)
 
+    # Construct a detailed response dictionary.
+    room_info = {
+        "id": room.id,
+        "name": room.name,
+        "is_encrypted": room.is_encrypted,
+        "key": room.key,
+        "message": room.message,
+        "image": room.image,
+        "stegoed_image": room.stegoed_image,
+        "metrics": room.metrics,
+        "user_id": room.user_id,
+        # If needed, include user details via the relationship.
+        "user": {
+            "id": room.user.id,
+            "email": room.user.email
+        } if room.user else None
+    }
+
+    # Return both a human-readable text block and the JSON data.
+    response_text = (
+        f"StegoRoom (ID: {room.id})\n"
+        f"Name: {room.name}\n"
+        f"Encrypted: {'Yes' if room.is_encrypted else 'No'}\n"
+        f"Encryption Key: {room.key}\n"
+        f"Message: {room.message}\n"
+        f"Image Info: {room.image}\n"
+        f"Stegoed Image: {room.stegoed_image}\n"
+        f"Metrics: {room.metrics}\n"
+        f"Associated User ID: {room.user_id}\n"
+        f"User Email: {room.user.email if room.user else 'N/A'}\n"
+    )
+
+    return jsonify({
+        "text": response_text,
+        "room": room_info
+    })
+    
 # FOR TESTING FOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTING
 
 @app.route('/api/mlsb/embed', methods=['POST'])
