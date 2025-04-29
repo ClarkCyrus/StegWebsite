@@ -7,6 +7,7 @@ import CreateStegoRoom from './pages/CreateStegoRoom.js';
 import StegoRoom from './pages/StegoRoom.js';
 import Login from './pages/Login.js';
 import Signup from './pages/Signup.js';
+import QuickStego from './pages/QuickStego.js';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
             <Route path="/create" element={<CreateStegoRoom />} />
             <Route path="/room/:roomId" element={<StegoRoom />} />
             <Route path="/mlsb-demo" element={<MLSBDemo />} />
+            <Route path="/quick-stego" element={<QuickStego />} />
           </Routes>
         </Router>
     </div>

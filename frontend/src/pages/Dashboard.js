@@ -45,13 +45,20 @@ function Dashboard() {
           </Col>
         ))}
       </Row>
-      <div className="d-flex justify-content-center">
+      <div className="d-flex justify-content-center gap-4">
         <Button
           variant="outline-primary"
           style={{ borderRadius: '50%', width: '100px', height: '100px', fontSize: '1.1rem' }}
           onClick={() => navigate('/create')}
         >
           Create<br />Stego<br />Image
+        </Button>
+        <Button
+          variant="outline-success"
+          style={{ borderRadius: '50%', width: '100px', height: '100px', fontSize: '1.1rem' }}
+          onClick={() => navigate('/quick-stego')}
+        >
+          Quick<br />Stego
         </Button>
       </div>
     </Container>
