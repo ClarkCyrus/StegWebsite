@@ -13,6 +13,9 @@ function StegoRoom() {
   const [messagePreview, setMessagePreview] = useState(null);
   const [error, setError] = useState(null);
 
+  //SetLoading
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     axios.get(`http://localhost:5000/api/stegorooms/${roomId}`, { withCredentials: true })
       .then(res => {
@@ -36,8 +39,10 @@ function StegoRoom() {
     setMessagePreview(null);
     if (!stegoUpload) {
       setError('Please upload a stego image');
+      setLoading(false); 
       return;
     }
+    setLoading(true);
     const formData = new FormData();
     formData.append('stego_image', stegoUpload);
     formData.append('is_encrypted', room.is_encrypted);
@@ -83,6 +88,8 @@ function StegoRoom() {
       }
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -248,6 +255,37 @@ function StegoRoom() {
               )}
             </Col>
           </Row>
+        </div>
+      )}
+      {/* Loading overlay: always rendered on top but only visible when loading === true */}
+       {loading && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.3)', // A slightly transparent overlay, so underlying buttons are still visible
+            zIndex: 9999
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.8)', // semi-transparent white container
+              padding: '20px',
+              borderRadius: '8px',
+              textAlign: 'center'
+            }}
+          >
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <p style={{ margin: 0 }}>Extracting message, please wait...</p>
+          </div>
         </div>
       )}
     </Container>
