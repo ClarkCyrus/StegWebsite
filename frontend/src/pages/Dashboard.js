@@ -15,11 +15,12 @@ function Dashboard() {
 
   const getCoverImageSrc = (room) => {
     if (!room.cover_image) return null;
-    if (room.cover_image.startsWith('data:image')) return room.cover_image;
-    if (room.cover_image.match(/^[A-Za-z0-9+/=]+$/)) return `data:image/png;base64,${room.cover_image}`;
-    if (room.cover_image.startsWith('/')) return `http://localhost:5000${room.cover_image}`;
-    if (room.cover_image.startsWith('uploads/')) return `http://localhost:5000/${room.cover_image}`;
-    return null;
+    const normalized = room.cover_image.replace(/\\/g, '/');
+    if (normalized.startsWith('data:image')) return normalized;
+    if (normalized.match(/^[A-Za-z0-9+/=]+$/)) return `data:image/png;base64,${normalized}`;
+    if (normalized.startsWith('uploads/')) return `http://localhost:5000/${normalized}`;
+    if (!normalized.startsWith('http') && !normalized.startsWith('/uploads/')) return `http://localhost:5000/uploads/${normalized}`;
+    return normalized;
   };
 
   return (
