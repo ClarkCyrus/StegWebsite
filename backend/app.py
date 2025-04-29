@@ -284,9 +284,24 @@ def extract_message():
 
     try:
         stego_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(stego_image.filename))
-        output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'extracted_message')
-
         stego_image.save(stego_path)
+
+        # Get media type from the stego image's embedded metadata
+        media_type = MultiLayerLSB.get_media_type(stego_path)
+        
+        # Map media types to file extensions
+        extension_map = {
+            'text': '.txt',
+            'image': '.png',
+            'audio': '.mp3'
+        }
+        ext = extension_map.get(media_type, '.bin')  # default to .bin if unknown type
+        
+        # Create output path with correct extension
+        output_path = os.path.join(app.config['UPLOAD_FOLDER'], f"extracted_message{ext}")
+
+        print(output_path)
+        print(media_type)
 
         # Convert hex strings to bytes if encryption is enabled
         key_bytes = bytes.fromhex(key) if is_encrypted else None
@@ -304,7 +319,8 @@ def extract_message():
         return jsonify({
             'success': True,
             'message': message if isinstance(message, str) else 'Binary data extracted successfully',
-            'output_path': output_path
+            'output_path': output_path,
+            'media_type': media_type
         })
 
     except Exception as e:
@@ -336,7 +352,6 @@ def calculate_capacity():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# FOR TESTING FOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTING
 
 @app.route('/api/mlsb/download', methods=['GET'])
 def download_file():
@@ -348,6 +363,8 @@ def download_file():
         return send_file(file_path, as_attachment=True)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+# FOR TESTING FOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTING
 
 if __name__ == '__main__':     
     with app.app_context():

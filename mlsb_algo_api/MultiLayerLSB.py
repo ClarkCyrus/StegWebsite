@@ -107,6 +107,13 @@ class MultiLayerLSB:
                 rounds (int, optional): Number of LSB layers. Default is 1.
             Returns:
                 float: Bits per pixel value.
+
+        get_media_type(stego_image_path):
+            Extracts the media type from the stego image's metadata.
+            Args:
+                stego_image_path (str): Path to the stego image.
+            Returns:
+                str: The media type ('text', 'image', or 'audio').
     """
     def __init__(self, cover_image_path, stego_image_path):
         self.cover_image_path = cover_image_path
@@ -418,6 +425,29 @@ class MultiLayerLSB:
         # Calculate BPP (total message bits / total pixels)
         bpp = len(binary_message) / total_pixels
         return bpp
+
+    @staticmethod
+    def get_media_type(stego_image_path):
+        """
+        Extracts the media type from the stego image's metadata.
+        Args:
+            stego_image_path (str): Path to the stego image.
+        Returns:
+            str: The media type ('text', 'image', or 'audio').
+        """
+        stego_image = Image.open(stego_image_path)
+        stego_array = np.array(stego_image)
+        is_rgb = stego_image.mode == 'RGB'
+        if not is_rgb:
+            stego_array = stego_array[..., np.newaxis]
+
+        # Extract the first 3 bits which contain the media type
+        message_type_bits = ((stego_array >> 0) & 1).flatten()[:3]
+        message_type_binary = ''.join(str(b) for b in message_type_bits)
+        
+        # Map binary to media type
+        type_map = {'001': 'text', '010': 'audio', '011': 'image'}
+        return type_map.get(message_type_binary, 'text')  # default to text if unknown type
 
 
 

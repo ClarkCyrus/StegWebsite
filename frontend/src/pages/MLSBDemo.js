@@ -7,6 +7,7 @@ function MLSBDemo() {
     const [messageFile, setMessageFile] = useState(null);
     const [stegoImage, setStegoImage] = useState(null);
     const [extractedMessage, setExtractedMessage] = useState(null);
+    const [extractedMediaType, setExtractedMediaType] = useState(null);
     const [embedEncrypted, setEmbedEncrypted] = useState(true);
     const [extractEncrypted, setExtractEncrypted] = useState(true);
     const [embedKey, setEmbedKey] = useState('');
@@ -93,45 +94,51 @@ function MLSBDemo() {
         e.preventDefault();
         setLoading(true);
         setError(null);
-        setSuccess(null);
+        setExtractedMessage(null);
+        setExtractedMediaType(null);
 
         const formData = new FormData();
         formData.append('stego_image', stegoImage);
         formData.append('is_encrypted', extractEncrypted);
-        formData.append('message_type', messageType);
         if (extractEncrypted) {
             formData.append('key', extractKey);
             formData.append('iv', extractIV);
         }
 
         try {
-            const response = await axios.post('http://localhost:5000/api/mlsb/extract', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
+            const response = await fetch('http://localhost:5000/api/mlsb/extract', {
+                method: 'POST',
+                body: formData
             });
-            
-            if (response.data.message_type === 'text') {
-                const element = document.createElement('a');
-                const file = new Blob([response.data.message], { type: 'text/plain' });
-                element.href = URL.createObjectURL(file);
-                element.download = 'extracted_message.txt';
-                document.body.appendChild(element);
-                element.click();
-                document.body.removeChild(element);
-            } else {
-                const downloadUrl = `http://localhost:5000/api/mlsb/download?path=${encodeURIComponent(response.data.output_path)}`;
-                const element = document.createElement('a');
-                element.href = downloadUrl;
-                element.download = `extracted_message.${response.data.message_type === 'audio' ? 'mp3' : 'png'}`;
-                document.body.appendChild(element);
-                element.click();
-                document.body.removeChild(element);
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to extract message');
             }
 
-            setSuccess('Message extracted successfully!');
+            setExtractedMessage(data.message);
+            setExtractedMediaType(data.media_type);
+
+            // Create download link with correct extension
+            const extensionMap = {
+                'text': '.txt',
+                'image': '.png',
+                'audio': '.mp3'
+            };
+            const ext = extensionMap[data.media_type] || '.bin';
+            const filename = `extracted_message${ext}`;
+            
+            // Download the file
+            const downloadUrl = `http://localhost:5000/api/mlsb/download?path=${encodeURIComponent(data.output_path)}`;
+            const element = document.createElement('a');
+            element.href = downloadUrl;
+            element.download = filename;
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+
         } catch (err) {
-            setError(err.response?.data?.error || 'An error occurred');
+            setError(err.message);
         } finally {
             setLoading(false);
         }
