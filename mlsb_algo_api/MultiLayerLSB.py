@@ -137,15 +137,14 @@ class MultiLayerLSB:
     @staticmethod
     def message_to_binary(file_path):
         """Convert a file (text, audio, image, or TIFF) to binary with metadata."""
-        # Infer message type from file extension
         _, file_extension = os.path.splitext(file_path)
         file_extension = file_extension.lower()
 
         if file_extension == '.txt':
             message_type = 'text'
-            with open(file_path, 'r') as f:
+            with open(file_path, 'rb') as f:
                 message = f.read()
-            binary_message = ''.join(format(ord(char), '08b') for char in message)
+            binary_message = ''.join(format(b, '08b') for b in message)
         elif file_extension in ['.mp3', '.wav']:
             message_type = 'audio'
             binary_message = MultiLayerLSB.file_to_binary(file_path)
@@ -153,11 +152,9 @@ class MultiLayerLSB:
             message_type = 'image'
             binary_message = MultiLayerLSB.file_to_binary(file_path)
         else:
-            # Default: treat as binary (audio type is fine for generic binary)
             message_type = 'audio'
             binary_message = MultiLayerLSB.file_to_binary(file_path)
 
-        # Add metadata: message type (3 bits) + message length (32 bits)
         type_map = {'text': '001', 'audio': '010', 'image': '011'}
         message_type_binary = type_map[message_type]
         message_length_binary = format(len(binary_message), '032b')
