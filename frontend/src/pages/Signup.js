@@ -10,10 +10,25 @@ function Signup() {
   const [success, setSuccess] = useState(null);
   const navigate = useNavigate();
 
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+
+    // Client-side regex validation for email
+    if (!emailRegex.test(email)) {
+      setError('Invalid email format.');
+      return;
+    }
+
+    if (!passwordRegex.test(password)) {
+      setError('Password must be 8-20 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.');
+      return;
+    }
+        
     try {
       await axios.post('http://localhost:5000/api/signup', { email, password });
       setSuccess('Account created! You can now log in.');
