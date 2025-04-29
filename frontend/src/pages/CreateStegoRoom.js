@@ -168,8 +168,23 @@ function CreateStegoRoom() {
                 </Col>
               </Row>
               <Card style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span>*Metrics</span>
-                {modalData?.metrics && <div style={{ fontSize: 12 }}>{JSON.stringify(modalData.metrics)}</div>}
+                {modalData?.metrics && (
+                  <div style={{ fontSize: 14, marginTop: 8 }}>
+                    {(() => {
+                      let metricsObj = modalData.metrics;
+                      if (typeof metricsObj === 'string') {
+                        try { metricsObj = JSON.parse(metricsObj); } catch { metricsObj = {}; }
+                      }
+                      return (
+                        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                          {Object.entries(metricsObj).map(([k, v]) => (
+                            <li key={k}><b>{k}:</b> {typeof v === 'number' ? v.toFixed(2) : v}</li>
+                          ))}
+                        </ul>
+                      );
+                    })()}
+                  </div>
+                )}
               </Card>
             </Col>
           </Row>
