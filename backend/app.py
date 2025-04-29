@@ -217,12 +217,12 @@ def get_stegoroom(room_id):
         "name": room.name,
         "is_encrypted": room.is_encrypted,
         "key": room.key,
-        "message": room.message,
-        "image": room.image,
-        "stegoed_image": room.stegoed_image,
+        "iv": room.iv,
+        "message_file": room.message_file,
+        "cover_image": room.cover_image,
+        "stego_image": room.stego_image,
         "metrics": room.metrics,
         "user_id": room.user_id,
-        # If needed, include user details via the relationship.
         "user": {
             "id": room.user.id,
             "email": room.user.email
@@ -235,9 +235,10 @@ def get_stegoroom(room_id):
         f"Name: {room.name}\n"
         f"Encrypted: {'Yes' if room.is_encrypted else 'No'}\n"
         f"Encryption Key: {room.key}\n"
-        f"Message: {room.message}\n"
-        f"Image Info: {room.image}\n"
-        f"Stegoed Image: {room.stegoed_image}\n"
+        f"Encryption IV: {room.iv}\n"
+        f"Message File: {room.message_file}\n"
+        f"Cover Image: {room.cover_image}\n"
+        f"Stego Image: {room.stego_image}\n"
         f"Metrics: {room.metrics}\n"
         f"Associated User ID: {room.user_id}\n"
         f"User Email: {room.user.email if room.user else 'N/A'}\n"

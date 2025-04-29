@@ -13,6 +13,15 @@ function Dashboard() {
       .catch(() => setRooms([]));
   }, []);
 
+  const getCoverImageSrc = (room) => {
+    if (!room.cover_image) return null;
+    if (room.cover_image.startsWith('data:image')) return room.cover_image;
+    if (room.cover_image.match(/^[A-Za-z0-9+/=]+$/)) return `data:image/png;base64,${room.cover_image}`;
+    if (room.cover_image.startsWith('/')) return `http://localhost:5000${room.cover_image}`;
+    if (room.cover_image.startsWith('uploads/')) return `http://localhost:5000/${room.cover_image}`;
+    return null;
+  };
+
   return (
     <Container className="mt-4" style={{ maxWidth: '1200px' }}>
       <h2 className="mb-4">DASHBOARD</h2>
@@ -23,8 +32,12 @@ function Dashboard() {
               style={{ width: '220px', height: '220px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', cursor: 'pointer' }}
               onClick={() => navigate(`/room/${room.id}`)}
             >
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span>*Image</span>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                {getCoverImageSrc(room) ? (
+                  <img src={getCoverImageSrc(room)} alt="cover" style={{ maxWidth: '100%', maxHeight: '120px', objectFit: 'contain' }} />
+                ) : (
+                  <span>*Image</span>
+                )}
               </div>
               <Card.Footer className="text-center" style={{ fontWeight: 'bold', fontSize: '1rem' }}>{room.name || 'blahblah'}</Card.Footer>
             </Card>
