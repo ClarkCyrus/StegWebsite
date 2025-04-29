@@ -109,7 +109,12 @@ function CreateStegoRoom() {
 
   return (
     <Container className="mt-4" style={{ maxWidth: '900px' }}>
-      <h2 className="mb-4">CREATE STEGO ROOM</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2>CREATE STEGO ROOM</h2>
+        <Button variant="outline-secondary" onClick={() => navigate('/dashboard')}>
+          Back to Dashboard
+        </Button>
+      </div>
       {error && <Alert variant="danger">{error}</Alert>}
       <Form onSubmit={handleSubmit}>
         <Row>
