@@ -308,7 +308,7 @@ def extract_message():
         iv_bytes = bytes.fromhex(iv) if is_encrypted else None
 
         # Let MultiLayerLSB handle the extraction and file saving
-        message = MultiLayerLSB.extract_message(
+        message, media_type = MultiLayerLSB.extract_message(
             stego_path, 
             output_path=output_path, 
             is_encrypted=is_encrypted, 

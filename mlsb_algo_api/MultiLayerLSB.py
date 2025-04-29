@@ -81,7 +81,7 @@ class MultiLayerLSB:
                 termination_sequence (bytes, optional): Sequence marking end of message. Default is b'<<END_OF_MESSAGE>>'.
                 is_encrypted (bool, optional): Whether the embedded message is encrypted. Default is True.
             Returns:
-                bytes: The original extracted message.
+                tuple: (message (bytes), media_type (str))
 
         calculate_psnr(original_path, stego_path):
             Calculates the PSNR between the original and stego images.
@@ -233,9 +233,12 @@ class MultiLayerLSB:
             message_data = f.read()
         message_with_term = message_data + termination_sequence
 
+        # Get the original file extension
+        _, original_ext = os.path.splitext(file_path)
+
         if is_encrypted:
             encrypted_data, key, iv = MultiLayerLSB.aes_encrypt(message_with_term)
-            temp_enc_file = "temp_encrypted_payload.bin"
+            temp_enc_file = f"temp_encrypted_payload{original_ext}"
             with open(temp_enc_file, 'wb') as f:
                 f.write(encrypted_data)
             binary_message = MultiLayerLSB.message_to_binary(temp_enc_file)
@@ -243,7 +246,7 @@ class MultiLayerLSB:
         else:
             key = None
             iv = None
-            temp_plain_file = "temp_plain_payload.bin"
+            temp_plain_file = f"temp_plain_payload{original_ext}"
             with open(temp_plain_file, 'wb') as f:
                 f.write(message_with_term)
             binary_message = MultiLayerLSB.message_to_binary(temp_plain_file)
@@ -315,7 +318,7 @@ class MultiLayerLSB:
             termination_sequence (bytes, optional): Sequence marking end of message. Default is b'<<END_OF_MESSAGE>>'.
             is_encrypted (bool, optional): Whether the embedded message is encrypted. Default is True.
         Returns:
-            bytes: The original extracted message.
+            tuple: (message (bytes), media_type (str))
         """
         stego_image = Image.open(stego_image_path)
         stego_array = np.array(stego_image)
@@ -370,7 +373,7 @@ class MultiLayerLSB:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             with open(output_path, 'wb') as f:
                 f.write(original_message)
-        return original_message
+        return original_message, message_type
 
     @staticmethod
     def calculate_psnr(original_path, stego_path):

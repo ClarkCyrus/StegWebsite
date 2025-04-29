@@ -119,7 +119,7 @@ function MLSBDemo() {
             setExtractedMessage(data.message);
             setExtractedMediaType(data.media_type);
 
-            // Create download link with correct extension
+            // Create download link with correct extension based on media type
             const extensionMap = {
                 'text': '.txt',
                 'image': '.png',
@@ -127,6 +127,8 @@ function MLSBDemo() {
             };
             const ext = extensionMap[data.media_type] || '.bin';
             const filename = `extracted_message${ext}`;
+
+            console.log(filename)
             
             // Download the file
             const downloadUrl = `http://localhost:5000/api/mlsb/download?path=${encodeURIComponent(data.output_path)}`;
