@@ -159,56 +159,61 @@ def create_stego_room():
     cover_image_file.save(cover_path)
     message_file.save(message_path)
 
-    # Embed the message using MultiLayerLSB
-    stego_path, key, iv = MultiLayerLSB.embed_message(
-        cover_path,
-        stego_path,
-        message_path,
-        is_encrypted=is_encrypted
-    )
+    try:
+        # Embed the message using MultiLayerLSB
+        stego_path, key, iv = MultiLayerLSB.embed_message(
+            cover_path,
+            stego_path,
+            message_path,
+            is_encrypted=is_encrypted
+        )
 
-    with open(stego_path, 'rb') as f:
-        stego_image_b64 = base64.b64encode(f.read()).decode('utf-8')
+        with open(stego_path, 'rb') as f:
+            stego_image_b64 = base64.b64encode(f.read()).decode('utf-8')
 
-    metrics = {
-        'psnr': MultiLayerLSB.calculate_psnr(cover_path, stego_path),
-        'bpp': MultiLayerLSB.calculate_bpp(message_path, cover_path),
-        'capacity': MultiLayerLSB.calculate_capacity(cover_path),
-        'message_size': os.path.getsize(message_path)
-    }
-
-    user_id = session["user_id"]
-
-
-    new_room = StegoRoom(
-        name=name,
-        is_encrypted=is_encrypted,
-        key=key.hex() if key else None,
-        iv=iv.hex() if iv else None,
-        message_file=message_path,
-        cover_image=cover_path,
-        stego_image=stego_path,
-        metrics=str(metrics),
-        user_id=user_id,
-        is_key_stored=store_key
-    )
-    db.session.add(new_room)
-    db.session.commit()
-
-    return jsonify({
-        "message": "Stego room created successfully!",
-        "room": {
-            "id": new_room.id,
-            "name": new_room.name,
-            "is_encrypted": new_room.is_encrypted,
-            "key": new_room.key,
-            "iv": new_room.iv,
-            "cover_image": cover_path,
-            "stego_image": stego_image_b64,
-            "metrics": metrics,
-            "user_id": new_room.user_id
+        metrics = {
+            'psnr': MultiLayerLSB.calculate_psnr(cover_path, stego_path),
+            'bpp': MultiLayerLSB.calculate_bpp(message_path, cover_path),
+            'capacity': MultiLayerLSB.calculate_capacity(cover_path),
+            'message_size': os.path.getsize(message_path)
         }
-    }), 200
+
+        user_id = session["user_id"]
+
+
+        new_room = StegoRoom(
+            name=name,
+            is_encrypted=is_encrypted,
+            key=key.hex() if key else None,
+            iv=iv.hex() if iv else None,
+            message_file=message_path,
+            cover_image=cover_path,
+            stego_image=stego_path,
+            metrics=str(metrics),
+            user_id=user_id,
+            is_key_stored=store_key
+        )
+        db.session.add(new_room)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Stego room created successfully!",
+            "room": {
+                "id": new_room.id,
+                "name": new_room.name,
+                "is_encrypted": new_room.is_encrypted,
+                "key": new_room.key,
+                "iv": new_room.iv,
+                "cover_image": cover_path,
+                "stego_image": stego_image_b64,
+                "metrics": metrics,
+                "user_id": new_room.user_id
+            }
+        }), 200
+    except Exception as e:
+            # Optionally log the error here
+            return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/stegorooms/<int:room_id>', methods=['GET'])
 def get_stegoroom(room_id):

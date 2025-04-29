@@ -98,7 +98,7 @@ function CreateStegoRoom() {
       setNewRoomId(res.data.room.id);
       setShowModal(true);
     } catch (err) {
-      setError('Failed to create stego room');
+      setError(err.response?.data?.error || 'Failed to create stego room');
     } finally {
       setLoading(false);
     }
