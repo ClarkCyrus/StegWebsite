@@ -44,6 +44,7 @@ class StegoRoom(db.Model):
     stego_image = db.Column(db.Text, nullable=True)   
     metrics = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    is_key_stored = db.Column(db.Boolean, default=False)
 
 # FOR TESTING FOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTING
 class MLSBDemo(db.Model):
@@ -177,6 +178,7 @@ def create_stego_room():
 
     user_id = session["user_id"]
 
+
     new_room = StegoRoom(
         name=name,
         is_encrypted=is_encrypted,
@@ -186,7 +188,8 @@ def create_stego_room():
         cover_image=cover_path,
         stego_image=stego_path,
         metrics=str(metrics),
-        user_id=user_id
+        user_id=user_id,
+        is_key_stored=store_key
     )
     db.session.add(new_room)
     db.session.commit()
@@ -216,8 +219,6 @@ def get_stegoroom(room_id):
         "id": room.id,
         "name": room.name,
         "is_encrypted": room.is_encrypted,
-        "key": room.key,
-        "iv": room.iv,
         "message_file": room.message_file,
         "cover_image": room.cover_image,
         "stego_image": room.stego_image,
@@ -234,8 +235,6 @@ def get_stegoroom(room_id):
         f"StegoRoom (ID: {room.id})\n"
         f"Name: {room.name}\n"
         f"Encrypted: {'Yes' if room.is_encrypted else 'No'}\n"
-        f"Encryption Key: {room.key}\n"
-        f"Encryption IV: {room.iv}\n"
         f"Message File: {room.message_file}\n"
         f"Cover Image: {room.cover_image}\n"
         f"Stego Image: {room.stego_image}\n"
@@ -243,6 +242,10 @@ def get_stegoroom(room_id):
         f"Associated User ID: {room.user_id}\n"
         f"User Email: {room.user.email if room.user else 'N/A'}\n"
     )
+
+    if room.is_key_stored:
+        room_info['key'] = room.key
+        room_info['iv'] = room.iv
 
     return jsonify({
         "text": response_text,
