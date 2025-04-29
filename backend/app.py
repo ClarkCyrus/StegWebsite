@@ -339,28 +339,18 @@ def extract_message():
         stego_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(stego_image.filename))
         stego_image.save(stego_path)
 
-        # Get media type from the stego image's embedded metadata
         media_type = MultiLayerLSB.get_media_type(stego_path)
-        
-        # Map media types to file extensions
         extension_map = {
             'text': '.txt',
             'image': '.png',
             'audio': '.mp3'
         }
-        ext = extension_map.get(media_type, '.bin')  # default to .bin if unknown type
-        
-        # Create output path with correct extension
+        ext = extension_map.get(media_type, '.bin')
         output_path = os.path.join(app.config['UPLOAD_FOLDER'], f"extracted_message{ext}")
 
-        print(output_path)
-        print(media_type)
-
-        # Convert hex strings to bytes if encryption is enabled
         key_bytes = bytes.fromhex(key) if is_encrypted else None
         iv_bytes = bytes.fromhex(iv) if is_encrypted else None
 
-        # Let MultiLayerLSB handle the extraction and file saving
         message, media_type = MultiLayerLSB.extract_message(
             stego_path, 
             output_path=output_path, 
@@ -369,12 +359,20 @@ def extract_message():
             iv=iv_bytes
         )
 
-        return jsonify({
+        response = {
             'success': True,
-            'message': message if isinstance(message, str) else 'Binary data extracted successfully',
             'output_path': output_path,
             'media_type': media_type
-        })
+        }
+        if media_type == 'text':
+            if isinstance(message, bytes):
+                try:
+                    response['message'] = message.decode('utf-8')
+                except Exception:
+                    response['message'] = ''
+            else:
+                response['message'] = message
+        return jsonify(response)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
