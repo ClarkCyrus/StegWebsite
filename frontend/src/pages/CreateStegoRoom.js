@@ -20,6 +20,15 @@ function CreateStegoRoom() {
 
   const handleCoverChange = (e) => {
     const file = e.target.files[0];
+    const allowedFormats = ['image/png', 'image/tiff', 'image/bmp', 'image/jpeg']
+
+    if (!file || !allowedFormats.includes(file.type)) {
+      setError('Invalid format. Please upload a PNG, TIFF, BMP, or JPEG image.'); 
+      e.target.value = null; 
+      setCoverImage(null);
+      return; 
+    }
+
     setCoverImage(file);
     if (file) {
       const reader = new FileReader();
@@ -32,6 +41,15 @@ function CreateStegoRoom() {
 
   const handleMessageChange = (e) => {
     const file = e.target.files[0];
+    const allowedFormats = ['text/plain', 'audio/mpeg', 'image/*']; // MIME
+
+    if (!allowedFormats.includes(file.type)) {
+      setError('Invalid file format. Please upload a TXT, MP3, or IMG file.'); 
+      e.target.value = null;
+      setMessageFile(null);
+      return;
+    }
+
     setMessageFile(file);
     if (file) {
       const reader = new FileReader();
@@ -156,7 +174,12 @@ function CreateStegoRoom() {
             <Card style={{ height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Form.Group>
                 <Form.Label>*Upload message file here</Form.Label>
-                <Form.Control type="file" onChange={handleMessageChange} required />
+                <Form.Control 
+                  type="file" 
+                  accept=".txt, .mp3, .jpg, .png"
+                  onChange={handleMessageChange} 
+                  required 
+                  />
                 {messagePreview && (
                   <div style={{ marginTop: 8, maxHeight: 120, overflow: 'auto', width: '100%', textAlign: 'center' }}>
                     {messagePreview.type === 'image' && (

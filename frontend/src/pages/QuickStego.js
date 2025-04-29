@@ -30,9 +30,22 @@ function QuickStego() {
     const [extractSuccess, setExtractSuccess] = useState(null);
     const [extractedMessage, setExtractedMessage] = useState(null);
 
+    // setError
+    const [error, setError] = useState(null);
+
     // Embedding handlers
     const handleEmbedImageUpload = (e) => {
         const file = e.target.files[0];
+        const allowedFormats = ['image/png', 'image/tiff', 'image/bmp', 'image/jpeg']
+
+        if (!file || !allowedFormats.includes(file.type)) {
+            setError('Invalid format. Please upload a PNG, TIFF, BMP, or JPEG image.'); // Set error message
+            e.target.value = null; // Clear invalid input
+            setEmbedCoverImage(null); // Clear state
+            return; // Stop further execution
+        }        
+
+        setError(null)
         setEmbedCoverImage(file);
         if (file) {
             const reader = new FileReader();
@@ -47,6 +60,16 @@ function QuickStego() {
 
     const handleEmbedMessageUpload = (e) => {
         const file = e.target.files[0];
+        const allowedFormats = ['text/plain', 'audio/mpeg', 'image/*']; // MIME
+
+        if (!allowedFormats.includes(file.type)) {
+            setError('Invalid file format. Please upload a TXT, MP3, or IMG file.'); 
+            e.target.value = null;
+            setEmbedMessageFile(null);
+            return;
+        }
+
+        setError(null)
         setEmbedMessageFile(file);
         if (file) {
             const reader = new FileReader();
@@ -192,6 +215,7 @@ function QuickStego() {
             <p className="text-muted mb-4">
                 Quickly embed and extract messages using MLSB steganography without saving to database.
             </p>
+            {error && <Alert variant="danger">{error}</Alert>}
             <Row>
                 {/* Embed Section */}
                 <Col md={6}>
