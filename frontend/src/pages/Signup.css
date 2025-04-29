@@ -1,0 +1,48 @@
+.signup-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f8f9fa;
+  }
+  
+  .signup-card {
+    display: flex;
+    height: 500px;
+    width: 800px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  
+  .signup-form, .signup-image {
+    flex: 1;
+    height: 100%;
+  }
+  
+  .signup-form {
+    background-color: white;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .signup-image {
+    background-image: url('../Frontend-Assets/Ngaruroro.png');
+    background-size: cover;
+    background-position: center;
+  }
+  
+  /* Animated hover effect for login link */
+  .login-link {
+    text-decoration: none;
+    color: black;
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+  
+  .login-link:hover {
+    transform: scale(1.1);
+    color: #6c63ff;
+  }
+  

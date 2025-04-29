@@ -1,0 +1,35 @@
+.login-card {
+    height: 500px; /* Increase or decrease as needed */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  
+  .login-form, .login-image {
+    height: 100%;
+  }
+  
+  .login-form {
+    background-color: white;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Vertically center the form */
+  }
+  
+  .login-image {
+    background-size: cover;
+    background-image: url('../Frontend-Assets/Ngaruroro.png');
+    background-position: center;
+  }
+  
+  .signup-link {
+    text-decoration: none;
+    color: black; /* or your desired color */
+    transition: transform 0.2s ease, color 0.2s ease; /* Smooth transition */
+  }
+  
+  .signup-link:hover {
+    transform: scale(1.1); /* Enlarge by 20% on hover */
+    color: #6c63ff; /* Change color on hover, optional */
+  }

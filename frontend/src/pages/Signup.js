@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Form, Button, Card } from 'react-bootstrap';
 import axios from 'axios';
+import './Signup.css'; // Ensure this CSS file includes layout styles
 
 function Signup() {
   const [email, setEmail] = useState('');
@@ -24,28 +24,43 @@ function Signup() {
   };
 
   return (
-    <Container className="mt-4" style={{ maxWidth: '400px' }}>
-      <Card className="p-4">
-        <h2 className="mb-4">Sign Up</h2>
-        {error && <div className="alert alert-danger">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
-        <Form onSubmit={handleSubmit}>
-          <Form.Group className="mb-3">
-            <Form.Label>Email</Form.Label>
-            <Form.Control type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Password</Form.Label>
-            <Form.Control type="password" value={password} onChange={e => setPassword(e.target.value)} required />
-          </Form.Group>
-          <Button type="submit" variant="primary" style={{ width: '100%' }}>Sign Up</Button>
-        </Form>
-        <div className="mt-3 text-center">
-          <a href="/login">Already have an account? Log in</a>
+    <div className="signup-wrapper">
+      <div className="signup-card">
+        <div className="signup-image"></div> {/* Image on the left */}
+        <div className="signup-form">
+          <h2 className="mb-3">Sign Up</h2>
+          {error && <div className="alert alert-danger">{error}</div>}
+          {success && <div className="alert alert-success">{success}</div>}
+          <form onSubmit={handleSubmit}>
+            <div className="mb-3">
+              <label>Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                className="form-control"
+              />
+            </div>
+            <div className="mb-3">
+              <label>Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                className="form-control"
+              />
+            </div>
+            <button type="submit" className="btn btn-primary w-100">Sign Up</button>
+          </form>
+          <div className="mt-3 text-center">
+            <a href="/login" className="login-link">Already have an account? Log in</a>
+          </div>
         </div>
-      </Card>
-    </Container>
+      </div>
+    </div>
   );
 }
 
-export default Signup; 
+export default Signup;
