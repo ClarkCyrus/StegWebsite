@@ -41,10 +41,10 @@ function CreateStegoRoom() {
 
   const handleMessageChange = (e) => {
     const file = e.target.files[0];
-    const allowedFormats = ['text/plain', 'audio/mpeg', 'image/*']; // MIME
+    const allowedFormats = ['text/plain', 'audio/mpeg', 'image/jpeg', 'image/png']; // MIME
 
     if (!allowedFormats.includes(file.type)) {
-      setError('Invalid file format. Please upload a TXT, MP3, or IMG file.'); 
+      setError('Invalid file format. Please upload a TXT, MP3, or PNG/JPG file.'); 
       e.target.value = null;
       setMessageFile(null);
       return;
