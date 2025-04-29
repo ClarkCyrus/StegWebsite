@@ -57,39 +57,42 @@ function StegoRoom() {
 
       // Create preview based on media type
       const downloadUrl = `http://localhost:5000/api/mlsb/download?path=${encodeURIComponent(data.output_path)}`;
+      const ext = data.media_type === 'text' ? '.txt' : data.media_type === 'image' ? '.png' : '.mp3';
       
       if (data.media_type === 'text') {
-        // For text, show the content directly
         setMessagePreview({
           type: 'text',
-          content: typeof data.message === 'string' ? data.message : 'Text content extracted'
+          content: typeof data.message === 'string' ? data.message : 'Text content extracted',
+          downloadUrl,
+          filename: `extracted_message${ext}`
         });
       } else if (data.media_type === 'image') {
-        // For images, create an image preview
         setMessagePreview({
           type: 'image',
-          content: downloadUrl
+          content: downloadUrl,
+          downloadUrl,
+          filename: `extracted_message${ext}`
         });
       } else if (data.media_type === 'audio') {
-        // For audio, create an audio player
         setMessagePreview({
           type: 'audio',
-          content: downloadUrl
+          content: downloadUrl,
+          downloadUrl,
+          filename: `extracted_message${ext}`
         });
       }
-
-      // Trigger download
-      const ext = data.media_type === 'text' ? '.txt' : data.media_type === 'image' ? '.png' : '.mp3';
-      const filename = `extracted_message${ext}`;
-      const element = document.createElement('a');
-      element.href = downloadUrl;
-      element.download = filename;
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  const handleDownload = (downloadUrl, filename) => {
+    const element = document.createElement('a');
+    element.href = downloadUrl;
+    element.download = filename;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
   };
 
   const getImageSrc = (img) => {
@@ -217,20 +220,29 @@ function StegoRoom() {
                   <div style={{ textAlign: 'center', marginBottom: '10px' }}>
                     <span style={{ fontWeight: 600 }}>Extracted Message Preview</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100px' }}>
-                    {messagePreview.type === 'image' && (
-                      <img src={messagePreview.content} alt="extracted preview" style={{ maxWidth: '100%', maxHeight: '200px' }} />
-                    )}
-                    {messagePreview.type === 'audio' && (
-                      <audio controls style={{ width: '100%', maxWidth: '250px' }}>
-                        <source src={messagePreview.content} />
-                      </audio>
-                    )}
-                    {messagePreview.type === 'text' && (
-                      <div style={{ maxHeight: '200px', overflow: 'auto', width: '100%', textAlign: 'left', padding: '8px', background: '#2a2b2f', borderRadius: '4px' }}>
-                        {messagePreview.content}
-                      </div>
-                    )}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100px' }}>
+                    <div style={{ marginBottom: '16px', width: '100%', display: 'flex', justifyContent: 'center' }}>
+                      {messagePreview.type === 'image' && (
+                        <img src={messagePreview.content} alt="extracted preview" style={{ maxWidth: '100%', maxHeight: '200px' }} />
+                      )}
+                      {messagePreview.type === 'audio' && (
+                        <audio controls style={{ width: '100%', maxWidth: '250px' }}>
+                          <source src={messagePreview.content} />
+                        </audio>
+                      )}
+                      {messagePreview.type === 'text' && (
+                        <div style={{ maxHeight: '200px', overflow: 'auto', width: '100%', textAlign: 'left', padding: '8px', background: '#2a2b2f', borderRadius: '4px' }}>
+                          {messagePreview.content}
+                        </div>
+                      )}
+                    </div>
+                    <Button 
+                      variant="success" 
+                      onClick={() => handleDownload(messagePreview.downloadUrl, messagePreview.filename)}
+                      style={{ width: 'auto', padding: '8px 24px' }}
+                    >
+                      Download Message
+                    </Button>
                   </div>
                 </Card>
               )}
