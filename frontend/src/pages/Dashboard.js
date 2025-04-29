@@ -59,10 +59,10 @@ function Dashboard() {
                 <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{room.name || 'blahblah'}</span>
                 <span className="d-flex align-items-center" style={{ gap: 8 }}>
                   {!room.is_encrypted ? (
-                    <span style={{ display: 'inline-block', width: 16, height: 16, borderRadius: '50%', background: '#28a745' }}></span>
+                    <span style={{ display: 'inline-block', width: 16, height: 16, borderRadius: '50%', background: '#28a745' }} title="Unencrypted steg image"></span>
                   ) : (
                     <>
-                      <span style={{ display: 'inline-block', width: 16, height: 16, borderRadius: '50%', background: '#dc3545' }}></span>
+                      <span style={{ display: 'inline-block', width: 16, height: 16, borderRadius: '50%', background: '#dc3545' }} title="Encrypted steg image"> </span>
                       {room.is_key_stored ? (
                         <BsLockFill style={{ color: '#dc3545', marginLeft: 4 }} title="Key stored on website" />
                       ) : (
