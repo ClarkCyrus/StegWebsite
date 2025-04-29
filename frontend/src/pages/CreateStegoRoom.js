@@ -163,7 +163,7 @@ function CreateStegoRoom() {
                 <Col md={6}>
                   <Card className="mb-3" style={{ height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <span>*Stegoed Image</span>
-                    {modalData?.stego_image && <img src={modalData.stego_image} alt="stego preview" style={{ maxWidth: '100%', maxHeight: '100px' }} />}
+                    {modalData?.stego_image && <img src={`data:image/png;base64,${modalData.stego_image}`} alt="stego preview" style={{ maxWidth: '100%', maxHeight: '100px' }} />}
                   </Card>
                 </Col>
               </Row>
