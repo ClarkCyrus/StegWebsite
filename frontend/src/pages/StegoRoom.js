@@ -10,6 +10,7 @@ function StegoRoom() {
   const [key, setKey] = useState('');
   const [iv, setIV] = useState('');
   const [message, setMessage] = useState(null);
+  const [messagePreview, setMessagePreview] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -32,6 +33,7 @@ function StegoRoom() {
   const handleGetMessage = async () => {
     setError(null);
     setMessage(null);
+    setMessagePreview(null);
     if (!stegoUpload) {
       setError('Please upload a stego image');
       return;
@@ -50,16 +52,35 @@ function StegoRoom() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to extract message');
+      
       setMessage(data.message);
-      // Download logic
-      const extensionMap = {
-        'text': '.txt',
-        'image': '.png',
-        'audio': '.mp3'
-      };
-      const ext = extensionMap[data.media_type] || '.bin';
-      const filename = `extracted_message${ext}`;
+
+      // Create preview based on media type
       const downloadUrl = `http://localhost:5000/api/mlsb/download?path=${encodeURIComponent(data.output_path)}`;
+      
+      if (data.media_type === 'text') {
+        // For text, show the content directly
+        setMessagePreview({
+          type: 'text',
+          content: typeof data.message === 'string' ? data.message : 'Text content extracted'
+        });
+      } else if (data.media_type === 'image') {
+        // For images, create an image preview
+        setMessagePreview({
+          type: 'image',
+          content: downloadUrl
+        });
+      } else if (data.media_type === 'audio') {
+        // For audio, create an audio player
+        setMessagePreview({
+          type: 'audio',
+          content: downloadUrl
+        });
+      }
+
+      // Trigger download
+      const ext = data.media_type === 'text' ? '.txt' : data.media_type === 'image' ? '.png' : '.mp3';
+      const filename = `extracted_message${ext}`;
       const element = document.createElement('a');
       element.href = downloadUrl;
       element.download = filename;
@@ -191,7 +212,28 @@ function StegoRoom() {
               <Button variant="primary" onClick={handleGetMessage} style={{ width: '100%' }}>Get message!</Button>
             </Col>
             <Col md={6} className="d-flex align-items-end">
-              {message && <Alert variant="success" style={{ width: '100%' }}>{message}</Alert>}
+              {messagePreview && (
+                <Card style={{ width: '100%', background: '#232428', color: '#fff', padding: '16px' }}>
+                  <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+                    <span style={{ fontWeight: 600 }}>Extracted Message Preview</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100px' }}>
+                    {messagePreview.type === 'image' && (
+                      <img src={messagePreview.content} alt="extracted preview" style={{ maxWidth: '100%', maxHeight: '200px' }} />
+                    )}
+                    {messagePreview.type === 'audio' && (
+                      <audio controls style={{ width: '100%', maxWidth: '250px' }}>
+                        <source src={messagePreview.content} />
+                      </audio>
+                    )}
+                    {messagePreview.type === 'text' && (
+                      <div style={{ maxHeight: '200px', overflow: 'auto', width: '100%', textAlign: 'left', padding: '8px', background: '#2a2b2f', borderRadius: '4px' }}>
+                        {messagePreview.content}
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              )}
             </Col>
           </Row>
         </div>

@@ -32,12 +32,26 @@ function CreateStegoRoom() {
   const handleMessageChange = (e) => {
     const file = e.target.files[0];
     setMessageFile(file);
-    if (file && file.type.startsWith('text/')) {
+    if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => setMessagePreview(reader.result);
-      reader.readAsText(file);
+      reader.onloadend = () => {
+        if (file.type.startsWith('image/')) {
+          setMessagePreview({ type: 'image', content: reader.result });
+        } else if (file.type.startsWith('audio/')) {
+          setMessagePreview({ type: 'audio', content: reader.result });
+        } else if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
+          reader.onload = (e) => {
+            setMessagePreview({ type: 'text', content: e.target.result });
+          };
+          reader.readAsText(file);
+          return;
+        } else {
+          setMessagePreview({ type: 'unknown', name: file.name });
+        }
+      };
+      reader.readAsDataURL(file);
     } else {
-      setMessagePreview(file ? file.name : null);
+      setMessagePreview(null);
     }
   };
 
@@ -127,8 +141,25 @@ function CreateStegoRoom() {
                 <Form.Label>*Upload message file here</Form.Label>
                 <Form.Control type="file" onChange={handleMessageChange} required />
                 {messagePreview && (
-                  <div style={{ marginTop: 8, maxHeight: 80, overflow: 'auto', width: '100%' }}>
-                    {typeof messagePreview === 'string' && messagePreview.length < 200 ? messagePreview : <span>{messagePreview}</span>}
+                  <div style={{ marginTop: 8, maxHeight: 120, overflow: 'auto', width: '100%', textAlign: 'center' }}>
+                    {messagePreview.type === 'image' && (
+                      <img src={messagePreview.content} alt="message preview" style={{ maxWidth: '100%', maxHeight: '100px' }} />
+                    )}
+                    {messagePreview.type === 'audio' && (
+                      <audio controls style={{ width: '100%', maxWidth: '250px' }}>
+                        <source src={messagePreview.content} />
+                      </audio>
+                    )}
+                    {messagePreview.type === 'text' && (
+                      <div style={{ maxHeight: '100px', overflow: 'auto', textAlign: 'left', padding: '8px', background: '#f8f9fa', borderRadius: '4px' }}>
+                        {messagePreview.content.length > 200 
+                          ? `${messagePreview.content.substring(0, 200)}...` 
+                          : messagePreview.content}
+                      </div>
+                    )}
+                    {messagePreview.type === 'unknown' && (
+                      <span>File selected: {messagePreview.name}</span>
+                    )}
                   </div>
                 )}
               </Form.Group>
