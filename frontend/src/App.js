@@ -7,6 +7,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Dashboard from './pages/Dashboard.js';
 import StegoRoom from './pages/StegoRoom.js';
 import MLSBDemo from './pages/MLSBDemo.js';
+import IndivRoom from './components/Room.js';
 
 function App() {
   return (
@@ -16,9 +17,10 @@ function App() {
             <Route path="/" element={<Navigate to="/mlsb-demo" replace />} />
             <Route path="/account" element={<Account />} />
             <Route path="/create" element={<CreateStegoRoom />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Main />} />
             <Route path="/stegoroom" element={<StegoRoom />} />
             <Route path="/mlsb-demo" element={<MLSBDemo />} />
+            <Route path="/room/:roomId" element={<IndivRoom />} />
           </Routes>
         </Router>
     </div>
