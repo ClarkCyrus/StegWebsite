@@ -5,72 +5,83 @@ import axios from 'axios';
 
 function QuickStego() {
     const navigate = useNavigate();
-    const [coverImage, setCoverImage] = useState(null);
-    const [messageFile, setMessageFile] = useState(null);
-    const [stegoImage, setStegoImage] = useState(null);
-    const [extractedMessage, setExtractedMessage] = useState(null);
+    // Embedding states
+    const [embedCoverImage, setEmbedCoverImage] = useState(null);
+    const [embedMessageFile, setEmbedMessageFile] = useState(null);
+    const [embedImagePreview, setEmbedImagePreview] = useState(null);
+    const [embedMessagePreview, setEmbedMessagePreview] = useState(null);
     const [embedEncrypted, setEmbedEncrypted] = useState(false);
+    const [embedLoading, setEmbedLoading] = useState(false);
+    const [embedError, setEmbedError] = useState(null);
+    const [embedSuccess, setEmbedSuccess] = useState(null);
+    const [stegoImage, setStegoImage] = useState(null);
+    const [stegoPreview, setStegoPreview] = useState(null);
+    const [metrics, setMetrics] = useState(null);
+    const [encryptionData, setEncryptionData] = useState(null);
+
+    // Extraction states
+    const [extractStegoImage, setExtractStegoImage] = useState(null);
+    const [extractStegoPreview, setExtractStegoPreview] = useState(null);
     const [extractEncrypted, setExtractEncrypted] = useState(false);
     const [extractKey, setExtractKey] = useState('');
     const [extractIV, setExtractIV] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(null);
-    const [metrics, setMetrics] = useState(null);
-    const [imagePreview, setImagePreview] = useState(null);
-    const [stegoPreview, setStegoPreview] = useState(null);
-    const [messagePreview, setMessagePreview] = useState(null);
-    const [encryptionData, setEncryptionData] = useState(null);
+    const [extractLoading, setExtractLoading] = useState(false);
+    const [extractError, setExtractError] = useState(null);
+    const [extractSuccess, setExtractSuccess] = useState(null);
+    const [extractedMessage, setExtractedMessage] = useState(null);
 
-    const handleImageUpload = (e, setImage, setPreview) => {
+    // Embedding handlers
+    const handleEmbedImageUpload = (e) => {
         const file = e.target.files[0];
-        setImage(file);
+        setEmbedCoverImage(file);
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setPreview(reader.result);
+                setEmbedImagePreview(reader.result);
             };
             reader.readAsDataURL(file);
+        } else {
+            setEmbedImagePreview(null);
         }
     };
 
-    const handleMessageUpload = (e) => {
+    const handleEmbedMessageUpload = (e) => {
         const file = e.target.files[0];
-        setMessageFile(file);
+        setEmbedMessageFile(file);
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
                 if (file.type.startsWith('image/')) {
-                    setMessagePreview({ type: 'image', content: reader.result });
+                    setEmbedMessagePreview({ type: 'image', content: reader.result });
                 } else if (file.type.startsWith('audio/')) {
-                    setMessagePreview({ type: 'audio', content: reader.result });
+                    setEmbedMessagePreview({ type: 'audio', content: reader.result });
                 } else if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
                     reader.onload = (e) => {
-                        setMessagePreview({ type: 'text', content: e.target.result });
+                        setEmbedMessagePreview({ type: 'text', content: e.target.result });
                     };
                     reader.readAsText(file);
                     return;
                 } else {
-                    setMessagePreview({ type: 'unknown', name: file.name });
+                    setEmbedMessagePreview({ type: 'unknown', name: file.name });
                 }
             };
             reader.readAsDataURL(file);
         } else {
-            setMessagePreview(null);
+            setEmbedMessagePreview(null);
         }
     };
 
     const handleEmbed = async (e) => {
         e.preventDefault();
-        setLoading(true);
-        setError(null);
-        setSuccess(null);
+        setEmbedLoading(true);
+        setEmbedError(null);
+        setEmbedSuccess(null);
         setMetrics(null);
         setEncryptionData(null);
 
         const formData = new FormData();
-        formData.append('cover_image', coverImage);
-        formData.append('message_file', messageFile);
+        formData.append('cover_image', embedCoverImage);
+        formData.append('message_file', embedMessageFile);
         formData.append('is_encrypted', embedEncrypted);
 
         try {
@@ -79,35 +90,47 @@ function QuickStego() {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            
             setStegoImage(response.data.stego_image);
             setMetrics(response.data.metrics);
             setStegoPreview(`data:image/png;base64,${response.data.stego_image}`);
-
             if (embedEncrypted) {
                 setEncryptionData({
                     key: response.data.key,
                     iv: response.data.iv
                 });
             }
-
-            setSuccess('Message embedded successfully!');
+            setEmbedSuccess('Message embedded successfully!');
         } catch (err) {
-            setError(err.response?.data?.error || 'An error occurred');
+            setEmbedError(err.response?.data?.error || 'An error occurred');
         } finally {
-            setLoading(false);
+            setEmbedLoading(false);
+        }
+    };
+
+    // Extraction handlers
+    const handleExtractStegoImageUpload = (e) => {
+        const file = e.target.files[0];
+        setExtractStegoImage(file);
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setExtractStegoPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            setExtractStegoPreview(null);
         }
     };
 
     const handleExtract = async (e) => {
         e.preventDefault();
-        setLoading(true);
-        setError(null);
-        setSuccess(null);
+        setExtractLoading(true);
+        setExtractError(null);
+        setExtractSuccess(null);
         setExtractedMessage(null);
 
         const formData = new FormData();
-        formData.append('stego_image', stegoImage);
+        formData.append('stego_image', extractStegoImage);
         formData.append('is_encrypted', extractEncrypted);
         if (extractEncrypted) {
             formData.append('key', extractKey);
@@ -117,11 +140,8 @@ function QuickStego() {
         try {
             const response = await axios.post('http://localhost:5000/api/mlsb/extract', formData);
             const data = response.data;
-
-            // Create preview based on media type
             const downloadUrl = `http://localhost:5000/api/mlsb/download?path=${encodeURIComponent(data.output_path)}`;
             const ext = data.media_type === 'text' ? '.txt' : data.media_type === 'image' ? '.png' : '.mp3';
-            
             if (data.media_type === 'text') {
                 setExtractedMessage({
                     type: 'text',
@@ -144,12 +164,11 @@ function QuickStego() {
                     filename: `extracted_message${ext}`
                 });
             }
-
-            setSuccess('Message extracted successfully!');
+            setExtractSuccess('Message extracted successfully!');
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to extract message');
+            setExtractError(err.response?.data?.error || 'Failed to extract message');
         } finally {
-            setLoading(false);
+            setExtractLoading(false);
         }
     };
 
@@ -173,10 +192,6 @@ function QuickStego() {
             <p className="text-muted mb-4">
                 Quickly embed and extract messages using MLSB steganography without saving to database.
             </p>
-            
-            {error && <Alert variant="danger">{error}</Alert>}
-            {success && <Alert variant="success">{success}</Alert>}
-
             <Row>
                 {/* Embed Section */}
                 <Col md={6}>
@@ -185,52 +200,52 @@ function QuickStego() {
                             <h4 className="mb-0">Embed Message</h4>
                         </Card.Header>
                         <Card.Body className="p-4">
+                            {embedError && <Alert variant="danger">{embedError}</Alert>}
+                            {embedSuccess && <Alert variant="success">{embedSuccess}</Alert>}
                             <Form onSubmit={handleEmbed}>
                                 <Form.Group className="mb-4">
                                     <Form.Label>Cover Image</Form.Label>
                                     <Form.Control
                                         type="file"
                                         accept="image/*"
-                                        onChange={(e) => handleImageUpload(e, setCoverImage, setImagePreview)}
+                                        onChange={handleEmbedImageUpload}
                                         required
                                     />
-                                    {imagePreview && (
+                                    {embedImagePreview && (
                                         <div className="mt-3">
                                             <img 
-                                                src={imagePreview} 
+                                                src={embedImagePreview} 
                                                 alt="Cover Preview" 
                                                 style={{ maxWidth: '100%', maxHeight: '200px' }}
                                             />
                                         </div>
                                     )}
                                 </Form.Group>
-
                                 <Form.Group className="mb-4">
                                     <Form.Label>Message File</Form.Label>
                                     <Form.Control
                                         type="file"
-                                        onChange={handleMessageUpload}
+                                        onChange={handleEmbedMessageUpload}
                                         required
                                     />
-                                    {messagePreview && (
+                                    {embedMessagePreview && (
                                         <div className="mt-3">
-                                            {messagePreview.type === 'image' && (
-                                                <img src={messagePreview.content} alt="message preview" style={{ maxWidth: '100%', maxHeight: '200px' }} />
+                                            {embedMessagePreview.type === 'image' && (
+                                                <img src={embedMessagePreview.content} alt="message preview" style={{ maxWidth: '100%', maxHeight: '200px' }} />
                                             )}
-                                            {messagePreview.type === 'audio' && (
+                                            {embedMessagePreview.type === 'audio' && (
                                                 <audio controls style={{ width: '100%' }}>
-                                                    <source src={messagePreview.content} />
+                                                    <source src={embedMessagePreview.content} />
                                                 </audio>
                                             )}
-                                            {messagePreview.type === 'text' && (
+                                            {embedMessagePreview.type === 'text' && (
                                                 <div style={{ maxHeight: '200px', overflow: 'auto', padding: '8px', background: '#2a2b2f', borderRadius: '4px' }}>
-                                                    {messagePreview.content}
+                                                    {embedMessagePreview.content}
                                                 </div>
                                             )}
                                         </div>
                                     )}
                                 </Form.Group>
-
                                 <Form.Group className="mb-4">
                                     <Form.Check
                                         type="switch"
@@ -239,17 +254,15 @@ function QuickStego() {
                                         onChange={(e) => setEmbedEncrypted(e.target.checked)}
                                     />
                                 </Form.Group>
-
                                 <Button 
                                     variant="primary" 
                                     type="submit" 
-                                    disabled={loading}
+                                    disabled={embedLoading}
                                     className="w-100"
                                 >
-                                    {loading ? 'Processing...' : 'Embed Message'}
+                                    {embedLoading ? 'Processing...' : 'Embed Message'}
                                 </Button>
                             </Form>
-
                             {stegoPreview && (
                                 <div className="mt-4">
                                     <h5>Result:</h5>
@@ -285,7 +298,6 @@ function QuickStego() {
                                     )}
                                 </div>
                             )}
-
                             {metrics && (
                                 <div className="mt-4">
                                     <h5>Metrics:</h5>
@@ -300,7 +312,6 @@ function QuickStego() {
                         </Card.Body>
                     </Card>
                 </Col>
-
                 {/* Extract Section */}
                 <Col md={6}>
                     <Card style={{ background: '#232428', color: '#fff' }}>
@@ -308,26 +319,27 @@ function QuickStego() {
                             <h4 className="mb-0">Extract Message</h4>
                         </Card.Header>
                         <Card.Body className="p-4">
+                            {extractError && <Alert variant="danger">{extractError}</Alert>}
+                            {extractSuccess && <Alert variant="success">{extractSuccess}</Alert>}
                             <Form onSubmit={handleExtract}>
                                 <Form.Group className="mb-4">
                                     <Form.Label>Stego Image</Form.Label>
                                     <Form.Control
                                         type="file"
                                         accept="image/*"
-                                        onChange={(e) => handleImageUpload(e, setStegoImage, setStegoPreview)}
+                                        onChange={handleExtractStegoImageUpload}
                                         required
                                     />
-                                    {stegoPreview && (
+                                    {extractStegoPreview && (
                                         <div className="mt-3">
                                             <img 
-                                                src={stegoPreview} 
+                                                src={extractStegoPreview} 
                                                 alt="Stego Preview" 
                                                 style={{ maxWidth: '100%', maxHeight: '200px' }}
                                             />
                                         </div>
                                     )}
                                 </Form.Group>
-
                                 <Form.Group className="mb-4">
                                     <Form.Check
                                         type="switch"
@@ -336,7 +348,6 @@ function QuickStego() {
                                         onChange={(e) => setExtractEncrypted(e.target.checked)}
                                     />
                                 </Form.Group>
-
                                 {extractEncrypted && (
                                     <>
                                         <Form.Group className="mb-4">
@@ -348,7 +359,6 @@ function QuickStego() {
                                                 required
                                             />
                                         </Form.Group>
-
                                         <Form.Group className="mb-4">
                                             <Form.Label>Initialization Vector (IV)</Form.Label>
                                             <Form.Control
@@ -360,17 +370,15 @@ function QuickStego() {
                                         </Form.Group>
                                     </>
                                 )}
-
                                 <Button 
                                     variant="primary" 
                                     type="submit" 
-                                    disabled={loading}
+                                    disabled={extractLoading}
                                     className="w-100"
                                 >
-                                    {loading ? 'Processing...' : 'Extract Message'}
+                                    {extractLoading ? 'Processing...' : 'Extract Message'}
                                 </Button>
                             </Form>
-
                             {extractedMessage && (
                                 <div className="mt-4">
                                     <h5>Extracted Message:</h5>
