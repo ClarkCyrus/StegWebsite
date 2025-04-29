@@ -32,9 +32,7 @@ function Signup() {
       setError('Password must be 8-20 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.');
       return;
     }
-
-
-        
+    
     try {
       await axios.post('http://localhost:5000/api/signup', { email: normalizedEmail, password });
       setSuccess('Account created! You can now log in.');

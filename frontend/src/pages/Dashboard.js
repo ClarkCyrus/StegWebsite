@@ -5,6 +5,7 @@ import axios from 'axios';
 import { BsLockFill, BsLock } from 'react-icons/bs';
 
 function Dashboard() {
+  const [currentUser, setCurrentUser] = useState(null);
   const [rooms, setRooms] = useState([]);
   const navigate = useNavigate();
 
@@ -12,7 +13,12 @@ function Dashboard() {
     axios.get('http://localhost:5000/api/steg_rooms', { withCredentials: true })
       .then(res => setRooms(res.data))
       .catch(() => setRooms([]));
+
+    axios.get('http://localhost:5000/api/current_user', { withCredentials: true })
+    .then(res => setCurrentUser(res.data))
+    .catch(() => setCurrentUser(null));
   }, []);
+
 
   const handleLogout = async () => {
     try {
@@ -41,6 +47,12 @@ function Dashboard() {
           Logout
         </Button>
       </div>
+       {/* Welcome Message */}
+       {currentUser && (
+        <div className="mb-5">
+          <h4>Hello, {currentUser.name || currentUser.email}!</h4>
+        </div>
+      )}
       <Row className="mb-5">
         {rooms.map((room, idx) => (
           <Col key={room.id} md={4} className="mb-4 d-flex justify-content-center">

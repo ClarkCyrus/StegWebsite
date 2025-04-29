@@ -13,8 +13,11 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+
+    const normalizedEmail = email.toLowerCase();
+
     try {
-      await axios.post('http://localhost:5000/api/login', { email, password }, { withCredentials: true });
+      await axios.post('http://localhost:5000/api/login', { email: normalizedEmail, password }, { withCredentials: true });
       navigate('/dashboard');
     } catch (err) {
       setError('Invalid credentials');
