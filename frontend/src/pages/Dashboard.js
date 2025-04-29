@@ -13,6 +13,15 @@ function Dashboard() {
       .catch(() => setRooms([]));
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      await axios.post('http://localhost:5000/api/logout', {}, { withCredentials: true });
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   const getCoverImageSrc = (room) => {
     if (!room.cover_image) return null;
     const normalized = room.cover_image.replace(/\\/g, '/');
@@ -25,7 +34,12 @@ function Dashboard() {
 
   return (
     <Container className="mt-4" style={{ maxWidth: '1200px' }}>
-      <h2 className="mb-4">DASHBOARD</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2>DASHBOARD</h2>
+        <Button variant="outline-danger" onClick={handleLogout}>
+          Logout
+        </Button>
+      </div>
       <Row className="mb-5">
         {rooms.map((room, idx) => (
           <Col key={room.id} md={4} className="mb-4 d-flex justify-content-center">
