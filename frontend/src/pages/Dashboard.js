@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card } from 'react-bootstrap';
+import { Container, Row, Col, Card, Modal, Button } from 'react-bootstrap';
 import axios from 'axios';
 import { BsLockFill, BsLock, BsPlusCircle, BsLightningCharge } from 'react-icons/bs';
-import { FiLogOut } from 'react-icons/fi';
+import { FiLogOut, FiX } from 'react-icons/fi';
 import './Dashboard.css';
 
 function Dashboard() {
   const [currentUser, setCurrentUser] = useState(null);
   const [rooms, setRooms] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [roomToDelete, setRoomToDelete] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,7 +18,7 @@ function Dashboard() {
       .then(res => setRooms(res.data))
       .catch(() => setRooms([]));
 
-    axios.get('http://localhost:5000/api/current_user', { withCredentials: true })
+    axios.get('http://localhost:5000/api/current_user', { withCredentials: true })  
     .then(res => setCurrentUser(res.data))
     .catch(() => setCurrentUser(null));
   }, []);
@@ -38,6 +40,23 @@ function Dashboard() {
     if (normalized.startsWith('uploads/')) return `http://localhost:5000/${normalized}`;
     if (!normalized.startsWith('http') && !normalized.startsWith('/uploads/')) return `http://localhost:5000/uploads/${normalized}`;
     return normalized;
+  };
+
+  const handleDelete = (room) => {
+    setRoomToDelete(room);
+    setShowModal(true); 
+  };
+
+  const confirmDelete = () => {
+    if (roomToDelete) {
+      axios.delete(`http://localhost:5000/api/steg_rooms/${roomToDelete.id}`, { withCredentials: true })
+        .then(() => {
+          setRooms(rooms.filter(r => r.id !== roomToDelete.id));
+          setShowModal(false);
+          setRoomToDelete(null); 
+        })
+        .catch(err => console.error('Failed to delete room:', err));
+    }
   };
 
   return (
@@ -64,6 +83,15 @@ function Dashboard() {
                 ) : (
                   <span>No Image</span>
                 )}
+                <button
+                  className="close-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(room); 
+                  }}
+                >
+                  <FiX size={14} />
+                </button>
               </div>
               <div className="room-footer">
                 <div className="d-flex justify-content-between align-items-center">
@@ -95,6 +123,28 @@ function Dashboard() {
           <span className="action-button-text">Quick Stego</span>
         </button>
       </div>
+
+      <Modal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        centered // Centers the modal on the screen
+        className="custom-modal" // Add a custom class for styling
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Deletion</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete the room "{roomToDelete?.name}"?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={confirmDelete}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
