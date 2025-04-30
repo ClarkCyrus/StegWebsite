@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Form, Button, Card, Modal, Alert } from 'react-bootstrap';
 import axios from 'axios';
+import { FiUpload, FiLock, FiDownload, FiArrowLeft } from 'react-icons/fi';
+import './CreateStegoRoom.css';
 
 function CreateStegoRoom() {
   const [name, setName] = useState('');
-  const [encrypted, setEncrypted] = useState(false);
+  const [encrypted, setEncrypted] = useState(true);
   const [storeKey, setStoreKey] = useState(false);
   const [coverImage, setCoverImage] = useState(null);
   const [messageFile, setMessageFile] = useState(null);
@@ -138,166 +139,199 @@ function CreateStegoRoom() {
   };
 
   return (
-    <Container className="mt-4" style={{ maxWidth: '900px' }}>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>CREATE STEGO ROOM</h2>
-        <Button variant="outline-secondary" onClick={() => navigate('/dashboard')}>
-          Back to Dashboard
-        </Button>
-      </div>
-      {error && <Alert variant="danger">{error}</Alert>}
-      <Form onSubmit={handleSubmit}>
-        <Row>
-          <Col md={6}>
-            <Form.Group className="mb-4">
-              <Form.Label>Name</Form.Label>
-              <Form.Control value={name} onChange={e => setName(e.target.value)} required />
-            </Form.Group>
-            <Form.Group className="mb-4">
-              <Form.Check type="switch" label="Encrypted?" checked={encrypted} onChange={e => setEncrypted(e.target.checked)} />
-            </Form.Group>
-            <Form.Group className="mb-4">
-              <Form.Check type="switch" label="Store encryption key in database?" checked={storeKey} onChange={e => setStoreKey(e.target.checked)} />
-            </Form.Group>
-            <Button type="submit" variant="primary" disabled={loading} style={{ width: '150px', height: '50px', fontSize: '1.2rem' }}>
-              {loading ? 'Creating...' : 'Create!'}
-            </Button>
-          </Col>
-          <Col md={6}>
-            <Card className="mb-4" style={{ height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Form.Group>
-                <Form.Label>*Upload cover image here</Form.Label>
-                <Form.Control type="file" accept="image/*" onChange={handleCoverChange} required />
-                {coverPreview && <img src={coverPreview} alt="cover preview" style={{ maxWidth: '100%', maxHeight: '120px', marginTop: 8 }} />}
-              </Form.Group>
-            </Card>
-            <Card style={{ height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Form.Group>
-                <Form.Label>*Upload message file here</Form.Label>
-                <Form.Control 
-                  type="file" 
-                  accept=".txt, .mp3, .jpg, .png"
-                  onChange={handleMessageChange} 
-                  required 
+    <div className="create-room-container">
+      <div className="create-room-card">
+        <div className="create-room-header">
+          <button className="back-button" onClick={() => navigate('/dashboard')}>
+            <FiArrowLeft size={20} />
+            Back to Dashboard
+          </button>
+          <h1 className="create-room-title">Create Stego Room</h1>
+        </div>
+
+        {error && <div className="error-alert">{error}</div>}
+
+        <form className="create-room-form" onSubmit={handleSubmit}>
+          <div className="form-section">
+            <div className="form-group">
+              <label className="form-label">Room Name</label>
+              <input
+                type="text"
+                className="form-control"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                required
+                placeholder="Enter room name"
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Security Options</label>
+              <div className="security-options">
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={encrypted}
+                    onChange={e => setEncrypted(e.target.checked)}
                   />
+                  <span className="slider"></span>
+                  <span className="switch-label">Enable Encryption</span>
+                </label>
+                {encrypted && (
+                  <label className="switch">
+                    <input
+                      type="checkbox"
+                      checked={storeKey}
+                      onChange={e => setStoreKey(e.target.checked)}
+                    />
+                    <span className="slider"></span>
+                    <span className="switch-label">Store Key in Database</span>
+                  </label>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="upload-section">
+            <div className="upload-card">
+              <div className="upload-header">
+                <FiUpload size={24} />
+                <h3>Cover Image</h3>
+              </div>
+              <div className="upload-content">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCoverChange}
+                  required
+                  className="file-input"
+                />
+                {coverPreview ? (
+                  <img src={coverPreview} alt="cover preview" className="preview-image" />
+                ) : (
+                  <div className="upload-placeholder">
+                    <p>Upload a cover image (PNG, TIFF, BMP, JPEG)</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="upload-card">
+              <div className="upload-header">
+                <FiLock size={24} />
+                <h3>Secret Message</h3>
+              </div>
+              <div className="upload-content">
+                <input
+                  type="file"
+                  accept=".txt, .mp3, .jpg, .png"
+                  onChange={handleMessageChange}
+                  required
+                  className="file-input"
+                />
                 {messagePreview && (
-                  <div style={{ marginTop: 8, maxHeight: 120, overflow: 'auto', width: '100%', textAlign: 'center' }}>
+                  <div className="preview-container">
                     {messagePreview.type === 'image' && (
-                      <img src={messagePreview.content} alt="message preview" style={{ maxWidth: '100%', maxHeight: '100px' }} />
+                      <img src={messagePreview.content} alt="message preview" className="preview-image" />
                     )}
                     {messagePreview.type === 'audio' && (
-                      <audio controls style={{ width: '100%', maxWidth: '250px' }}>
+                      <audio controls className="preview-audio">
                         <source src={messagePreview.content} />
                       </audio>
                     )}
                     {messagePreview.type === 'text' && (
-                      <div style={{ maxHeight: '100px', overflow: 'auto', textAlign: 'left', padding: '8px', background: '#f8f9fa', borderRadius: '4px' }}>
-                        {messagePreview.content.length > 200 
-                          ? `${messagePreview.content.substring(0, 200)}...` 
+                      <div className="preview-text">
+                        {messagePreview.content.length > 200
+                          ? `${messagePreview.content.substring(0, 200)}...`
                           : messagePreview.content}
                       </div>
                     )}
                     {messagePreview.type === 'unknown' && (
-                      <span>File selected: {messagePreview.name}</span>
+                      <span className="preview-filename">File selected: {messagePreview.name}</span>
                     )}
                   </div>
                 )}
-              </Form.Group>
-            </Card>
-          </Col>
-        </Row>
-      </Form>
-      <Modal show={showModal} onHide={handleModalClose} size="lg" centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Stego Room Created</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Row>
-            <Col md={4}>
-              <Button className="mb-3 w-100" variant="success" onClick={() => handleStegoDownload(modalData?.stego_image)}>Download stego image</Button>
-              {encrypted && (
-                <>
-                  <Button className="mb-3 w-100" variant="info" onClick={() => handleTextDownload(modalData?.key, 'encryption_key.txt')}>Download encryption key</Button>
-                  <Button className="mb-3 w-100" variant="info" onClick={() => handleTextDownload(modalData?.iv, 'encryption_iv.txt')}>Download encryption IV</Button>
-                  {!storeKey && <Alert variant="warning">You must download the encryption key and IV. They will not be stored in the database.</Alert>}
-                </>
-              )}
-              {newRoomId && (
-                <Button className="mt-2 w-100" variant="primary" onClick={handleGoToRoom}>
-                  Go to Room
-                </Button>
-              )}
-            </Col>
-            <Col md={8}>
-              <Row>
-                <Col md={6}>
-                  <Card className="mb-3" style={{ height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span>*Cover Image</span>
-                    {modalData?.coverPreview && <img src={modalData.coverPreview} alt="cover preview" style={{ maxWidth: '100%', maxHeight: '100px' }} />}
-                  </Card>
-                </Col>
-                <Col md={6}>
-                  <Card className="mb-3" style={{ height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span>*Stegoed Image</span>
-                    {modalData?.stego_image && <img src={`data:image/png;base64,${modalData.stego_image}`} alt="stego preview" style={{ maxWidth: '100%', maxHeight: '100px' }} />}
-                  </Card>
-                </Col>
-              </Row>
-              <Card style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" className="create-button" disabled={loading}>
+            {loading ? 'Creating...' : 'Create Stego Room'}
+          </button>
+        </form>
+      </div>
+
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Stego Room Created Successfully!</h2>
+              <button className="close-button" onClick={handleModalClose}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="download-section">
+                <button className="download-button" onClick={() => handleStegoDownload(modalData?.stego_image)}>
+                  <FiDownload size={20} />
+                  Download Stego Image
+                </button>
+                {encrypted && (
+                  <>
+                    <button className="download-button" onClick={() => handleTextDownload(modalData?.key, 'encryption_key.txt')}>
+                      <FiDownload size={20} />
+                      Download Encryption Key
+                    </button>
+                    <button className="download-button" onClick={() => handleTextDownload(modalData?.iv, 'encryption_iv.txt')}>
+                      <FiDownload size={20} />
+                      Download Encryption IV
+                    </button>
+                    {!storeKey && (
+                      <div className="warning-alert">
+                        <FiLock size={20} />
+                        <p>You must download the encryption key and IV. They will not be stored in the database.</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+              <div className="preview-section">
+                <div className="preview-grid">
+                  <div className="preview-item">
+                    <h3>Original Image</h3>
+                    {modalData?.coverPreview && (
+                      <img src={modalData.coverPreview} alt="cover preview" className="preview-image" />
+                    )}
+                  </div>
+                  <div className="preview-item">
+                    <h3>Stego Image</h3>
+                    {modalData?.stego_image && (
+                      <img src={`data:image/png;base64,${modalData.stego_image}`} alt="stego preview" className="preview-image" />
+                    )}
+                  </div>
+                </div>
                 {modalData?.metrics && (
-                  <div style={{ fontSize: 14, marginTop: 8 }}>
-                    {(() => {
-                      let metricsObj = modalData.metrics;
-                      if (typeof metricsObj === 'string') {
-                        try { metricsObj = JSON.parse(metricsObj); } catch { metricsObj = {}; }
-                      }
-                      return (
-                        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                          {Object.entries(metricsObj).map(([k, v]) => (
-                            <li key={k}><b>{k}:</b> {typeof v === 'number' ? v.toFixed(2) : v}</li>
-                          ))}
-                        </ul>
-                      );
-                    })()}
+                  <div className="metrics-section">
+                    <h3>Embedding Metrics</h3>
+                    <div className="metrics-grid">
+                      {Object.entries(modalData.metrics).map(([key, value]) => (
+                        <div key={key} className="metric-item">
+                          <span className="metric-label">{key}:</span>
+                          <span className="metric-value">{value}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
-              </Card>
-            </Col>
-          </Row>
-        </Modal.Body>
-      </Modal>
-      {/* Loading overlay: always rendered on top but only visible when loading === true */}
-      {loading && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: 'rgba(0, 0, 0, 0.3)', // A slightly transparent overlay, so underlying buttons are still visible
-            zIndex: 9999
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.8)', // semi-transparent white container
-              padding: '20px',
-              borderRadius: '8px',
-              textAlign: 'center'
-            }}
-          >
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
+              </div>
+              {newRoomId && (
+                <button className="go-to-room-button" onClick={handleGoToRoom}>
+                  Go to Room
+                </button>
+              )}
             </div>
-            <p style={{ margin: 0 }}>Creating Stego Room, please wait...</p>
           </div>
         </div>
       )}
-    </Container>   
+    </div>
   );
 }
 
