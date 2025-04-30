@@ -434,7 +434,13 @@ def signup():
     new_user = User(email=email, password=password)
     db.session.add(new_user)
     db.session.commit()
-    return jsonify({'message': 'User created successfully.'}), 201
+    
+    # Set up session after successful signup
+    session['user_id'] = new_user.id
+    return jsonify({
+        'message': 'User created successfully.',
+        'user_id': new_user.id
+    }), 201
 
 @app.after_request
 def add_cors_headers(response):

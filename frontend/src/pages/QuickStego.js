@@ -60,10 +60,10 @@ function QuickStego() {
 
     const handleEmbedMessageUpload = (e) => {
         const file = e.target.files[0];
-        const allowedFormats = ['text/plain', 'audio/mpeg', 'image/jpeg', 'image/png'] // MIME
+        const allowedFormats = ['text/plain', 'audio/mpeg', 'image/png'] // MIME
 
         if (!allowedFormats.includes(file.type)) {
-            setError('Invalid file format. Please upload a TXT, MP3, or JPG/PNG file.'); 
+            setError('Invalid file format. Please upload a TXT, MP3, or PNG file.'); 
             e.target.value = null;
             setEmbedMessageFile(null);
             return;

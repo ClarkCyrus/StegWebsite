@@ -15,16 +15,39 @@ function Signup() {
     e.preventDefault();
     setError(null);
 
+    const normalizedEmail = email.toLowerCase();
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/;
+
+    if (!emailRegex.test(normalizedEmail)) {
+      setError('Invalid email format.');
+      return;
+    }
+
+    if (!passwordRegex.test(password)) {
+      setError('Password must be 8-20 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
-    const normalizedEmail = email.toLowerCase();
-
     try {
-      await axios.post('http://localhost:5000/api/signup', { email: normalizedEmail, password }, { withCredentials: true });
-      navigate('/dashboard');
+      const response = await axios.post('http://localhost:5000/api/signup', { email: normalizedEmail, password }, { withCredentials: true });
+      
+      if (response.data.user_id) {
+        // Verify the session is established
+        const userResponse = await axios.get('http://localhost:5000/api/current_user', { withCredentials: true });
+        if (userResponse.data.id) {
+          navigate('/dashboard');
+        } else {
+          setError('Authentication failed after signup');
+        }
+      } else {
+        setError('Signup successful but session not established');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred during signup');
     }
