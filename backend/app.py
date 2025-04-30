@@ -450,8 +450,21 @@ def uploaded_file(filename):
 
 @app.route('/api/steg_rooms/<int:id>', methods=['DELETE'])
 def delete_room(id):
-    # Logic to delete the room
-    return {"message": "Room deleted successfully"}, 200
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    # Query the room by ID and ensure it belongs to the current user
+    room = StegoRoom.query.filter_by(id=id, user_id=session['user_id']).first()
+    if not room:
+        return jsonify({"error": "Room not found or unauthorized"}), 404
+
+    try:
+        # Delete the room from the database
+        db.session.delete(room)
+        db.session.commit()
+        return jsonify({"message": "Room deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':     
     with app.app_context():
