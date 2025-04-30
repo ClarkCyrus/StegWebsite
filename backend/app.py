@@ -448,6 +448,11 @@ def add_cors_headers(response):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+@app.route('/api/steg_rooms/<int:id>', methods=['DELETE'])
+def delete_room(id):
+    # Logic to delete the room
+    return {"message": "Room deleted successfully"}, 200
+
 if __name__ == '__main__':     
     with app.app_context():
             db.create_all() 

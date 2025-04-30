@@ -164,3 +164,53 @@
   font-size: 0.9rem;
   margin-top: 0.5rem;
 } 
+
+.close-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: 2px solid #6c63ff; /* Purple border */
+  border-radius: 50%;
+  color: #6c63ff; /* Purple text */
+  width: 20px; /* Adjusted size for better alignment */
+  height: 20px; /* Adjusted size for better alignment */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.close-button:hover {
+  background-color: #6c63ff; /* Purple background on hover */
+  color: white; /* White icon on hover */
+}
+
+.custom-modal .modal-header {
+  background-color: #6c63ff; /* Purple background */
+  color: white; /* White text */
+  border-bottom: none; /* Remove border */
+}
+
+.custom-modal .modal-title {
+  font-weight: bold;
+}
+
+.custom-modal .modal-footer {
+  border-top: none; /* Remove border */
+}
+
+.custom-modal .btn-secondary {
+  background-color: #d3d3d3; /* Light gray for cancel button */
+  border: none;
+}
+
+.custom-modal .btn-danger {
+  background-color: #6c63ff; /* Purple for delete button */
+  border: none;
+}
+
+.custom-modal .btn-danger:hover {
+  background-color: #5a0ca0; /* Darker purple on hover */
+}
