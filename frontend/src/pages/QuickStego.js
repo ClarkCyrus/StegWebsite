@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Form, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { FiArrowLeft, FiDownload } from 'react-icons/fi';
+import './QuickStego.css';
 
 function QuickStego() {
     const navigate = useNavigate();
@@ -39,10 +41,10 @@ function QuickStego() {
         const allowedFormats = ['image/png', 'image/tiff', 'image/bmp', 'image/jpeg']
 
         if (!file || !allowedFormats.includes(file.type)) {
-            setError('Invalid format. Please upload a PNG, TIFF, BMP, or JPEG image.'); // Set error message
-            e.target.value = null; // Clear invalid input
-            setEmbedCoverImage(null); // Clear state
-            return; // Stop further execution
+            setError('Invalid format. Please upload a PNG, TIFF, BMP, or JPEG image.');
+            e.target.value = null;
+            setEmbedCoverImage(null);
+            return;
         }        
 
         setError(null)
@@ -60,7 +62,7 @@ function QuickStego() {
 
     const handleEmbedMessageUpload = (e) => {
         const file = e.target.files[0];
-        const allowedFormats = ['text/plain', 'audio/mpeg', 'image/png'] // MIME
+        const allowedFormats = ['text/plain', 'audio/mpeg', 'image/png']
 
         if (!allowedFormats.includes(file.type) && !file.name.endsWith('.txt')) {
             setError('Invalid file format. Please upload a TXT, MP3, or PNG file.'); 
@@ -75,14 +77,12 @@ function QuickStego() {
         if (file) {
             const reader = new FileReader();
             
-            // Handle text files differently
             if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
                 reader.onload = (e) => {
                     setEmbedMessagePreview({ type: 'text', content: e.target.result });
                 };
                 reader.readAsText(file);
             } else {
-                // Handle other file types
                 reader.onloadend = () => {
                     if (file.type.startsWith('image/')) {
                         setEmbedMessagePreview({ type: 'image', content: reader.result });
@@ -219,273 +219,270 @@ function QuickStego() {
     };
 
     return (
-        <Container className="mt-4" style={{ maxWidth: '1200px' }}>
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2>Quick Stego</h2>
-                <Button variant="outline-secondary" onClick={() => navigate('/dashboard')}>
+        <div className="quick-stego-container">
+            <div className="quick-stego-header">
+                <h1 className="quick-stego-title">Quick Stego</h1>
+                <button className="back-button" onClick={() => navigate('/dashboard')}>
+                    <FiArrowLeft size={20} />
                     Back to Dashboard
-                </Button>
+                </button>
             </div>
-            <p className="text-muted mb-4">
+            <p className="quick-stego-description">
                 Quickly embed and extract messages using MLSB steganography without saving to database.
             </p>
             {error && <Alert variant="danger">{error}</Alert>}
             <Row>
                 {/* Embed Section */}
                 <Col md={6}>
-                    <Card style={{ background: '#232428', color: '#fff', marginBottom: '2rem' }}>
-                        <Card.Header className="py-3">
-                            <h4 className="mb-0">Embed Message</h4>
-                        </Card.Header>
-                        <Card.Body className="p-4">
+                    <div className="stego-card">
+                        <div className="stego-card-header">
+                            <h4>Embed Message</h4>
+                        </div>
+                        <div className="stego-card-body">
                             {embedError && <Alert variant="danger">{embedError}</Alert>}
                             {embedSuccess && <Alert variant="success">{embedSuccess}</Alert>}
                             <Form onSubmit={handleEmbed}>
-                                <Form.Group className="mb-4">
-                                    <Form.Label>Cover Image</Form.Label>
-                                    <Form.Control
+                                <div className="form-group">
+                                    <label className="form-label">Cover Image</label>
+                                    <input
                                         type="file"
+                                        className="form-control"
                                         accept="image/*"
                                         onChange={handleEmbedImageUpload}
                                         required
                                     />
                                     {embedImagePreview && (
-                                        <div className="mt-3">
+                                        <div className="preview-container">
                                             <img 
                                                 src={embedImagePreview} 
                                                 alt="Cover Preview" 
-                                                style={{ maxWidth: '100%', maxHeight: '200px' }}
+                                                className="preview-image"
                                             />
                                         </div>
                                     )}
-                                </Form.Group>
-                                <Form.Group className="mb-4">
-                                    <Form.Label>Message File</Form.Label>
-                                    <Form.Control
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Message File</label>
+                                    <input
                                         type="file"
+                                        className="form-control"
                                         onChange={handleEmbedMessageUpload}
                                         required
                                     />
                                     {embedMessagePreview && (
-                                        <div className="mt-3">
+                                        <div className="preview-container">
                                             {embedMessagePreview.type === 'image' && (
-                                                <img src={embedMessagePreview.content} alt="message preview" style={{ maxWidth: '100%', maxHeight: '200px' }} />
+                                                <img src={embedMessagePreview.content} alt="message preview" className="preview-image" />
                                             )}
                                             {embedMessagePreview.type === 'audio' && (
-                                                <audio controls style={{ width: '100%' }}>
+                                                <audio controls className="preview-audio">
                                                     <source src={embedMessagePreview.content} />
                                                 </audio>
                                             )}
                                             {embedMessagePreview.type === 'text' && (
-                                                <div style={{ maxHeight: '200px', overflow: 'auto', padding: '8px', background: '#2a2b2f', borderRadius: '4px' }}>
+                                                <div className="preview-text">
                                                     {embedMessagePreview.content}
                                                 </div>
                                             )}
                                         </div>
                                     )}
-                                </Form.Group>
-                                <Form.Group className="mb-4">
+                                </div>
+                                <div className="switch-container">
                                     <Form.Check
                                         type="switch"
+                                        id="embed-encryption"
                                         label="Enable Encryption"
                                         checked={embedEncrypted}
                                         onChange={(e) => setEmbedEncrypted(e.target.checked)}
                                     />
-                                </Form.Group>
-                                <Button 
-                                    variant="primary" 
+                                </div>
+                                <button 
+                                    className="submit-button"
                                     type="submit" 
                                     disabled={embedLoading}
-                                    className="w-100"
                                 >
                                     {embedLoading ? 'Processing...' : 'Embed Message'}
-                                </Button>
+                                </button>
                             </Form>
                             {stegoPreview && (
-                                <div className="mt-4">
-                                    <h5>Result:</h5>
-                                    <img 
-                                        src={stegoPreview} 
-                                        alt="Stego Preview" 
-                                        style={{ maxWidth: '100%', marginBottom: '1rem' }}
-                                    />
-                                    <Button 
-                                        variant="success" 
+                                <div className="result-section">
+                                    <h5 className="result-title">Result:</h5>
+                                    <div className="preview-container">
+                                        <img 
+                                            src={stegoPreview} 
+                                            alt="Stego Preview" 
+                                            className="preview-image"
+                                        />
+                                    </div>
+                                    <button 
+                                        className="download-button"
                                         onClick={() => handleDownload(`data:image/png;base64,${stegoImage}`, 'stego_image.png')}
-                                        className="w-100 mb-3"
                                     >
+                                        <FiDownload size={20} />
                                         Download Stego Image
-                                    </Button>
+                                    </button>
                                     {encryptionData && (
                                         <>
-                                            <Button 
-                                                variant="info" 
+                                            <button 
+                                                className="download-button"
                                                 onClick={() => handleDownload(`data:text/plain,${encryptionData.key}`, 'encryption_key.txt')}
-                                                className="w-100 mb-2"
                                             >
+                                                <FiDownload size={20} />
                                                 Download Encryption Key
-                                            </Button>
-                                            <Button 
-                                                variant="info" 
+                                            </button>
+                                            <button 
+                                                className="download-button"
                                                 onClick={() => handleDownload(`data:text/plain,${encryptionData.iv}`, 'encryption_iv.txt')}
-                                                className="w-100"
                                             >
+                                                <FiDownload size={20} />
                                                 Download Encryption IV
-                                            </Button>
+                                            </button>
                                         </>
                                     )}
                                 </div>
                             )}
                             {metrics && (
-                                <div className="mt-4">
-                                    <h5>Metrics:</h5>
-                                    <div className="bg-dark p-3 rounded">
-                                        <p className="mb-2">Capacity: {metrics.capacity.toLocaleString()} bytes</p>
-                                        <p className="mb-2">Message Size: {metrics.message_size.toLocaleString()} bytes</p>
-                                        <p className="mb-2">Bits Per Pixel: {metrics.bpp.toFixed(2)}</p>
-                                        <p className="mb-0">PSNR: {metrics.psnr.toFixed(2)} dB</p>
+                                <div className="result-section">
+                                    <h5 className="result-title">Metrics:</h5>
+                                    <div className="metrics-container">
+                                        <div className="metric-item">
+                                            <span className="metric-label">Capacity:</span>
+                                            <span className="metric-value">{metrics.capacity.toLocaleString()} bytes</span>
+                                        </div>
+                                        <div className="metric-item">
+                                            <span className="metric-label">Message Size:</span>
+                                            <span className="metric-value">{metrics.message_size.toLocaleString()} bytes</span>
+                                        </div>
+                                        <div className="metric-item">
+                                            <span className="metric-label">Bits Per Pixel:</span>
+                                            <span className="metric-value">{metrics.bpp.toFixed(2)}</span>
+                                        </div>
+                                        <div className="metric-item">
+                                            <span className="metric-label">PSNR:</span>
+                                            <span className="metric-value">{metrics.psnr.toFixed(2)} dB</span>
+                                        </div>
                                     </div>
                                 </div>
                             )}
-                        </Card.Body>
-                    </Card>
+                        </div>
+                    </div>
                 </Col>
                 {/* Extract Section */}
                 <Col md={6}>
-                    <Card style={{ background: '#232428', color: '#fff' }}>
-                        <Card.Header className="py-3">
-                            <h4 className="mb-0">Extract Message</h4>
-                        </Card.Header>
-                        <Card.Body className="p-4">
+                    <div className="stego-card">
+                        <div className="stego-card-header">
+                            <h4>Extract Message</h4>
+                        </div>
+                        <div className="stego-card-body">
                             {extractError && <Alert variant="danger">{extractError}</Alert>}
                             {extractSuccess && <Alert variant="success">{extractSuccess}</Alert>}
                             <Form onSubmit={handleExtract}>
-                                <Form.Group className="mb-4">
-                                    <Form.Label>Stego Image</Form.Label>
-                                    <Form.Control
+                                <div className="form-group">
+                                    <label className="form-label">Stego Image</label>
+                                    <input
                                         type="file"
+                                        className="form-control"
                                         accept="image/*"
                                         onChange={handleExtractStegoImageUpload}
                                         required
                                     />
                                     {extractStegoPreview && (
-                                        <div className="mt-3">
+                                        <div className="preview-container">
                                             <img 
                                                 src={extractStegoPreview} 
                                                 alt="Stego Preview" 
-                                                style={{ maxWidth: '100%', maxHeight: '200px' }}
+                                                className="preview-image"
                                             />
                                         </div>
                                     )}
-                                </Form.Group>
-                                <Form.Group className="mb-4">
+                                </div>
+                                <div className="switch-container">
                                     <Form.Check
                                         type="switch"
+                                        id="extract-encryption"
                                         label="Enable Decryption"
                                         checked={extractEncrypted}
                                         onChange={(e) => setExtractEncrypted(e.target.checked)}
                                     />
-                                </Form.Group>
+                                </div>
                                 {extractEncrypted && (
                                     <>
-                                        <Form.Group className="mb-4">
-                                            <Form.Label>Encryption Key</Form.Label>
-                                            <Form.Control
+                                        <div className="form-group">
+                                            <label className="form-label">Encryption Key</label>
+                                            <input
                                                 type="text"
+                                                className="form-control"
                                                 value={extractKey}
                                                 onChange={(e) => setExtractKey(e.target.value)}
                                                 required
                                             />
-                                        </Form.Group>
-                                        <Form.Group className="mb-4">
-                                            <Form.Label>Initialization Vector (IV)</Form.Label>
-                                            <Form.Control
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">Initialization Vector (IV)</label>
+                                            <input
                                                 type="text"
+                                                className="form-control"
                                                 value={extractIV}
                                                 onChange={(e) => setExtractIV(e.target.value)}
                                                 required
                                             />
-                                        </Form.Group>
+                                        </div>
                                     </>
                                 )}
-                                <Button 
-                                    variant="primary" 
+                                <button 
+                                    className="submit-button"
                                     type="submit" 
                                     disabled={extractLoading}
-                                    className="w-100"
                                 >
                                     {extractLoading ? 'Processing...' : 'Extract Message'}
-                                </Button>
+                                </button>
                             </Form>
                             {extractedMessage && (
-                                <div className="mt-4">
-                                    <h5>Extracted Message:</h5>
-                                    <Card style={{ background: '#2a2b2f', marginBottom: '1rem' }}>
-                                        <Card.Body>
-                                            {extractedMessage.type === 'image' && (
-                                                <img src={extractedMessage.content} alt="extracted" style={{ maxWidth: '100%' }} />
-                                            )}
-                                            {extractedMessage.type === 'audio' && (
-                                                <audio controls style={{ width: '100%' }}>
-                                                    <source src={extractedMessage.content} />
-                                                </audio>
-                                            )}
-                                            {extractedMessage.type === 'text' && (
-                                                <div style={{ maxHeight: '200px', overflow: 'auto' }}>
-                                                    {extractedMessage.content}
-                                                </div>
-                                            )}
-                                        </Card.Body>
-                                    </Card>
-                                    <Button 
-                                        variant="success" 
+                                <div className="result-section">
+                                    <h5 className="result-title">Extracted Message:</h5>
+                                    <div className="preview-container">
+                                        {extractedMessage.type === 'image' && (
+                                            <img src={extractedMessage.content} alt="extracted" className="preview-image" />
+                                        )}
+                                        {extractedMessage.type === 'audio' && (
+                                            <audio controls className="preview-audio">
+                                                <source src={extractedMessage.content} />
+                                            </audio>
+                                        )}
+                                        {extractedMessage.type === 'text' && (
+                                            <div className="preview-text">
+                                                {extractedMessage.content}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <button 
+                                        className="download-button"
                                         onClick={() => handleDownload(extractedMessage.downloadUrl, extractedMessage.filename)}
-                                        className="w-100"
                                     >
+                                        <FiDownload size={20} />
                                         Download Extracted Message
-                                    </Button>
+                                    </button>
                                 </div>
                             )}
-                        </Card.Body>
-                    </Card>
+                        </div>
+                    </div>
                 </Col>
             </Row>
-            {/* Loading overlay: always rendered on top but only visible when loading === true */}
-            {(embedLoading || extractLoading)  && (
-                <div
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor: 'rgba(0, 0, 0, 0.3)', // A slightly transparent overlay, so underlying buttons are still visible
-                    zIndex: 9999
-                }}
-                >
-                <div
-                    style={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.8)', // semi-transparent white container
-                    padding: '20px',
-                    borderRadius: '8px',
-                    textAlign: 'center'
-                    }}
-                >
-                    <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Loading...</span>
+            {(embedLoading || extractLoading) && (
+                <div className="loading-overlay">
+                    <div className="loading-content">
+                        <div className="loading-spinner">
+                            <div className="spinner-border" role="status">
+                                <span className="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <p className="loading-text">
+                            {extractLoading ? 'Extracting message, please wait...' : 'Embedding message, please wait...'}
+                        </p>
                     </div>
-                    <p style={{ margin: 0 }}>
-                    {extractLoading
-                        ? 'Extracting message, please wait...'
-                        : 'Embedding message, please wait...'}
-                    </p>
-                </div>
                 </div>
             )}
-        </Container>
+        </div>
     );
 }
 
