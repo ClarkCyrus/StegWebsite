@@ -62,7 +62,7 @@ function QuickStego() {
         const file = e.target.files[0];
         const allowedFormats = ['text/plain', 'audio/mpeg', 'image/png'] // MIME
 
-        if (!allowedFormats.includes(file.type)) {
+        if (!allowedFormats.includes(file.type) && !file.name.endsWith('.txt')) {
             setError('Invalid file format. Please upload a TXT, MP3, or PNG file.'); 
             e.target.value = null;
             setEmbedMessageFile(null);
@@ -71,24 +71,29 @@ function QuickStego() {
 
         setError(null)
         setEmbedMessageFile(file);
+        
         if (file) {
             const reader = new FileReader();
-            reader.onloadend = () => {
-                if (file.type.startsWith('image/')) {
-                    setEmbedMessagePreview({ type: 'image', content: reader.result });
-                } else if (file.type.startsWith('audio/')) {
-                    setEmbedMessagePreview({ type: 'audio', content: reader.result });
-                } else if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
-                    reader.onload = (e) => {
-                        setEmbedMessagePreview({ type: 'text', content: e.target.result });
-                    };
-                    reader.readAsText(file);
-                    return;
-                } else {
-                    setEmbedMessagePreview({ type: 'unknown', name: file.name });
-                }
-            };
-            reader.readAsDataURL(file);
+            
+            // Handle text files differently
+            if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+                reader.onload = (e) => {
+                    setEmbedMessagePreview({ type: 'text', content: e.target.result });
+                };
+                reader.readAsText(file);
+            } else {
+                // Handle other file types
+                reader.onloadend = () => {
+                    if (file.type.startsWith('image/')) {
+                        setEmbedMessagePreview({ type: 'image', content: reader.result });
+                    } else if (file.type.startsWith('audio/')) {
+                        setEmbedMessagePreview({ type: 'audio', content: reader.result });
+                    } else {
+                        setEmbedMessagePreview({ type: 'unknown', name: file.name });
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
         } else {
             setEmbedMessagePreview(null);
         }
@@ -165,10 +170,18 @@ function QuickStego() {
             const data = response.data;
             const downloadUrl = `http://localhost:5000/api/mlsb/download?path=${encodeURIComponent(data.output_path)}`;
             const ext = data.media_type === 'text' ? '.txt' : data.media_type === 'image' ? '.png' : '.mp3';
+            
             if (data.media_type === 'text') {
+                let textContent = '';
+                if (data.message) {
+                    textContent = typeof data.message === 'string' 
+                        ? data.message 
+                        : new TextDecoder().decode(new Uint8Array(data.message));
+                }
+                
                 setExtractedMessage({
                     type: 'text',
-                    content: typeof data.message === 'string' ? data.message : 'Text content extracted',
+                    content: textContent || 'Text content extracted',
                     downloadUrl,
                     filename: `extracted_message${ext}`
                 });
@@ -189,6 +202,7 @@ function QuickStego() {
             }
             setExtractSuccess('Message extracted successfully!');
         } catch (err) {
+            console.error('Extraction error:', err);
             setExtractError(err.response?.data?.error || 'Failed to extract message');
         } finally {
             setExtractLoading(false);

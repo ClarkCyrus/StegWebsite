@@ -173,21 +173,20 @@ class MultiLayerLSB:
             raise ValueError("Unsupported message type in extracted data.")
 
         if message_type == 'text':
-            message = ''.join(chr(int(message_binary[i:i+8], 2)) for i in range(0, len(message_binary), 8))
+            # For encrypted text, keep as bytes
+            if output_path:
+                os.makedirs(os.path.dirname(output_path), exist_ok=True)
+                with open(output_path, 'wb') as f:
+                    f.write(bytes(int(message_binary[i:i+8], 2) for i in range(0, len(message_binary), 8)))
+            return bytes(int(message_binary[i:i+8], 2) for i in range(0, len(message_binary), 8))
         elif message_type in ['audio', 'image']:
-            message = bytes(int(message_binary[i:i+8], 2) for i in range(0, len(message_binary), 8))
+            if output_path:
+                os.makedirs(os.path.dirname(output_path), exist_ok=True)
+                with open(output_path, 'wb') as f:
+                    f.write(bytes(int(message_binary[i:i+8], 2) for i in range(0, len(message_binary), 8)))
+            return bytes(int(message_binary[i:i+8], 2) for i in range(0, len(message_binary), 8))
         else:
             raise ValueError("Invalid message type")
-
-        if output_path:
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            if message_type == 'text':
-                with open(output_path, 'w', encoding='utf-8') as f:
-                    f.write(message)
-            else:
-                with open(output_path, 'wb') as f:
-                    f.write(message)
-        return message
 
     @staticmethod
     def aes_encrypt(data):
@@ -346,7 +345,11 @@ class MultiLayerLSB:
         if message_type is None or message_length is None:
             raise ValueError("Could not extract message metadata")
         if message_type == 'text':
-            message = ''.join(chr(int(binary_message[i:i+8], 2)) for i in range(0, len(binary_message), 8))
+            # For encrypted text, keep as bytes
+            if is_encrypted:
+                message = bytes(int(binary_message[i:i+8], 2) for i in range(0, len(binary_message), 8))
+            else:
+                message = ''.join(chr(int(binary_message[i:i+8], 2)) for i in range(0, len(binary_message), 8))
         elif message_type in ['audio', 'image']:
             message = bytes(int(binary_message[i:i+8], 2) for i in range(0, len(binary_message), 8))
         else:

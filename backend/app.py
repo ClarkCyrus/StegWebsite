@@ -370,16 +370,19 @@ def extract_message():
             'media_type': media_type
         }
         if media_type == 'text':
-            if isinstance(message, bytes):
-                try:
-                    response['message'] = message.decode('utf-8')
-                except Exception:
-                    response['message'] = ''
-            else:
+            try:
+                if isinstance(message, bytes):
+                    message = message.decode('utf-8')
+                elif not isinstance(message, str):
+                    message = str(message)
                 response['message'] = message
+            except Exception as e:
+                print(f"Error decoding text message: {str(e)}")
+                response['message'] = ''
         return jsonify(response)
 
     except Exception as e:
+        print(f"Extraction error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/mlsb/capacity', methods=['POST'])
