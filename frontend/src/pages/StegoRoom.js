@@ -143,7 +143,7 @@ function StegoRoom() {
                 <div style={{ textAlign: 'center' }}>
                   <span style={{ fontWeight: 600 }}>*Cover Image</span>
                   {getImageSrc(room.cover_image) && <img src={getImageSrc(room.cover_image)} alt="cover" style={{ maxWidth: '100%', maxHeight: '120px', marginTop: 8 }} />}
-                </div>
+          </div>
               </Card>
             </Col>
             <Col md={6}>
@@ -151,7 +151,7 @@ function StegoRoom() {
                 <div style={{ textAlign: 'center' }}>
                   <span style={{ fontWeight: 600 }}>*Stegoed Image</span>
                   {getImageSrc(room.stego_image) && <img src={getImageSrc(room.stego_image)} alt="stego" style={{ maxWidth: '100%', maxHeight: '120px', marginTop: 8 }} />}
-                </div>
+          </div>
               </Card>
             </Col>
           </Row>
@@ -189,8 +189,8 @@ function StegoRoom() {
                         </ul>
                       );
                     })()}
-                  </div>
-                </div>
+          </div>
+        </div>
               </Card>
             </Col>
           </Row>
@@ -250,12 +250,12 @@ function StegoRoom() {
                     >
                       Download Message
                     </Button>
-                  </div>
+              </div>
                 </Card>
               )}
             </Col>
           </Row>
-        </div>
+            </div>
       )}
       {/* Loading overlay: always rendered on top but only visible when loading === true */}
        {loading && (
@@ -292,4 +292,4 @@ function StegoRoom() {
   );
 }
 
-export default StegoRoom; 
+export default StegoRoom;

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card } from 'react-bootstrap';
 import axios from 'axios';
-import { BsLockFill, BsLock } from 'react-icons/bs';
+import { BsLockFill, BsLock, BsPlusCircle, BsLightningCharge } from 'react-icons/bs';
+import { FiLogOut } from 'react-icons/fi';
+import './Dashboard.css';
 
 function Dashboard() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -18,7 +20,6 @@ function Dashboard() {
     .then(res => setCurrentUser(res.data))
     .catch(() => setCurrentUser(null));
   }, []);
-
 
   const handleLogout = async () => {
     try {
@@ -40,81 +41,61 @@ function Dashboard() {
   };
 
   return (
-    <Container className="mt-4" style={{ maxWidth: '1200px' }}>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>DASHBOARD</h2>
-        <Button variant="outline-danger" onClick={handleLogout}>
-          Logout
-        </Button>
-      </div>
-       {/* Welcome Message */}
-       {currentUser && (
-        <div className="mb-5">
-          <h4>Hello, {currentUser.name || currentUser.email}!</h4>
+    <div className="dashboard-container">
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">Stego Dashboard</h1>
+        <div className="user-info">
+          {currentUser && (
+            <span className="user-email">{currentUser.email}</span>
+          )}
+          <button className="logout-button" onClick={handleLogout}>
+            <FiLogOut size={20} />
+          </button>
         </div>
-      )}
-      <Row className="mb-5">
-        {rooms.map((room, idx) => (
-          <Col key={room.id} md={4} className="mb-4 d-flex justify-content-center">
-            <Card
-              style={{ width: '220px', height: '220px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', cursor: 'pointer' }}
-              onClick={() => navigate(`/room/${room.id}`)}
-            >
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+      </div>
+
+      <Row>
+        {rooms.map((room) => (
+          <Col key={room.id} md={4} className="mb-4">
+            <Card className="room-card" onClick={() => navigate(`/room/${room.id}`)}>
+              <div className="room-image-container">
                 {getCoverImageSrc(room) ? (
-                  <img src={getCoverImageSrc(room)} alt="cover" style={{ maxWidth: '100%', maxHeight: '120px', objectFit: 'contain' }} />
+                  <img src={getCoverImageSrc(room)} alt="cover" className="room-image" />
                 ) : (
-                  <span>*Image</span>
+                  <span>No Image</span>
                 )}
               </div>
-              <Card.Footer className="d-flex justify-content-between align-items-center" style={{ fontWeight: 'bold', fontSize: '1rem' }}>
-                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{room.name || 'blahblah'}</span>
-                <span className="d-flex align-items-center" style={{ gap: 8 }}>
-                  {!room.is_encrypted ? (
-                    <span style={{ display: 'inline-block', width: 16, height: 16, borderRadius: '50%', background: '#28a745' }} title="Unencrypted"></span>
-                  ) : (
-                    <>
-                      <span style={{ display: 'inline-block', width: 16, height: 16, borderRadius: '50%', background: '#dc3545' }}></span>
-                      {room.is_key_stored ? (
-                        <BsLockFill style={{ color: '#dc3545', marginLeft: 4 }} title="Key stored on website" />
+              <div className="room-footer">
+                <div className="d-flex justify-content-between align-items-center">
+                  <h3 className="room-name">{room.name || 'Untitled'}</h3>
+                  <div className="encryption-status">
+                    <div className={`status-dot ${room.is_encrypted ? 'encrypted' : 'unencrypted'}`} />
+                    {room.is_encrypted && (
+                      room.is_key_stored ? (
+                        <BsLockFill color="var(--danger-color)" size={16} />
                       ) : (
-                        <BsLock style={{ color: '#dc3545', marginLeft: 4 }} title="Key stored locally only" />
-                      )}
-                    </>
-                  )}
-                </span>
-              </Card.Footer>
+                        <BsLock color="var(--danger-color)" size={16} />
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
             </Card>
           </Col>
         ))}
       </Row>
-      <div style={{
-        position: 'fixed',
-        left: '50%',
-        bottom: '32px',
-        transform: 'translateX(-50%)',
-        zIndex: 1000,
-        display: 'flex',
-        gap: '32px',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}>
-        <Button
-          variant="outline-primary"
-          style={{ borderRadius: '50%', width: '100px', height: '100px', fontSize: '1.1rem' }}
-          onClick={() => navigate('/create')}
-        >
-          Create<br />Stego<br />Image
-        </Button>
-        <Button
-          variant="outline-success"
-          style={{ borderRadius: '50%', width: '100px', height: '100px', fontSize: '1.1rem' }}
-          onClick={() => navigate('/quick-stego')}
-        >
-          Quick<br />Stego
-        </Button>
+
+      <div className="action-buttons">
+        <button className="action-button create" onClick={() => navigate('/create')}>
+          <BsPlusCircle size={24} />
+          <span className="action-button-text">Create Stego</span>
+        </button>
+        <button className="action-button quick" onClick={() => navigate('/quick-stego')}>
+          <BsLightningCharge size={24} />
+          <span className="action-button-text">Quick Stego</span>
+        </button>
       </div>
-    </Container>
+    </div>
   );
 }
 
