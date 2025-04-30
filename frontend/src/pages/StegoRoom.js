@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { FiUpload, FiDownload, FiLock, FiArrowLeft, FiImage, FiFileText, FiMusic } from 'react-icons/fi';
+import './StegoRoom.css';
 
 function StegoRoom() {
   const { roomId } = useParams();
+  const navigate = useNavigate();
   const [room, setRoom] = useState(null);
   const [stegoUpload, setStegoUpload] = useState(null);
   const [key, setKey] = useState('');
@@ -12,8 +14,6 @@ function StegoRoom() {
   const [message, setMessage] = useState(null);
   const [messagePreview, setMessagePreview] = useState(null);
   const [error, setError] = useState(null);
-
-  //SetLoading
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -132,163 +132,167 @@ function StegoRoom() {
   };
 
   return (
-    <Container fluid style={{ background: '#18191c', minHeight: '100vh', color: '#fff', padding: 40 }}>
-      {error && <Alert variant="danger">{error}</Alert>}
-      {room && (
-        <div>
-          <h3 style={{ color: '#fff', marginBottom: 24 }}>{room.name}</h3>
-          <Row className="mb-4">
-            <Col md={6}>
-              <Card style={{ height: '180px', background: '#232428', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <span style={{ fontWeight: 600 }}>*Cover Image</span>
-                  {getImageSrc(room.cover_image) && <img src={getImageSrc(room.cover_image)} alt="cover" style={{ maxWidth: '100%', maxHeight: '120px', marginTop: 8 }} />}
-          </div>
-              </Card>
-            </Col>
-            <Col md={6}>
-              <Card style={{ height: '180px', background: '#232428', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <span style={{ fontWeight: 600 }}>*Stegoed Image</span>
-                  {getImageSrc(room.stego_image) && <img src={getImageSrc(room.stego_image)} alt="stego" style={{ maxWidth: '100%', maxHeight: '120px', marginTop: 8 }} />}
-          </div>
-              </Card>
-            </Col>
-          </Row>
-          <Row className="mb-4">
-            <Col>
-              <Card style={{ minHeight: '100px', background: '#232428', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ width: '100%', padding: '16px' }}>
-                  <div style={{ fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>metrics</div>
-                  <div style={{ fontSize: 14, marginTop: 8 }}>
-                    {(() => {
-                      let metricsObj = room.metrics;
-                      if (typeof metricsObj === 'string') {
-                        try {
-                          // First replace np.float64(...) with just the number
-                          metricsObj = metricsObj.replace(/np\.float64\(([\d.]+)\)/g, '$1');
-                          // Then parse the cleaned string as JSON
-                          metricsObj = JSON.parse(metricsObj.replace(/'/g, '"'));
-                        } catch (e) {
-                          console.error('Error parsing metrics:', e);
-                          metricsObj = {};
-                        }
-                      }
-                      return (
-                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, textAlign: 'center' }}>
-                          {Object.entries(metricsObj).map(([k, v]) => (
-                            <li key={k} style={{ marginBottom: 4 }}>
-                              <b style={{ marginRight: 8 }}>{k}:</b>
-                              {typeof v === 'number' ? 
-                                k === 'capacity' || k === 'message_size' ? 
-                                  v.toLocaleString() : 
-                                  v.toFixed(2)
-                                : v}
-                            </li>
-                          ))}
-                        </ul>
-                      );
-                    })()}
-          </div>
+    <div className="stego-room-container">
+      <div className="stego-room-card">
+        <div className="stego-room-header">
+          <button className="back-button" onClick={() => navigate('/dashboard')}>
+            <FiArrowLeft size={20} />
+            Back to Dashboard
+          </button>
+          <h1 className="stego-room-title">{room?.name || 'Loading...'}</h1>
         </div>
-              </Card>
-            </Col>
-          </Row>
-          <Row className="mb-4">
-            <Col md={2} className="d-flex align-items-center">
-              <Form.Check type="switch" label="is_encrypted" checked={room.is_encrypted} disabled style={{ color: '#fff' }} />
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label style={{ color: '#fff' }}>Key</Form.Label>
-                <Form.Control value={key} disabled={!room.is_encrypted} onChange={e => setKey(e.target.value)} style={{ background: '#232428', color: '#fff' }} />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label style={{ color: '#fff' }}>IV</Form.Label>
-                <Form.Control value={iv} disabled={!room.is_encrypted} onChange={e => setIV(e.target.value)} style={{ background: '#232428', color: '#fff' }} />
-              </Form.Group>
-            </Col>
-          </Row>
-          <Row className="mb-4">
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label style={{ color: '#fff' }}>*upload stego image</Form.Label>
-                <Form.Control type="file" onChange={handleStegoUpload} style={{ background: '#232428', color: '#fff' }} />
-              </Form.Group>
-            </Col>
-            <Col md={2} className="d-flex align-items-end">
-              <Button variant="primary" onClick={handleGetMessage} style={{ width: '100%' }}>Get message!</Button>
-            </Col>
-            <Col md={6} className="d-flex align-items-end">
-              {messagePreview && (
-                <Card style={{ width: '100%', background: '#232428', color: '#fff', padding: '16px' }}>
-                  <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-                    <span style={{ fontWeight: 600 }}>Extracted Message Preview</span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100px' }}>
-                    <div style={{ marginBottom: '16px', width: '100%', display: 'flex', justifyContent: 'center' }}>
-                      {messagePreview.type === 'image' && (
-                        <img src={messagePreview.content} alt="extracted preview" style={{ maxWidth: '100%', maxHeight: '200px' }} />
-                      )}
-                      {messagePreview.type === 'audio' && (
-                        <audio controls style={{ width: '100%', maxWidth: '250px' }}>
-                          <source src={messagePreview.content} />
-                        </audio>
-                      )}
-                      {messagePreview.type === 'text' && (
-                        <div style={{ maxHeight: '200px', overflow: 'auto', width: '100%', textAlign: 'left', padding: '8px', background: '#2a2b2f', borderRadius: '4px' }}>
-                          {messagePreview.content}
-                        </div>
-                      )}
-                    </div>
-                    <Button 
-                      variant="success" 
-                      onClick={() => handleDownload(messagePreview.downloadUrl, messagePreview.filename)}
-                      style={{ width: 'auto', padding: '8px 24px' }}
-                    >
-                      Download Message
-                    </Button>
+
+        {error && <div className="error-alert">{error}</div>}
+
+        {room && (
+          <div className="stego-room-content">
+            <div className="image-section">
+              <div className="image-card">
+                <div className="image-header">
+                  <FiImage size={24} />
+                  <h3>Cover Image</h3>
+                </div>
+                <div className="image-preview">
+                  {getImageSrc(room.cover_image) && (
+                    <img src={getImageSrc(room.cover_image)} alt="cover" className="preview-image" />
+                  )}
+                </div>
               </div>
-                </Card>
+
+              <div className="image-card">
+                <div className="image-header">
+                  <FiImage size={24} />
+                  <h3>Stego Image</h3>
+                </div>
+                <div className="image-preview">
+                  {getImageSrc(room.stego_image) && (
+                    <img src={getImageSrc(room.stego_image)} alt="stego" className="preview-image" />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="metrics-section">
+              <div className="metrics-header">
+                <h3>Embedding Metrics</h3>
+              </div>
+              <div className="metrics-grid">
+                {(() => {
+                  let metricsObj = room.metrics;
+                  if (typeof metricsObj === 'string') {
+                    try {
+                      metricsObj = metricsObj.replace(/np\.float64\(([\d.]+)\)/g, '$1');
+                      metricsObj = JSON.parse(metricsObj.replace(/'/g, '"'));
+                    } catch (e) {
+                      console.error('Error parsing metrics:', e);
+                      metricsObj = {};
+                    }
+                  }
+                  return Object.entries(metricsObj).map(([k, v]) => (
+                    <div key={k} className="metric-item">
+                      <span className="metric-label">{k}:</span>
+                      <span className="metric-value">
+                        {typeof v === 'number' ? 
+                          k === 'capacity' || k === 'message_size' ? 
+                            v.toLocaleString() : 
+                            v.toFixed(2)
+                          : v}
+                      </span>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+
+            <div className="extraction-section">
+              <div className="encryption-section">
+                <div className="encryption-status">
+                  <FiLock size={20} />
+                  <span>Encryption: {room.is_encrypted ? 'Enabled' : 'Disabled'}</span>
+                </div>
+                {room.is_encrypted && (
+                  <div className="encryption-inputs">
+                    <div className="form-group">
+                      <label className="form-label">Encryption Key</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={key}
+                        onChange={e => setKey(e.target.value)}
+                        placeholder="Enter encryption key"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Initialization Vector (IV)</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={iv}
+                        onChange={e => setIV(e.target.value)}
+                        placeholder="Enter IV"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="upload-section">
+                <div className="upload-card">
+                  <div className="upload-header">
+                    <FiUpload size={24} />
+                    <h3>Upload Stego Image</h3>
+                  </div>
+                  <input
+                    type="file"
+                    className="file-input"
+                    onChange={handleStegoUpload}
+                    accept="image/*"
+                  />
+                </div>
+
+                <button 
+                  className="extract-button"
+                  onClick={handleGetMessage}
+                  disabled={loading}
+                >
+                  {loading ? 'Extracting...' : 'Extract Message'}
+                </button>
+              </div>
+
+              {messagePreview && (
+                <div className="message-preview">
+                  <div className="preview-header">
+                    <h3>Extracted Message</h3>
+                    <button 
+                      className="download-button"
+                      onClick={() => handleDownload(messagePreview.downloadUrl, messagePreview.filename)}
+                    >
+                      <FiDownload size={20} />
+                      Download
+                    </button>
+                  </div>
+                  <div className="preview-content">
+                    {messagePreview.type === 'image' && (
+                      <img src={messagePreview.content} alt="extracted preview" className="preview-image" />
+                    )}
+                    {messagePreview.type === 'audio' && (
+                      <audio controls className="preview-audio">
+                        <source src={messagePreview.content} />
+                      </audio>
+                    )}
+                    {messagePreview.type === 'text' && (
+                      <div className="preview-text">
+                        {messagePreview.content}
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
-            </Col>
-          </Row>
             </div>
-      )}
-      {/* Loading overlay: always rendered on top but only visible when loading === true */}
-       {loading && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: 'rgba(0, 0, 0, 0.3)', // A slightly transparent overlay, so underlying buttons are still visible
-            zIndex: 9999
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.8)', // semi-transparent white container
-              padding: '20px',
-              borderRadius: '8px',
-              textAlign: 'center'
-            }}
-          >
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p style={{ margin: 0 }}>Extracting message, please wait...</p>
           </div>
-        </div>
-      )}
-    </Container>
+        )}
+      </div>
+    </div>
   );
 }
 
