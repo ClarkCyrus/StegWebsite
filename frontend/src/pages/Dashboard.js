@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Modal, Button } from 'react-bootstrap';
 import axios from 'axios';
 import { BsLockFill, BsLock, BsPlusCircle, BsLightningCharge } from 'react-icons/bs';
-import { FiLogOut } from 'react-icons/fi';
-import { FiX } from 'react-icons/fi';
+import { FiLogOut, FiX } from 'react-icons/fi';
 import './Dashboard.css';
 
 function Dashboard() {
@@ -19,7 +18,7 @@ function Dashboard() {
       .then(res => setRooms(res.data))
       .catch(() => setRooms([]));
 
-    axios.get('http://localhost:5000/api/current_user', { withCredentials: true })
+    axios.get('http://localhost:5000/api/current_user', { withCredentials: true })  
     .then(res => setCurrentUser(res.data))
     .catch(() => setCurrentUser(null));
   }, []);

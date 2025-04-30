@@ -170,11 +170,11 @@
   top: 8px;
   right: 8px;
   background: transparent;
-  border: 2px solid #6c63ff; /* Purple border */
+  border: 2px solid #6c63ff; 
   border-radius: 50%;
-  color: #6c63ff; /* Purple text */
-  width: 20px; /* Adjusted size for better alignment */
-  height: 20px; /* Adjusted size for better alignment */
+  color: #6c63ff; 
+  width: 24px; 
+  height: 24px; 
   display: flex;
   align-items: center;
   justify-content: center;
@@ -183,14 +183,26 @@
 }
 
 .close-button:hover {
-  background-color: #6c63ff; /* Purple background on hover */
-  color: white; /* White icon on hover */
+  background-color: #6c63ff; 
+  color: white; 
+}
+
+.close-button svg {
+  font-size: 16px; 
+  transform: scale(2); 
+  color: #6c63ff;
+  transition: color 0.3s;
+  pointer-events: none; 
+}
+
+.close-button:hover svg {
+  color: white; 
 }
 
 .custom-modal .modal-header {
-  background-color: #6c63ff; /* Purple background */
-  color: white; /* White text */
-  border-bottom: none; /* Remove border */
+  background-color: #6c63ff; 
+  color: white; 
+  border-bottom: none;
 }
 
 .custom-modal .modal-title {
@@ -198,19 +210,19 @@
 }
 
 .custom-modal .modal-footer {
-  border-top: none; /* Remove border */
+  border-top: none;
 }
 
 .custom-modal .btn-secondary {
-  background-color: #d3d3d3; /* Light gray for cancel button */
+  background-color: #d3d3d3; 
   border: none;
 }
 
 .custom-modal .btn-danger {
-  background-color: #6c63ff; /* Purple for delete button */
+  background-color: #6c63ff; 
   border: none;
 }
 
 .custom-modal .btn-danger:hover {
-  background-color: #5a0ca0; /* Darker purple on hover */
+  background-color: #5a0ca0; 
 }
