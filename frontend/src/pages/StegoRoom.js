@@ -38,6 +38,8 @@ function StegoRoom() {
   const [messagePreview, setMessagePreview] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [sliderPosition, setSliderPosition] = useState(50);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     axios.get(`http://localhost:5000/api/stegorooms/${roomId}`, { withCredentials: true })
@@ -51,6 +53,15 @@ function StegoRoom() {
       })
       .catch(() => setError('Failed to load room data'));
   }, [roomId]);
+
+  // Initialize slider position
+  useEffect(() => {
+    // Apply initial slider position
+    const container = document.querySelector('.image-comparison-container');
+    if (container) {
+      container.style.setProperty('--position', `${sliderPosition}%`);
+    }
+  }, [room, sliderPosition]);
 
   const handleStegoUpload = (e) => {
     setStegoUpload(e.target.files[0]);
@@ -348,6 +359,49 @@ function StegoRoom() {
     );
   };
 
+  const handleSliderMouseDown = (e) => {
+    setIsDragging(true);
+    e.preventDefault();
+  };
+
+  const handleSliderMouseMove = (e) => {
+    if (!isDragging) return;
+    
+    const container = e.currentTarget;
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const percentage = Math.min(Math.max((x / rect.width) * 100, 0), 100);
+    
+    setSliderPosition(percentage);
+    container.style.setProperty('--position', `${percentage}%`);
+  };
+
+  const handleSliderMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleSliderTouchStart = (e) => {
+    setIsDragging(true);
+    e.preventDefault();
+  };
+
+  const handleSliderTouchMove = (e) => {
+    if (!isDragging) return;
+    
+    const container = e.currentTarget;
+    const rect = container.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const percentage = Math.min(Math.max((x / rect.width) * 100, 0), 100);
+    
+    setSliderPosition(percentage);
+    container.style.setProperty('--position', `${percentage}%`);
+  };
+
+  const handleSliderTouchEnd = () => {
+    setIsDragging(false);
+  };
+
   return (
     <div className="stego-room-container">
       <div className="stego-room-card">
@@ -364,41 +418,40 @@ function StegoRoom() {
         {room && (
           <div className="stego-room-content">
             <div className="image-section">
-              <div className="image-card">
-                <div className="image-header">
-                  <FiImage size={24} />
-                  <h3>Cover Image</h3>
-                </div>
-                <div className="image-preview">
-                  {getImageSrc(room.cover_image) && (
-                    <img src={getImageSrc(room.cover_image)} alt="cover" className="preview-image" />
-                  )}
-                </div>
-              </div>
-
-              <div className="image-card">
-                <div className="image-header">
-                  <FiImage size={24} />
-                  <h3>Stego Image</h3>
-                </div>
-                <div className="image-preview">
+              <div 
+                className="image-comparison-container"
+                onMouseMove={handleSliderMouseMove}
+                onMouseUp={handleSliderMouseUp}
+                onMouseLeave={handleSliderMouseUp}
+                onTouchMove={handleSliderTouchMove}
+                onTouchEnd={handleSliderTouchEnd}
+                style={{ '--position': `${sliderPosition}%` }}
+              >
+                <div className="image-comparison-before">
                   {getImageSrc(room.stego_image) && (
                     <img 
                       src={getImageSrc(room.stego_image)} 
                       alt="stego" 
-                      className="preview-image protected-image"
+                      className="protected-image"
                       onContextMenu={preventImageInteraction}
                       onDragStart={preventImageInteraction}
                       onMouseDown={preventImageInteraction}
-                      style={{ 
-                        pointerEvents: 'none',
-                        userSelect: 'none',
-                        WebkitUserSelect: 'none',
-                        MozUserSelect: 'none',
-                        msUserSelect: 'none'
-                      }}
                     />
                   )}
+                </div>
+                <div className="image-comparison-after">
+                  {getImageSrc(room.cover_image) && (
+                    <img src={getImageSrc(room.cover_image)} alt="cover" />
+                  )}
+                </div>
+                <div 
+                  className="image-comparison-slider"
+                  onMouseDown={handleSliderMouseDown}
+                  onTouchStart={handleSliderTouchStart}
+                />
+                <div className="image-comparison-labels">
+                  <span style={{ color: "#6f42c1", fontWeight: "bold" }}>Cover Image</span>
+                  <span style={{ color: "#6f42c1", fontWeight: "bold" }}>Stego Image</span>
                 </div>
               </div>
             </div>
