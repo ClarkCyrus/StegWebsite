@@ -1,6 +1,6 @@
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import MLSBDemo from './pages/MLSBDemo.js';
 import Dashboard from './pages/Dashboard.js';
@@ -35,6 +35,7 @@ function App() {
 
   function RequireAuth({ children }) {
     const { authToken } = useAuth(); // Use the context to get the authToken
+    const navigate = useNavigate();
 
     const [countdown, setCountdown] = useState(5);
     const [showAlert, setShowAlert] = useState(false);
@@ -46,7 +47,7 @@ function App() {
           setCountdown((prev) => {
             if (prev <= 1) {
               clearInterval(interval); 
-              Navigate('/login');
+              navigate('/login');
             }
             return prev - 1; 
           });
