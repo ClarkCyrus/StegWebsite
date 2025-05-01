@@ -432,7 +432,12 @@
   background: #f8f9fa;
   border-radius: 4px;
   white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-all;
   border: 1px solid #e9ecef;
+  font-family: monospace;
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
 
 .protected-image {
