@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FiUpload, FiLock, FiDownload, FiArrowLeft, FiAlertTriangle } from 'react-icons/fi';
+import { FiUpload, FiLock, FiDownload, FiArrowLeft, FiAlertTriangle, FiInfo} from 'react-icons/fi';
 import './CreateStegoRoom.css';
 
 function CreateStegoRoom() {
@@ -315,6 +315,12 @@ function CreateStegoRoom() {
                       <img src={`data:image/png;base64,${modalData.stego_image}`} alt="stego preview" className="preview-image" />
                     )}
                   </div>
+                </div>
+                <div className="warning-info">
+                  <FiInfo size={20} />
+                    <span style={{ display: "flex", alignItems: "center" }}>
+                      When the PSNR metric is lower than 30, the image quality might be low.
+                    </span>
                 </div>
                 {modalData?.metrics && (
                   <div className="metrics-section">

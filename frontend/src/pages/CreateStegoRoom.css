@@ -366,6 +366,17 @@ input:checked + .slider:before {
   border: 1px solid #feebc8;
 }
 
+.warning-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #e5feff;
+  color: #2190c0;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #b9eefe;
+}
+
 .preview-section {
   display: flex;
   flex-direction: column;
