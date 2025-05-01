@@ -3,12 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FiLogIn } from 'react-icons/fi';
 import './Auth.css';
+import { useAuth } from '../pages/AuthContext';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,6 +21,8 @@ function Login() {
 
     try {
       await axios.post('http://localhost:5000/api/login', { email: normalizedEmail, password }, { withCredentials: true });
+      const fakeToken = '123456'; 
+      login(fakeToken);
       navigate('/dashboard');
     } catch (err) {
       setError('Invalid credentials');

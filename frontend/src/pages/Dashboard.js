@@ -5,6 +5,7 @@ import axios from 'axios';
 import { BsLockFill, BsLock, BsPlusCircle, BsLightningCharge } from 'react-icons/bs';
 import { FiLogOut, FiX } from 'react-icons/fi';
 import './Dashboard.css';
+import { useAuth } from './AuthContext'; 
 
 function Dashboard() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -12,6 +13,8 @@ function Dashboard() {
   const [showModal, setShowModal] = useState(false);
   const [roomToDelete, setRoomToDelete] = useState(null);
   const navigate = useNavigate();
+
+  const { logout } = useAuth();
 
   useEffect(() => {
     axios.get('http://localhost:5000/api/steg_rooms', { withCredentials: true })
@@ -26,6 +29,7 @@ function Dashboard() {
   const handleLogout = async () => {
     try {
       await axios.post('http://localhost:5000/api/logout', {}, { withCredentials: true });
+      logout(); 
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
