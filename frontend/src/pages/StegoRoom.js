@@ -302,12 +302,12 @@ function StegoRoom() {
               </div>
             </div>
             <p className="loading-text">
-              {'Embedding message, please wait...'}
+              {'Extracting message, please wait...'}
             </p>
           </div>
         </div>
       )}
-      
+
     </div>
   );
 }
