@@ -9,6 +9,7 @@ import StegoRoom from './pages/StegoRoom.js';
 import Login from './pages/Login.js';
 import Signup from './pages/Signup.js';
 import QuickStego from './pages/QuickStego.js';
+import NotFound from './pages/NotFound.js';
 import { AuthProvider, useAuth } from './pages/AuthContext.js';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
             <Route path="/room/:roomId" element={<RequireAuth><StegoRoom /></RequireAuth>} />
             <Route path="/mlsb-demo" element={<RequireAuth><MLSBDemo /></RequireAuth>} />
             <Route path="/quick-stego" element={<RequireAuth><QuickStego /></RequireAuth>} />
+            <Route path="*" element={<NotFound />} /> {/* Fallback route */}
           </Routes>
         </Router>
       </AuthProvider>
