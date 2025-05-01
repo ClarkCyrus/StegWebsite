@@ -120,6 +120,19 @@
   color: #333;
 }
 
+.metrics-content {
+  display: grid;
+  gap: 2rem;
+}
+
+.metrics-chart {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  height: 300px;
+}
+
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

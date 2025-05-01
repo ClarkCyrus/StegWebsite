@@ -2,7 +2,30 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FiUpload, FiDownload, FiLock, FiArrowLeft, FiImage, FiFileText, FiMusic } from 'react-icons/fi';
+import { Line, Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 import './StegoRoom.css';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 function StegoRoom() {
   const { roomId } = useParams();
@@ -137,6 +160,99 @@ function StegoRoom() {
     return false;
   };
 
+  const formatBytes = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const renderMetricsSection = (metricsObj) => {
+    if (!metricsObj) return null;
+
+    // Parse metrics if they're in string format
+    if (typeof metricsObj === 'string') {
+      try {
+        metricsObj = metricsObj.replace(/np\.float64\(([\d.]+)\)/g, '$1');
+        metricsObj = JSON.parse(metricsObj.replace(/'/g, '"'));
+      } catch (e) {
+        console.error('Error parsing metrics:', e);
+        return null;
+      }
+    }
+
+    const capacityData = {
+      labels: ['Message Size', 'Total Capacity'],
+      datasets: [{
+        label: 'Storage Usage (bytes)',
+        data: [metricsObj.message_size, metricsObj.capacity],
+        backgroundColor: ['rgba(111, 66, 193, 0.6)', 'rgba(111, 66, 193, 0.3)'],
+        borderColor: ['rgba(111, 66, 193, 1)', 'rgba(111, 66, 193, 0.5)'],
+        borderWidth: 1
+      }]
+    };
+
+    const barOptions = {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Storage Capacity Usage'
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Bytes'
+          }
+        }
+      }
+    };
+
+    return (
+      <div className="metrics-section">
+        <div className="metrics-header">
+          <h3>Embedding Metrics</h3>
+        </div>
+        <div className="metrics-content">
+          <div className="metrics-chart">
+            <Bar data={capacityData} options={barOptions} />
+          </div>
+          <div className="metrics-grid">
+            <div className="metric-item">
+              <span className="metric-label">PSNR:</span>
+              <span className="metric-value">{metricsObj.psnr.toFixed(2)} dB</span>
+            </div>
+            <div className="metric-item">
+              <span className="metric-label">Bits per Pixel:</span>
+              <span className="metric-value">{metricsObj.bpp.toFixed(4)} bpp</span>
+            </div>
+            <div className="metric-item">
+              <span className="metric-label">Message Size:</span>
+              <span className="metric-value">{formatBytes(metricsObj.message_size)}</span>
+            </div>
+            <div className="metric-item">
+              <span className="metric-label">Total Capacity:</span>
+              <span className="metric-value">{formatBytes(metricsObj.capacity)}</span>
+            </div>
+            <div className="metric-item">
+              <span className="metric-label">Capacity Used:</span>
+              <span className="metric-value">
+                {((metricsObj.message_size / metricsObj.capacity) * 100).toFixed(2)}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="stego-room-container">
       <div className="stego-room-card">
@@ -192,37 +308,7 @@ function StegoRoom() {
               </div>
             </div>
 
-            <div className="metrics-section">
-              <div className="metrics-header">
-                <h3>Embedding Metrics</h3>
-              </div>
-              <div className="metrics-grid">
-                {(() => {
-                  let metricsObj = room.metrics;
-                  if (typeof metricsObj === 'string') {
-                    try {
-                      metricsObj = metricsObj.replace(/np\.float64\(([\d.]+)\)/g, '$1');
-                      metricsObj = JSON.parse(metricsObj.replace(/'/g, '"'));
-                    } catch (e) {
-                      console.error('Error parsing metrics:', e);
-                      metricsObj = {};
-                    }
-                  }
-                  return Object.entries(metricsObj).map(([k, v]) => (
-                    <div key={k} className="metric-item">
-                      <span className="metric-label">{k}:</span>
-                      <span className="metric-value">
-                        {typeof v === 'number' ? 
-                          k === 'capacity' || k === 'message_size' ? 
-                            v.toLocaleString() : 
-                            v.toFixed(2)
-                          : v}
-                      </span>
-                    </div>
-                  ));
-                })()}
-              </div>
-            </div>
+            {renderMetricsSection(room.metrics)}
 
             <div className="extraction-section">
               <div className="encryption-section">
