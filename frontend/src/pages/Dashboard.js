@@ -73,9 +73,9 @@ function Dashboard() {
         </div>
       </div>
 
-      <Row>
+      <Row className="g-1 card-row">
         {rooms.map((room) => (
-          <Col key={room.id} md={4} className="mb-4">
+          <Col key={room.id} md={3} className="mb-2 px-1">
             <Card className="room-card" onClick={() => navigate(`/room/${room.id}`)}>
               <div className="room-image-container">
                 {getCoverImageSrc(room) ? (
@@ -132,14 +132,16 @@ function Dashboard() {
       </Row>
 
       <div className="action-buttons">
-        <button className="action-button create" onClick={() => navigate('/create')}>
-          <BsPlusCircle size={24} />
-          <span className="action-button-text">Create Stego</span>
-        </button>
-        <button className="action-button quick" onClick={() => navigate('/quick-stego')}>
-          <BsLightningCharge size={24} />
-          <span className="action-button-text">Quick Stego</span>
-        </button>
+        <div className="action-buttons-container">
+          <button className="action-button create" onClick={() => navigate('/create')}>
+            <BsPlusCircle size={24} />
+            <span className="action-button-text">Create Stego</span>
+          </button>
+          <button className="action-button quick" onClick={() => navigate('/quick-stego')}>
+            <BsLightningCharge size={24} />
+            <span className="action-button-text">Quick Stego</span>
+          </button>
+        </div>
       </div>
 
       <Modal

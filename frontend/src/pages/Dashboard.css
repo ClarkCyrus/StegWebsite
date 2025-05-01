@@ -1,14 +1,14 @@
 .dashboard-container {
   background-color: var(--background-light);
   min-height: 100vh;
-  padding: 2rem;
+  padding: 1.5rem 0.5rem;
 }
 
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   padding: 1rem;
   background-color: var(--white);
   border-radius: 12px;
@@ -46,38 +46,51 @@
   transform: translateY(-2px);
 }
 
+.row.card-row {
+  margin-left: -0.25rem;
+  margin-right: -0.25rem;
+}
+
 .room-card {
   background-color: var(--white);
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   transition: var(--transition);
   box-shadow: var(--shadow-sm);
+  max-width: 400px;
+  width: 100%;
+  margin: 0;
+  border: none;
 }
 
 .room-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-3px);
   box-shadow: var(--shadow-md);
 }
 
 .room-image-container {
-  height: 150px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--background-light);
-  padding: 1rem;
+  height: 160px;
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  background-color: #f0f0f0;
+  border-radius: 8px 8px 0 0;
 }
 
 .room-image {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  margin: 0;
+  padding: 0;
+  display: block;
 }
 
 .room-footer {
-  padding: 1rem;
+  padding: 0.5rem 0.75rem;
   background-color: var(--white);
-  border-top: 1px solid #eee;
+  border-top: none;
 }
 
 .room-name {
@@ -87,17 +100,19 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 0.95rem;
+  max-width: 75%;
 }
 
 .encryption-status {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.3rem;
 }
 
 .status-dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
 }
 
@@ -114,14 +129,34 @@
   left: 50%;
   bottom: 2rem;
   transform: translateX(-50%);
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 1.0rem 1.5rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+}
+
+.action-buttons-title {
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.action-buttons-container {
   display: flex;
   gap: 2rem;
-  z-index: 1000;
 }
 
 .action-button {
-  width: 100px;
-  height: 100px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
   display: flex;
   flex-direction: column;
@@ -132,12 +167,15 @@
   border: 2px solid var(--primary-color);
   color: var(--primary-color);
   background-color: var(--white);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 0;
 }
 
 .action-button:hover {
   background-color: var(--primary-color);
   color: var(--white);
   transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
 }
 
 .action-button.create {
@@ -148,33 +186,39 @@
 .action-button.quick {
   border-color: var(--success-color);
   color: var(--success-color);
-}
-
-.action-button.create:hover {
-  background-color: var(--primary-color);
-  color: var(--white);
+  background-color: var(--white);
 }
 
 .action-button.quick:hover {
   background-color: var(--success-color);
   color: var(--white);
+  box-shadow: 0 8px 15px rgba(40, 167, 69, 0.3);
+}
+
+.action-button.create:hover {
+  background-color: var(--primary-color);
+  color: var(--white);
+  box-shadow: 0 8px 15px rgba(111, 66, 193, 0.3);
 }
 
 .action-button-text {
   font-size: 0.9rem;
-  margin-top: 0.5rem;
-} 
+  margin-top: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  max-width: 80%;
+}
 
 .close-button {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 5px;
+  right: 5px;
   background: transparent;
   border: 2px solid #6c63ff; 
   border-radius: 50%;
   color: #6c63ff; 
-  width: 24px; 
-  height: 24px; 
+  width: 20px; 
+  height: 20px; 
   display: flex;
   align-items: center;
   justify-content: center;
