@@ -106,16 +106,21 @@ function CreateStegoRoom() {
   };
 
   const handleStegoDownload = (base64Data) => {
-    const stegoBlob = fetch(`data:image/png;base64,${base64Data}`).then(res => res.blob()).then(blob => {
-      const stegoUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = stegoUrl;
-      link.download = 'stego_image.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(stegoUrl);
-    });
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'image/png' });
+    const stegoUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = stegoUrl;
+    link.download = 'stego_image.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(stegoUrl);
   };
 
   const handleTextDownload = (content, filename) => {
