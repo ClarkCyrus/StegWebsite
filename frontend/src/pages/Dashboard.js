@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Modal, Button } from 'react-bootstrap';
+import { Container, OverlayTrigger, Tooltip, Row, Col, Card, Modal, Button } from 'react-bootstrap';
 import axios from 'axios';
 import { BsLockFill, BsLock, BsPlusCircle, BsLightningCharge } from 'react-icons/bs';
 import { FiLogOut, FiX } from 'react-icons/fi';
@@ -97,13 +97,31 @@ function Dashboard() {
                 <div className="d-flex justify-content-between align-items-center">
                   <h3 className="room-name">{room.name || 'Untitled'}</h3>
                   <div className="encryption-status">
-                    <div className={`status-dot ${room.is_encrypted ? 'encrypted' : 'unencrypted'}`} />
+                    <OverlayTrigger
+                      placement="top"
+                      overlay={
+                        <Tooltip>
+                          {room.is_encrypted ? 'Encryption enabled' : 'Encryption disabled'}
+                        </Tooltip>
+                     }
+                    >
+                      <div className={`status-dot ${room.is_encrypted ? 'encrypted' : 'unencrypted'}`} />
+                    </OverlayTrigger>
                     {room.is_encrypted && (
-                      room.is_key_stored ? (
+                      <OverlayTrigger
+                        placement="top"
+                        overlay={
+                          <Tooltip>
+                            {room.is_key_stored ? 'Key is stored' : 'Key is not stored'}
+                          </Tooltip>
+                        }
+                      >
+                      {room.is_key_stored ? (
                         <BsLockFill color="var(--danger-color)" size={16} />
                       ) : (
                         <BsLock color="var(--danger-color)" size={16} />
-                      )
+                      )}
+                      </OverlayTrigger>
                     )}
                   </div>
                 </div>
