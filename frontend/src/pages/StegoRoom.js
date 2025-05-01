@@ -131,6 +131,12 @@ function StegoRoom() {
     return normalizedPath;
   };
 
+  const preventImageInteraction = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  };
+
   return (
     <div className="stego-room-container">
       <div className="stego-room-card">
@@ -166,7 +172,21 @@ function StegoRoom() {
                 </div>
                 <div className="image-preview">
                   {getImageSrc(room.stego_image) && (
-                    <img src={getImageSrc(room.stego_image)} alt="stego" className="preview-image" />
+                    <img 
+                      src={getImageSrc(room.stego_image)} 
+                      alt="stego" 
+                      className="preview-image protected-image"
+                      onContextMenu={preventImageInteraction}
+                      onDragStart={preventImageInteraction}
+                      onMouseDown={preventImageInteraction}
+                      style={{ 
+                        pointerEvents: 'none',
+                        userSelect: 'none',
+                        WebkitUserSelect: 'none',
+                        MozUserSelect: 'none',
+                        msUserSelect: 'none'
+                      }}
+                    />
                   )}
                 </div>
               </div>
