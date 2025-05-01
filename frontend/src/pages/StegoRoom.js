@@ -292,6 +292,22 @@ function StegoRoom() {
           </div>
         )}
       </div>
+      
+      {loading && (
+        <div className="loading-overlay">
+          <div className="loading-content">
+            <div className="loading-spinner">
+              <div className="spinner-border" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>
+            <p className="loading-text">
+              {'Embedding message, please wait...'}
+            </p>
+          </div>
+        </div>
+      )}
+      
     </div>
   );
 }
