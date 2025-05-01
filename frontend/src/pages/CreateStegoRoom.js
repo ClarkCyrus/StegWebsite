@@ -274,6 +274,9 @@ function CreateStegoRoom() {
                   <FiDownload size={20} />
                   Download Stego Image
                 </button>
+                <p className="text-danger" style={{ lineHeight: "1", padding: "0", margin: "0" }}>
+                  Download now or else there is no way to retrieve the stego image later.
+                </p>
                 {encrypted && (
                   <>
                     <button className="download-button" onClick={() => handleTextDownload(modalData?.key, 'encryption_key.txt')}>
