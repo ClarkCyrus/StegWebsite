@@ -46,7 +46,7 @@ function App() {
           setCountdown((prev) => {
             if (prev <= 1) {
               clearInterval(interval); 
-              navigate('/login');
+              Navigate('/login');
             }
             return prev - 1; 
           });
