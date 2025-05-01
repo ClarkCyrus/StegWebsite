@@ -168,6 +168,78 @@ function StegoRoom() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const renderLSBTable = (bpp) => {
+    // Calculate how many complete LSB layers are used
+    const totalBitsPerPixel = bpp;
+    const bitsPerChannel = totalBitsPerPixel / 3; // Since RGB has 3 channels
+    const completeLayersUsed = Math.ceil(bitsPerChannel);
+
+    // Create data for all 8 bits (from LSB to MSB)
+    const bits = Array.from({ length: 8 }, (_, i) => ({
+      bit: 8 - i, // Order: 8,7,6,5,4,3,2,1
+      used: (7 - i) < completeLayersUsed,
+      color: (7 - i) < completeLayersUsed ? getColorForBit(8 - i) : '#e9ecef'
+    }));
+
+    return (
+      <div className="lsb-visualization">
+        <div className="chart-title">LSB Layer Usage</div>
+        <div className="lsb-table">
+          <div className="lsb-header">
+            <div className="lsb-cell">R</div>
+            <div className="lsb-cell">G</div>
+            <div className="lsb-cell">B</div>
+          </div>
+          {[...Array(8)].map((_, row) => (
+            <div key={row} className="lsb-row">
+              {['R', 'G', 'B'].map((channel, col) => (
+                <div
+                  key={`${row}-${col}`}
+                  className="lsb-cell"
+                  style={{
+                    backgroundColor: bits[row].color,
+                    color: bits[row].used ? 'white' : '#666',
+                  }}
+                >
+                  Bit {bits[row].bit}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="lsb-legend">
+          <div className="legend-item">
+            <span className="legend-color" style={{ backgroundColor: '#2e7d32' }}></span>
+            <span>Safe (Minimal Impact)</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{ backgroundColor: '#ffc107' }}></span>
+            <span>Moderate Impact</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{ backgroundColor: '#f44336' }}></span>
+            <span>High Impact</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const getColorForBit = (bitPosition) => {
+    // Color scheme from safe (green) to dangerous (red)
+    const colors = {
+      8: '#f44336', // Red (MSB - high impact)
+      7: '#ff5722',
+      6: '#ff9800',
+      5: '#ffc107', // Yellow
+      4: '#ffeb3b',
+      3: '#8bc34a',
+      2: '#4caf50',
+      1: '#2e7d32', // Dark Green (LSB - minimal impact)
+    };
+    return colors[bitPosition] || '#e9ecef';
+  };
+
   const renderMetricsSection = (metricsObj) => {
     if (!metricsObj) return null;
 
@@ -195,13 +267,24 @@ function StegoRoom() {
 
     const barOptions = {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
           position: 'top',
+          align: 'center'
         },
         title: {
           display: true,
-          text: 'Storage Capacity Usage'
+          text: 'Storage Capacity Usage',
+          align: 'center',
+          font: {
+            size: 16,
+            weight: 'bold'
+          },
+          padding: {
+            top: 10,
+            bottom: 20
+          }
         }
       },
       scales: {
@@ -209,8 +292,15 @@ function StegoRoom() {
           beginAtZero: true,
           title: {
             display: true,
-            text: 'Bytes'
+            text: 'Bytes',
+            align: 'center'
           }
+        }
+      },
+      layout: {
+        padding: {
+          top: 20,
+          bottom: 20
         }
       }
     };
@@ -221,8 +311,13 @@ function StegoRoom() {
           <h3>Embedding Metrics</h3>
         </div>
         <div className="metrics-content">
-          <div className="metrics-chart">
-            <Bar data={capacityData} options={barOptions} />
+          <div className="metrics-charts">
+            <div className="chart-container lsb-container">
+              {renderLSBTable(metricsObj.bpp)}
+            </div>
+            <div className="chart-container capacity-container">
+              <Bar data={capacityData} options={barOptions} />
+            </div>
           </div>
           <div className="metrics-grid">
             <div className="metric-item">
