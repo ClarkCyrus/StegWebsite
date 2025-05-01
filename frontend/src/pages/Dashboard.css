@@ -214,8 +214,12 @@
 }
 
 .custom-modal .btn-secondary {
-  background-color: #d3d3d3; 
-  border: none;
+  background: none; 
+  border: 1px solid #6c63ff;
+  color: #6c63ff
+}
+.custom-modal .btn-secondary:hover {
+  background-color: rgba(111, 66, 193, 0.1);
 }
 
 .custom-modal .btn-danger {
