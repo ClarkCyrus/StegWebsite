@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FiUpload, FiLock, FiDownload, FiArrowLeft } from 'react-icons/fi';
+import { FiUpload, FiLock, FiDownload, FiArrowLeft, FiAlertTriangle } from 'react-icons/fi';
 import './CreateStegoRoom.css';
 
 function CreateStegoRoom() {
@@ -274,9 +274,12 @@ function CreateStegoRoom() {
                   <FiDownload size={20} />
                   Download Stego Image
                 </button>
-                <p className="text-danger" style={{ lineHeight: "1", padding: "0", margin: "0" }}>
-                  Download now or else there is no way to retrieve the stego image later.
-                </p>
+                <div className="warning-alert">
+                  <FiAlertTriangle size={20} />
+                    <span style={{ display: "flex", alignItems: "center" }}>
+                      You must download the stego image, else it will not be retrievable later.
+                    </span>
+                </div>
                 {encrypted && (
                   <>
                     <button className="download-button" onClick={() => handleTextDownload(modalData?.key, 'encryption_key.txt')}>
@@ -290,7 +293,9 @@ function CreateStegoRoom() {
                     {!storeKey && (
                       <div className="warning-alert">
                         <FiLock size={20} />
-                        <p>You must download the encryption key and IV. They will not be stored in the database.</p>
+                        <span style={{ display: "flex", alignItems: "center" }}>
+                          You must download the encryption key and IV. They will not be stored in the database.
+                        </span>
                       </div>
                     )}
                   </>
