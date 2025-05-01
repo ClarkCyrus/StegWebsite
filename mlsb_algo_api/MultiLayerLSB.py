@@ -58,24 +58,24 @@ class MultiLayerLSB:
             Returns:
                 bytes: Decrypted data.
 
-        embed_message(cover_image_path, stego_image_path, file_path, rounds=1, termination_sequence=b'<<END_OF_MESSAGE>>', is_encrypted=True):
+        embed_message(cover_image_path, stego_image_path, file_path, rounds=8, termination_sequence=b'<<END_OF_MESSAGE>>', is_encrypted=True):
             Embeds a message into an image using multi-layer LSB, with optional AES encryption.
             Args:
                 cover_image_path (str): Path to the cover image.
                 stego_image_path (str): Path to save the stego image.
                 file_path (str): Path to the message file.
-                rounds (int, optional): Number of LSB layers to use (1-4). Default is 1.
+                rounds (int, optional): Number of LSB layers to use (1-8). Default is 8.
                 termination_sequence (bytes, optional): Sequence to mark end of message. Default is b'<<END_OF_MESSAGE>>'.
                 is_encrypted (bool, optional): Whether to encrypt the message with AES. Default is True.
             Returns:
                 tuple: (stego_image_path (str), key (bytes or None), iv (bytes or None))
 
-        extract_message(stego_image_path, output_path=None, rounds=1, key=None, iv=None, termination_sequence=b'<<END_OF_MESSAGE>>', is_encrypted=True):
+        extract_message(stego_image_path, output_path=None, rounds=8, key=None, iv=None, termination_sequence=b'<<END_OF_MESSAGE>>', is_encrypted=True):
             Extracts a message from a stego image, with optional AES decryption.
             Args:
                 stego_image_path (str): Path to the stego image.
                 output_path (str, optional): Path to save the extracted message.
-                rounds (int, optional): Number of LSB layers used. Default is 1.
+                rounds (int, optional): Number of LSB layers used. Default is 8.
                 key (bytes): AES key for decryption (if encrypted).
                 iv (bytes): Initialization vector for decryption (if encrypted).
                 termination_sequence (bytes, optional): Sequence marking end of message. Default is b'<<END_OF_MESSAGE>>'.
@@ -91,20 +91,20 @@ class MultiLayerLSB:
             Returns:
                 float: PSNR value in dB.
 
-        calculate_capacity(image_path, rounds=1):
+        calculate_capacity(image_path, rounds=8):
             Calculates the maximum embedding capacity in bytes for a given image and number of rounds.
             Args:
                 image_path (str): Path to the image.
-                rounds (int, optional): Number of LSB layers. Default is 1.
+                rounds (int, optional): Number of LSB layers. Default is 8.
             Returns:
                 int: Maximum capacity in bytes.
 
-        calculate_bpp(message_file, image_path, rounds=1):
+        calculate_bpp(message_file, image_path, rounds=8):
             Calculates the bits per pixel (BPP) for the embedding.
             Args:
                 message_file (str): Path to the message file.
                 image_path (str): Path to the image.
-                rounds (int, optional): Number of LSB layers. Default is 1.
+                rounds (int, optional): Number of LSB layers. Default is 8.
             Returns:
                 float: Bits per pixel value.
 
@@ -209,21 +209,21 @@ class MultiLayerLSB:
         return data
 
     @staticmethod
-    def embed_message(cover_image_path, stego_image_path, file_path, rounds=4, termination_sequence=b'<<END_OF_MESSAGE>>', is_encrypted=True):
+    def embed_message(cover_image_path, stego_image_path, file_path, rounds=8, termination_sequence=b'<<END_OF_MESSAGE>>', is_encrypted=True):
         """
         Embeds a message into an image using multi-layer LSB, with optional AES encryption.
         Args:
             cover_image_path (str): Path to the cover image.
             stego_image_path (str): Path to save the stego image.
             file_path (str): Path to the message file.
-            rounds (int, optional): Number of LSB layers to use (1-4). Default is 1.
+            rounds (int, optional): Number of LSB layers to use (1-8). Default is 8.
             termination_sequence (bytes, optional): Sequence to mark end of message. Default is b'<<END_OF_MESSAGE>>'.
             is_encrypted (bool, optional): Whether to encrypt the message with AES. Default is True.
         Returns:
             tuple: (stego_image_path (str), key (bytes or None), iv (bytes or None))
         """
-        if not 1 <= rounds <= 4:
-            raise ValueError("Number of rounds must be between 1 and 4")
+        if not 1 <= rounds <= 8:
+            raise ValueError("Number of rounds must be between 1 and 8")
 
         with open(file_path, 'rb') as f:
             message_data = f.read()
@@ -302,13 +302,13 @@ class MultiLayerLSB:
         return stego_image_path, key, iv
 
     @staticmethod
-    def extract_message(stego_image_path, output_path=None, rounds=4, key=None, iv=None, termination_sequence=b'<<END_OF_MESSAGE>>', is_encrypted=True):
+    def extract_message(stego_image_path, output_path=None, rounds=8, key=None, iv=None, termination_sequence=b'<<END_OF_MESSAGE>>', is_encrypted=True):
         """
         Extracts a message from a stego image, with optional AES decryption.
         Args:
             stego_image_path (str): Path to the stego image.
             output_path (str, optional): Path to save the extracted message.
-            rounds (int, optional): Number of LSB layers used. Default is 1.
+            rounds (int, optional): Number of LSB layers used. Default is 8.
             key (bytes): AES key for decryption (if encrypted).
             iv (bytes): Initialization vector for decryption (if encrypted).
             termination_sequence (bytes, optional): Sequence marking end of message. Default is b'<<END_OF_MESSAGE>>'.
@@ -390,7 +390,7 @@ class MultiLayerLSB:
         return psnr
 
     @staticmethod
-    def calculate_capacity(image_path, rounds=4):
+    def calculate_capacity(image_path, rounds=8):
         """Calculate maximum capacity in bytes based on image size, channels, and embedding rounds."""
         img = Image.open(image_path)
         is_rgb = img.mode == 'RGB'
@@ -411,7 +411,7 @@ class MultiLayerLSB:
         return max_bytes
 
     @staticmethod
-    def calculate_bpp(message_file, image_path, rounds=4):
+    def calculate_bpp(message_file, image_path, rounds=8):
         """Calculate bits per pixel (BPP) for the embedding."""
         binary_message = MultiLayerLSB.message_to_binary(message_file)
         img = Image.open(image_path)
