@@ -373,7 +373,10 @@ def extract_message():
             'audio': '.mp3'
         }
         ext = extension_map.get(media_type, '.bin')
-        output_path = os.path.join(app.config['UPLOAD_FOLDER'], f"extracted_message{ext}")
+        
+        # Define file paths
+        extracted_filename = f"extracted_message{ext}"
+        output_path = os.path.join(app.config['UPLOAD_FOLDER'], extracted_filename)
 
         key_bytes = bytes.fromhex(key) if is_encrypted else None
         iv_bytes = bytes.fromhex(iv) if is_encrypted else None
@@ -386,9 +389,12 @@ def extract_message():
             iv=iv_bytes
         )
 
+        # For frontend download URL, use a relative path that includes uploads/
+        download_path = f"uploads/{extracted_filename}"
+        
         response = {
             'success': True,
-            'output_path': output_path,
+            'output_path': download_path,  # Return a path that includes uploads/ prefix
             'media_type': media_type
         }
         if media_type == 'text':
@@ -441,7 +447,22 @@ def download_file():
         return jsonify({'error': 'No file path provided'}), 400
     
     try:
-        return send_file(file_path, as_attachment=True)
+        # Handle relative path that starts with 'uploads/'
+        if file_path.startswith('uploads/'):
+            # Extract just the filename part
+            filename = file_path.replace('uploads/', '', 1)
+            # Return the file from the uploads directory
+            return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+        
+        # Handle simple filename (without uploads/ prefix)
+        if not os.path.isabs(file_path) and '/' not in file_path:
+            return send_from_directory(app.config['UPLOAD_FOLDER'], file_path, as_attachment=True)
+            
+        # Handle absolute path
+        if os.path.isabs(file_path) and os.path.exists(file_path):
+            return send_file(file_path, as_attachment=True)
+            
+        return jsonify({'error': f'File not found: {file_path}'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
@@ -505,8 +526,16 @@ from flask import send_from_directory
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_react_app(path):
-    if path.startswith('api') or path.startswith('uploads') or path.startswith('static'):
+    # Handle uploads requests - forward to the uploaded_file handler
+    if path.startswith('uploads/'):
+        filename = path[8:]  # Remove 'uploads/' prefix
+        return uploaded_file(filename)
+        
+    # Block API requests and static routes - let their own handlers deal with them
+    if path.startswith('api') or path.startswith('static'):
         abort(404)
+        
+    # For all other routes, serve the React app
     return send_from_directory('build', 'index.html')
 
 if __name__ == '__main__':     
