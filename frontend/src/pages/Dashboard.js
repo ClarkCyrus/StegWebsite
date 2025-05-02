@@ -186,63 +186,80 @@ function Dashboard() {
         </div>
       </div>
 
-      <Row className="g-1 card-row">
-        {filteredAndSortedRooms.map((room) => (
-          <Col key={room.id} md={3} className="mb-2 px-1">
-            <Card className="room-card" onClick={() => navigate(`/room/${room.id}`)}>
-              <div className="room-image-container">
-                {getCoverImageSrc(room) ? (
-                  <img src={getCoverImageSrc(room)} alt="cover" className="room-image" />
-                ) : (
-                  <span>No Image</span>
-                )}
-                <button
-                  className="close-button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(room); 
-                  }}
-                >
-                  <FiX size={14} />
-                </button>
-              </div>
-              <div className="room-footer">
-                <div className="d-flex justify-content-between align-items-center">
-                  <h3 className="room-name">{room.name || 'Untitled'}</h3>
-                  <div className="encryption-status">
-                    <OverlayTrigger
-                      placement="top"
-                      overlay={
-                        <Tooltip>
-                          {room.is_encrypted ? 'Encryption enabled' : 'Encryption disabled'}
-                        </Tooltip>
-                     }
-                    >
-                      <div className={`status-dot ${room.is_encrypted ? 'encrypted' : 'unencrypted'}`} />
-                    </OverlayTrigger>
-                    {room.is_encrypted && (
+      {filteredAndSortedRooms.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-content">
+            <BsPlusCircle size={80} className="empty-state-icon" />
+            <h2>No Stego Rooms Yet</h2>
+            <p>Start by creating your first stego room to hide messages in images</p>
+            <Button 
+              variant="primary" 
+              className="create-first-button"
+              onClick={() => navigate('/create')}
+            >
+              Create Your First Stego Room
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Row className="g-1 card-row">
+          {filteredAndSortedRooms.map((room) => (
+            <Col key={room.id} md={3} className="mb-2 px-1">
+              <Card className="room-card" onClick={() => navigate(`/room/${room.id}`)}>
+                <div className="room-image-container">
+                  {getCoverImageSrc(room) ? (
+                    <img src={getCoverImageSrc(room)} alt="cover" className="room-image" />
+                  ) : (
+                    <span>No Image</span>
+                  )}
+                  <button
+                    className="close-button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(room); 
+                    }}
+                  >
+                    <FiX size={14} />
+                  </button>
+                </div>
+                <div className="room-footer">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <h3 className="room-name">{room.name || 'Untitled'}</h3>
+                    <div className="encryption-status">
                       <OverlayTrigger
                         placement="top"
                         overlay={
                           <Tooltip>
-                            {room.is_key_stored ? 'Key is stored' : 'Key is not stored'}
+                            {room.is_encrypted ? 'Encryption enabled' : 'Encryption disabled'}
                           </Tooltip>
-                        }
+                       }
                       >
-                      {room.is_key_stored ? (
-                        <BsLockFill color="var(--danger-color)" size={16} />
-                      ) : (
-                        <BsLock color="var(--danger-color)" size={16} />
-                      )}
+                        <div className={`status-dot ${room.is_encrypted ? 'encrypted' : 'unencrypted'}`} />
                       </OverlayTrigger>
-                    )}
+                      {room.is_encrypted && (
+                        <OverlayTrigger
+                          placement="top"
+                          overlay={
+                            <Tooltip>
+                              {room.is_key_stored ? 'Key is stored' : 'Key is not stored'}
+                            </Tooltip>
+                          }
+                        >
+                        {room.is_key_stored ? (
+                          <BsLockFill color="var(--danger-color)" size={16} />
+                        ) : (
+                          <BsLock color="var(--danger-color)" size={16} />
+                        )}
+                        </OverlayTrigger>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      )}
 
       <div className="action-buttons">
         <div className="action-buttons-container">
