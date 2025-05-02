@@ -4,6 +4,7 @@ import axios from 'axios';
 import { FiLogIn } from 'react-icons/fi';
 import './Auth.css';
 import { useAuth } from '../pages/AuthContext';
+import API_BASE_URL from '../config';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -20,7 +21,7 @@ function Login() {
     const normalizedEmail = email.toLowerCase();
 
     try {
-      await axios.post('http://localhost:5000/api/login', { email: normalizedEmail, password }, { withCredentials: true });
+      await axios.post(`${API_BASE_URL}/api/login`, { email: normalizedEmail, password }, { withCredentials: true });
       const fakeToken = '123456'; 
       login(fakeToken);
       navigate('/dashboard');

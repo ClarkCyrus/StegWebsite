@@ -15,6 +15,7 @@ import {
   Legend,
 } from 'chart.js';
 import './StegoRoom.css';
+import API_BASE_URL from '../config';
 
 ChartJS.register(
   CategoryScale,
@@ -43,7 +44,7 @@ function StegoRoom() {
   const [expandedMetrics, setExpandedMetrics] = useState({});
 
   useEffect(() => {
-    axios.get(`http://localhost:5000/api/stegorooms/${roomId}`, { withCredentials: true })
+    axios.get(`${API_BASE_URL}/api/stegorooms/${roomId}`, { withCredentials: true })
       .then(res => {
         setRoom(res.data.room);
         console.log(res.data.room)
@@ -86,7 +87,7 @@ function StegoRoom() {
       formData.append('iv', iv);
     }
     try {
-      const response = await fetch('http://localhost:5000/api/mlsb/extract', {
+      const response = await fetch(`${API_BASE_URL}/api/mlsb/extract`, {
         method: 'POST',
         body: formData
       });
@@ -96,7 +97,7 @@ function StegoRoom() {
       setMessage(data.message);
 
       // Create preview based on media type
-      const downloadUrl = `http://localhost:5000/api/mlsb/download?path=${encodeURIComponent(data.output_path)}`;
+      const downloadUrl = `${API_BASE_URL}/api/mlsb/download?path=${encodeURIComponent(data.output_path)}`;
       const ext = data.media_type === 'text' ? '.txt' : data.media_type === 'image' ? '.png' : '.mp3';
       
       if (data.media_type === 'text') {
@@ -155,12 +156,12 @@ function StegoRoom() {
     
     // Handle uploads directory paths
     if (normalizedPath.startsWith('uploads/')) {
-      return `http://localhost:5000/${normalizedPath}`;
+      return `${API_BASE_URL}/${normalizedPath}`;
     }
     
     // Handle any other paths that might be relative to uploads
     if (!normalizedPath.startsWith('http')) {
-      return `http://localhost:5000/uploads/${normalizedPath.replace('uploads/', '')}`;
+      return `${API_BASE_URL}/uploads/${normalizedPath.replace('uploads/', '')}`;
     }
     
     return normalizedPath;

@@ -6,6 +6,7 @@ import { BsLockFill, BsLock, BsPlusCircle, BsLightningCharge, BsSearch, BsSortDo
 import { FiLogOut, FiX } from 'react-icons/fi';
 import './Dashboard.css';
 import { useAuth } from './AuthContext'; 
+import API_BASE_URL from '../config';
 
 function Dashboard() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -26,18 +27,18 @@ function Dashboard() {
   const { logout } = useAuth();
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/steg_rooms', { withCredentials: true })
+    axios.get(`${API_BASE_URL}/api/steg_rooms`, { withCredentials: true })
       .then(res => setRooms(res.data))
       .catch(() => setRooms([]));
 
-    axios.get('http://localhost:5000/api/current_user', { withCredentials: true })  
+    axios.get(`${API_BASE_URL}/api/current_user`, { withCredentials: true })  
     .then(res => setCurrentUser(res.data))
     .catch(() => setCurrentUser(null));
   }, []);
 
   const handleLogout = async () => {
     try {
-      await axios.post('http://localhost:5000/api/logout', {}, { withCredentials: true });
+      await axios.post(`${API_BASE_URL}/api/logout`, {}, { withCredentials: true });
       logout(); 
       navigate('/login');
     } catch (error) {
@@ -50,8 +51,8 @@ function Dashboard() {
     const normalized = room.cover_image.replace(/\\/g, '/');
     if (normalized.startsWith('data:image')) return normalized;
     if (normalized.match(/^[A-Za-z0-9+/=]+$/)) return `data:image/png;base64,${normalized}`;
-    if (normalized.startsWith('uploads/')) return `http://localhost:5000/${normalized}`;
-    if (!normalized.startsWith('http') && !normalized.startsWith('/uploads/')) return `http://localhost:5000/uploads/${normalized}`;
+    if (normalized.startsWith('uploads/')) return `${API_BASE_URL}/${normalized}`;
+    if (!normalized.startsWith('http') && !normalized.startsWith('/uploads/')) return `${API_BASE_URL}/uploads/${normalized}`;
     return normalized;
   };
 
@@ -62,7 +63,7 @@ function Dashboard() {
 
   const confirmDelete = () => {
     if (roomToDelete) {
-      axios.delete(`http://localhost:5000/api/steg_rooms/${roomToDelete.id}`, { withCredentials: true })
+      axios.delete(`${API_BASE_URL}/api/steg_rooms/${roomToDelete.id}`, { withCredentials: true })
         .then(() => {
           setRooms(rooms.filter(r => r.id !== roomToDelete.id));
           setShowModal(false);

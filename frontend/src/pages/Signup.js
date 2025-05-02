@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FiUserPlus } from 'react-icons/fi';
 import './Auth.css';
+import API_BASE_URL from '../config';
 
 function Signup() {
   const [email, setEmail] = useState('');
@@ -35,11 +36,11 @@ function Signup() {
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/api/signup', { email: normalizedEmail, password }, { withCredentials: true });
+      const response = await axios.post(`${API_BASE_URL}/api/signup`, { email: normalizedEmail, password }, { withCredentials: true });
       
       if (response.data.user_id) {
         // Verify the session is established
-        const userResponse = await axios.get('http://localhost:5000/api/current_user', { withCredentials: true });
+        const userResponse = await axios.get(`${API_BASE_URL}/api/current_user`, { withCredentials: true });
         if (userResponse.data.id) {
           navigate('/dashboard');
         } else {
