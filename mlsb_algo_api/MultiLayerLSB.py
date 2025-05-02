@@ -411,39 +411,14 @@ class MultiLayerLSB:
     
     @staticmethod
     def calculate_ssim(original_path, stego_path):
-        """Calculate the Structural Similarity Index Measure between original and stego images.
-        
-        SSIM(x,y) = (2μₓμy + c₁)(2σₓᵧ + c₂) / ((μₓ² + μy² + c₁)(σₓ² + σy² + c₂))
-        
-        where:
-        - μₓ, μy are the local means of x and y
-        - σₓ, σy are the local standard deviations of x and y
-        - σₓᵧ is the cross-covariance of x and y
-        - c₁, c₂ are small constants to avoid instability
-        """
-        # Convert images to grayscale for SSIM calculation (simplifies calculation)
-        original = np.array(Image.open(original_path).convert('L'), dtype=np.float64)
-        stego = np.array(Image.open(stego_path).convert('L'), dtype=np.float64)
-        
-        # Constants to avoid instability
-        c1 = (0.01 * 255) ** 2
-        c2 = (0.03 * 255) ** 2
-        
-        # Calculate mean and standard deviation
-        original_mean = original.mean()
-        stego_mean = stego.mean()
-        original_std = np.std(original)
-        stego_std = np.std(stego)
-        
-        # Calculate cross-covariance
-        covariance = np.mean((original - original_mean) * (stego - stego_mean))
-        
-        # Calculate SSIM
-        numerator = (2 * original_mean * stego_mean + c1) * (2 * covariance + c2)
-        denominator = (original_mean**2 + stego_mean**2 + c1) * (original_std**2 + stego_std**2 + c2)
-        
-        ssim = numerator / denominator
-        return ssim
+        from skimage.metrics import structural_similarity as ssim
+        original = np.array(Image.open(original_path).convert('RGB'))
+        stego = np.array(Image.open(stego_path).convert('RGB'))
+
+        # Set the window size and channel axis
+        win_size = 7  # or any odd value <= min(original.shape[:2])
+        ssim_value, _ = ssim(original, stego, win_size=win_size, full=True, multichannel=True, channel_axis=-1)
+        return ssim_value
 
     @staticmethod
     def calculate_psnr(original_path, stego_path):
