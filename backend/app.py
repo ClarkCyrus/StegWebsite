@@ -19,7 +19,7 @@ CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": ["http://
 app.config['SECRET_KEY'] = '123'    
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['UPLOAD_FOLDER'] = '/home/zydev/StegWebsite/backend/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 20MB max file size
 
 db = SQLAlchemy(app)
