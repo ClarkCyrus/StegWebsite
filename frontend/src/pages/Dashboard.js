@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, OverlayTrigger, Tooltip, Row, Col, Card, Modal, Button } from 'react-bootstrap';
+import { Container, OverlayTrigger, Tooltip, Row, Col, Card, Modal, Button, Form, InputGroup } from 'react-bootstrap';
 import axios from 'axios';
-import { BsLockFill, BsLock, BsPlusCircle, BsLightningCharge } from 'react-icons/bs';
+import { BsLockFill, BsLock, BsPlusCircle, BsLightningCharge, BsSearch, BsSortDown, BsSortUp } from 'react-icons/bs';
 import { FiLogOut, FiX } from 'react-icons/fi';
 import './Dashboard.css';
 import { useAuth } from './AuthContext'; 
@@ -12,6 +12,15 @@ function Dashboard() {
   const [rooms, setRooms] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [roomToDelete, setRoomToDelete] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState({
+    encrypted: false,
+    unencrypted: false,
+    keyStored: false,
+    keyNotStored: false
+  });
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [showKeyFilters, setShowKeyFilters] = useState(false);
   const navigate = useNavigate();
 
   const { logout } = useAuth();
@@ -63,6 +72,35 @@ function Dashboard() {
     }
   };
 
+  const handleFilterChange = (filter) => {
+    setFilters(prev => ({
+      ...prev,
+      [filter]: !prev[filter]
+    }));
+  };
+
+  const filteredAndSortedRooms = rooms
+    .filter(room => {
+      const matchesSearch = room.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesEncryption = 
+        (filters.encrypted && room.is_encrypted) ||
+        (filters.unencrypted && !room.is_encrypted) ||
+        (!filters.encrypted && !filters.unencrypted);
+      const matchesKeyStorage = 
+        (filters.keyStored && room.is_key_stored) ||
+        (filters.keyNotStored && !room.is_key_stored) ||
+        (!filters.keyStored && !filters.keyNotStored);
+      
+      return matchesSearch && matchesEncryption && matchesKeyStorage;
+    })
+    .sort((a, b) => {
+      const nameA = a.name?.toLowerCase() || '';
+      const nameB = b.name?.toLowerCase() || '';
+      return sortOrder === 'asc' 
+        ? nameA.localeCompare(nameB)
+        : nameB.localeCompare(nameA);
+    });
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
@@ -77,8 +115,79 @@ function Dashboard() {
         </div>
       </div>
 
+      <div className="search-and-filters">
+        <div className="search-section">
+          <InputGroup className="search-input-group">
+            <InputGroup.Text className="search-icon">
+              <BsSearch />
+            </InputGroup.Text>
+            <Form.Control
+              className="search-input"
+              placeholder="Search rooms by name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <Button
+              className="sort-button"
+              variant="outline-secondary"
+              onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+              title={sortOrder === 'asc' ? 'Sort A-Z' : 'Sort Z-A'}
+            >
+              {sortOrder === 'asc' ? <BsSortUp /> : <BsSortDown />}
+            </Button>
+          </InputGroup>
+        </div>
+
+        <div className="filter-section">
+          <div className="filter-options">
+            <Button
+              variant={filters.encrypted ? "primary" : "outline-primary"}
+              className="filter-button"
+              onClick={() => {
+                handleFilterChange('encrypted');
+                setShowKeyFilters(!filters.encrypted);
+                if (!filters.encrypted) {
+                  setFilters(prev => ({
+                    ...prev,
+                    keyStored: false,
+                    keyNotStored: false
+                  }));
+                }
+              }}
+            >
+              Encrypted
+            </Button>
+            <Button
+              variant={filters.unencrypted ? "primary" : "outline-primary"}
+              className="filter-button"
+              onClick={() => handleFilterChange('unencrypted')}
+            >
+              Unencrypted
+            </Button>
+            {showKeyFilters && (
+              <>
+                <Button
+                  variant={filters.keyStored ? "primary" : "outline-primary"}
+                  className="filter-button"
+                  onClick={() => handleFilterChange('keyStored')}
+                >
+                  Key Stored
+                </Button>
+                <Button
+                  variant={filters.keyNotStored ? "primary" : "outline-primary"}
+                  className="filter-button"
+                  onClick={() => handleFilterChange('keyNotStored')}
+                >
+                  Key Not Stored
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
       <Row className="g-1 card-row">
-        {rooms.map((room) => (
+        {filteredAndSortedRooms.map((room) => (
           <Col key={room.id} md={3} className="mb-2 px-1">
             <Card className="room-card" onClick={() => navigate(`/room/${room.id}`)}>
               <div className="room-image-container">
@@ -151,8 +260,8 @@ function Dashboard() {
       <Modal
         show={showModal}
         onHide={() => setShowModal(false)}
-        centered // Centers the modal on the screen
-        className="custom-modal" // Add a custom class for styling
+        centered
+        className="custom-modal"
       >
         <Modal.Header closeButton>
           <Modal.Title>Confirm Deletion</Modal.Title>
