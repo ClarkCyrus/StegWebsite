@@ -40,6 +40,7 @@ function StegoRoom() {
   const [loading, setLoading] = useState(false);
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
+  const [expandedMetrics, setExpandedMetrics] = useState({});
 
   useEffect(() => {
     axios.get(`http://localhost:5000/api/stegorooms/${roomId}`, { withCredentials: true })
@@ -316,6 +317,96 @@ function StegoRoom() {
       }
     };
 
+    const renderMetricsExplanation = () => (
+      <div className="metrics-info">
+        <h4>
+          Metrics Explained
+          <button 
+            className="metrics-toggle-button"
+            onClick={() => setExpandedMetrics({...expandedMetrics, all: !expandedMetrics.all})}
+          >
+            <span className={expandedMetrics.all ? "arrow up" : "arrow down"}></span>
+          </button>
+        </h4>
+        {expandedMetrics.all && (
+          <ul>
+            <li>
+              <span className="metric-name">MSE</span>
+              <button 
+                className="metrics-toggle-button small"
+                onClick={() => setExpandedMetrics({...expandedMetrics, mse: !expandedMetrics.mse})}
+              >
+                <span className={expandedMetrics.mse ? "arrow up" : "arrow down"}></span>
+              </button>
+              {expandedMetrics.mse && (
+                <div>
+                  <span className="metric-formula">MSE = Σ(m,n)[I₁(m,n) - I₂(m,n)]² / (M * N)</span>
+                  <span className="metrics-explanation">
+                    Mean Squared Error measures the average squared difference between pixels in the original and steganographic images. 
+                    Lower values indicate better quality (less distortion).
+                  </span>
+                </div>
+              )}
+            </li>
+            <li>
+              <span className="metric-name">SSIM</span>
+              <button 
+                className="metrics-toggle-button small"
+                onClick={() => setExpandedMetrics({...expandedMetrics, ssim: !expandedMetrics.ssim})}
+              >
+                <span className={expandedMetrics.ssim ? "arrow up" : "arrow down"}></span>
+              </button>
+              {expandedMetrics.ssim && (
+                <div>
+                  <span className="metric-formula">SSIM(x,y) = (2μₓμy + c₁)(2σₓᵧ + c₂) / ((μₓ² + μy² + c₁)(σₓ² + σy² + c₂))</span>
+                  <span className="metrics-explanation">
+                    Structural Similarity Index Measure evaluates the perceived quality considering luminance, contrast, and structure.
+                    Values range from -1 to 1, with 1 indicating perfect similarity (higher is better).
+                  </span>
+                </div>
+              )}
+            </li>
+            <li>
+              <span className="metric-name">PSNR</span>
+              <button 
+                className="metrics-toggle-button small"
+                onClick={() => setExpandedMetrics({...expandedMetrics, psnr: !expandedMetrics.psnr})}
+              >
+                <span className={expandedMetrics.psnr ? "arrow up" : "arrow down"}></span>
+              </button>
+              {expandedMetrics.psnr && (
+                <div>
+                  <span className="metric-formula">PSNR = 20 * log₁₀(MAX_I / √MSE)</span>
+                  <span className="metrics-explanation">
+                    Peak Signal-to-Noise Ratio measures image quality in decibels (dB).
+                    Higher values indicate better quality, typically 30+ dB is considered good.
+                  </span>
+                </div>
+              )}
+            </li>
+            <li>
+              <span className="metric-name">BPP</span>
+              <button 
+                className="metrics-toggle-button small"
+                onClick={() => setExpandedMetrics({...expandedMetrics, bpp: !expandedMetrics.bpp})}
+              >
+                <span className={expandedMetrics.bpp ? "arrow up" : "arrow down"}></span>
+              </button>
+              {expandedMetrics.bpp && (
+                <div>
+                  <span className="metric-formula">BPP = Total bits embedded / Total number of pixels</span>
+                  <span className="metrics-explanation">
+                    Bits Per Pixel indicates how many bits are hidden in each pixel on average.
+                    Higher values mean more data is stored, but may increase detection risk.
+                  </span>
+                </div>
+              )}
+            </li>
+          </ul>
+        )}
+      </div>
+    );
+
     return (
       <div className="metrics-section">
         <div className="metrics-header">
@@ -336,6 +427,14 @@ function StegoRoom() {
               <span className="metric-value">{metricsObj.psnr.toFixed(2)} dB</span>
             </div>
             <div className="metric-item">
+              <span className="metric-label">MSE:</span>
+              <span className="metric-value">{metricsObj.mse.toFixed(4)}</span>
+            </div>
+            <div className="metric-item">
+              <span className="metric-label">SSIM:</span>
+              <span className="metric-value">{metricsObj.ssim.toFixed(4)}</span>
+            </div>
+            <div className="metric-item">
               <span className="metric-label">Bits per Pixel:</span>
               <span className="metric-value">{metricsObj.bpp.toFixed(4)} bpp</span>
             </div>
@@ -354,6 +453,7 @@ function StegoRoom() {
               </span>
             </div>
           </div>
+          {renderMetricsExplanation()}
         </div>
       </div>
     );

@@ -5,6 +5,7 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
 import secrets
+from scipy.ndimage import gaussian_filter
 
 
 class MultiLayerLSB:
@@ -90,6 +91,22 @@ class MultiLayerLSB:
                 stego_path (str): Path to the stego image.
             Returns:
                 float: PSNR value in dB.
+
+        calculate_mse(original_path, stego_path):
+            Calculates the Mean Squared Error between the original and stego images.
+            Args:
+                original_path (str): Path to the original image.
+                stego_path (str): Path to the stego image.
+            Returns:
+                float: MSE value.
+
+        calculate_ssim(original_path, stego_path):
+            Calculates the Structural Similarity Index between the original and stego images.
+            Args:
+                original_path (str): Path to the original image.
+                stego_path (str): Path to the stego image.
+            Returns:
+                float: SSIM value (between -1 and 1, higher is better).
 
         calculate_capacity(image_path, rounds=8):
             Calculates the maximum embedding capacity in bytes for a given image and number of rounds.
@@ -376,12 +393,62 @@ class MultiLayerLSB:
         return original_message, message_type
 
     @staticmethod
+    def calculate_mse(original_path, stego_path):
+        """Calculate the Mean Squared Error between original and stego images.
+        
+        MSE = Σ(m,n)[I₁(m,n) - I₂(m,n)]² / (M * N)
+        
+        where:
+        - I₁ and I₂ are the original and stego images
+        - M, N are the image dimensions
+        """
+        original = np.array(Image.open(original_path).convert('RGB'), dtype=np.float64)
+        stego = np.array(Image.open(stego_path).convert('RGB'), dtype=np.float64)
+        
+        # Calculate MSE for all channels
+        mse = np.mean((original - stego) ** 2)
+        return mse
+    
+    @staticmethod
+    def calculate_ssim(original_path, stego_path):
+        """Calculate the Structural Similarity Index Measure between original and stego images.
+        
+        SSIM(x,y) = (2μₓμy + c₁)(2σₓᵧ + c₂) / ((μₓ² + μy² + c₁)(σₓ² + σy² + c₂))
+        
+        where:
+        - μₓ, μy are the local means of x and y
+        - σₓ, σy are the local standard deviations of x and y
+        - σₓᵧ is the cross-covariance of x and y
+        - c₁, c₂ are small constants to avoid instability
+        """
+        # Convert images to grayscale for SSIM calculation (simplifies calculation)
+        original = np.array(Image.open(original_path).convert('L'), dtype=np.float64)
+        stego = np.array(Image.open(stego_path).convert('L'), dtype=np.float64)
+        
+        # Constants to avoid instability
+        c1 = (0.01 * 255) ** 2
+        c2 = (0.03 * 255) ** 2
+        
+        # Calculate mean and standard deviation
+        original_mean = original.mean()
+        stego_mean = stego.mean()
+        original_std = np.std(original)
+        stego_std = np.std(stego)
+        
+        # Calculate cross-covariance
+        covariance = np.mean((original - original_mean) * (stego - stego_mean))
+        
+        # Calculate SSIM
+        numerator = (2 * original_mean * stego_mean + c1) * (2 * covariance + c2)
+        denominator = (original_mean**2 + stego_mean**2 + c1) * (original_std**2 + stego_std**2 + c2)
+        
+        ssim = numerator / denominator
+        return ssim
+
+    @staticmethod
     def calculate_psnr(original_path, stego_path):
         """Calculate PSNR between original and stego images."""
-        original = np.array(Image.open(original_path).convert('RGB'))
-        stego = np.array(Image.open(stego_path).convert('RGB'))
-        
-        mse = np.mean((original - stego) ** 2)
+        mse = MultiLayerLSB.calculate_mse(original_path, stego_path)
         if mse == 0:
             return float('inf')  # No difference between images
         

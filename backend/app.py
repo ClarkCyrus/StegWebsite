@@ -173,6 +173,8 @@ def create_stego_room():
 
         metrics = {
             'psnr': MultiLayerLSB.calculate_psnr(cover_path, stego_path),
+            'mse': MultiLayerLSB.calculate_mse(cover_path, stego_path),
+            'ssim': MultiLayerLSB.calculate_ssim(cover_path, stego_path),
             'bpp': MultiLayerLSB.calculate_bpp(message_path, cover_path),
             'capacity': MultiLayerLSB.calculate_capacity(cover_path),
             'message_size': os.path.getsize(message_path)
@@ -294,6 +296,8 @@ def embed_message():
         message_size = os.path.getsize(message_path)
         metrics = {
             'psnr': MultiLayerLSB.calculate_psnr(cover_path, stego_path),
+            'mse': MultiLayerLSB.calculate_mse(cover_path, stego_path),
+            'ssim': MultiLayerLSB.calculate_ssim(cover_path, stego_path),
             'bpp': MultiLayerLSB.calculate_bpp(message_path, cover_path),
             'capacity': MultiLayerLSB.calculate_capacity(cover_path),
             'message_size': message_size

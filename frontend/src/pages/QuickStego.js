@@ -218,6 +218,42 @@ function QuickStego() {
         document.body.removeChild(element);
     };
 
+    const renderMetricsSection = () => {
+        if (!metrics) return null;
+        
+        return (
+            <div className="result-section">
+                <h5 className="result-title">Metrics:</h5>
+                <div className="metrics-container">
+                    <div className="metric-item">
+                        <span className="metric-label">Capacity:</span>
+                        <span className="metric-value">{metrics.capacity.toLocaleString()} bytes</span>
+                    </div>
+                    <div className="metric-item">
+                        <span className="metric-label">Message Size:</span>
+                        <span className="metric-value">{metrics.message_size.toLocaleString()} bytes</span>
+                    </div>
+                    <div className="metric-item">
+                        <span className="metric-label">Bits Per Pixel:</span>
+                        <span className="metric-value">{metrics.bpp.toFixed(2)}</span>
+                    </div>
+                    <div className="metric-item">
+                        <span className="metric-label">PSNR:</span>
+                        <span className="metric-value">{metrics.psnr.toFixed(2)} dB</span>
+                    </div>
+                    <div className="metric-item">
+                        <span className="metric-label">MSE:</span>
+                        <span className="metric-value">{metrics.mse.toFixed(4)}</span>
+                    </div>
+                    <div className="metric-item">
+                        <span className="metric-label">SSIM:</span>
+                        <span className="metric-value">{metrics.ssim.toFixed(4)}</span>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="quick-stego-container">
             <div className="quick-stego-header">
@@ -341,29 +377,7 @@ function QuickStego() {
                                     )}
                                 </div>
                             )}
-                            {metrics && (
-                                <div className="result-section">
-                                    <h5 className="result-title">Metrics:</h5>
-                                    <div className="metrics-container">
-                                        <div className="metric-item">
-                                            <span className="metric-label">Capacity:</span>
-                                            <span className="metric-value">{metrics.capacity.toLocaleString()} bytes</span>
-                                        </div>
-                                        <div className="metric-item">
-                                            <span className="metric-label">Message Size:</span>
-                                            <span className="metric-value">{metrics.message_size.toLocaleString()} bytes</span>
-                                        </div>
-                                        <div className="metric-item">
-                                            <span className="metric-label">Bits Per Pixel:</span>
-                                            <span className="metric-value">{metrics.bpp.toFixed(2)}</span>
-                                        </div>
-                                        <div className="metric-item">
-                                            <span className="metric-label">PSNR:</span>
-                                            <span className="metric-value">{metrics.psnr.toFixed(2)} dB</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                            {renderMetricsSection()}
                         </div>
                     </div>
                 </Col>

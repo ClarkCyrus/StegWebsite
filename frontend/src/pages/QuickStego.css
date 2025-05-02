@@ -166,17 +166,19 @@
 }
 
 .metrics-container {
-  background: #f8f9fa;
-  border-radius: 6px;
-  padding: 1rem;
-  margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
 }
 
 .metric-item {
   display: flex;
   justify-content: space-between;
   padding: 0.5rem;
-  border-bottom: 1px solid #e9ecef;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
 }
 
 .metric-item:last-child {
@@ -184,8 +186,8 @@
 }
 
 .metric-label {
+  font-weight: 600;
   color: #6f42c1;
-  font-weight: 500;
 }
 
 .metric-value {
