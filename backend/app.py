@@ -14,7 +14,7 @@ from mlsb_algo_api.MultiLayerLSB import MultiLayerLSB
 import secrets
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "https://zydev.pythonanywhere.com"}})
+CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": ["http://localhost:3000", "https://zydev.pythonanywhere.com"]}})
 
 app.config['SECRET_KEY'] = '123'    
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
@@ -71,6 +71,24 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
 @app.route('/')
 def index():
     return "Flask app with SQLite is set up!"
+
+from app import app as application
+
+import os
+if not os.path.exists('/home/zydev/StegWebsite/backend/instance/database.db'):
+    from app import db
+    with application.app_context():
+        db.create_all()
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    import traceback
+    error_details = {
+        'error': str(e),
+        'trace': traceback.format_exc()
+    }
+    print(error_details)  # This will show in the error log
+    return jsonify(error_details), 500
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -451,7 +469,10 @@ def signup():
 
 @app.after_request
 def add_cors_headers(response):
-    response.headers['Access-Control-Allow-Origin'] = 'https://zydev.pythonanywhere.com'
+    if request.headers.get('Origin') == 'http://localhost:3000':
+        response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
+    else:
+        response.headers['Access-Control-Allow-Origin'] = 'https://zydev.pythonanywhere.com'
     response.headers['Access-Control-Allow-Credentials'] = 'true'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
     response.headers['Access-Control-Allow-Methods'] = 'GET,POST,PUT,DELETE,OPTIONS'
