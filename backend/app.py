@@ -22,22 +22,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = '/home/zydev/StegWebsite/backend/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 20MB max file size
 
-# Ensure upload folder exists
-try:
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-        print(f"Created upload folder: {app.config['UPLOAD_FOLDER']}")
-    else:
-        print(f"Upload folder exists: {app.config['UPLOAD_FOLDER']}")
-        # Try to ensure it's writable
-        test_file = os.path.join(app.config['UPLOAD_FOLDER'], '.test_write')
-        with open(test_file, 'w') as f:
-            f.write('test')
-        os.remove(test_file)
-        print("Upload folder is writable")
-except Exception as e:
-    print(f"Error with upload folder: {str(e)}")
-
 db = SQLAlchemy(app)
 
 class User(db.Model):
@@ -79,6 +63,10 @@ admin = Admin(app, name='Admin Panel', template_mode='bootstrap3')
 admin.add_view(ModelView(User, db.session))
 admin.add_view(ModelView(StegoRoom, db.session))
 admin.add_view(ModelView(MLSBDemo, db.session))
+
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
+
 
 @app.route('/')
 def index():
@@ -375,22 +363,9 @@ def extract_message():
         return jsonify({'error': 'Encryption key and IV are required when encryption is enabled'}), 400
 
     try:
-        # Ensure upload folder exists
-        if not os.path.exists(app.config['UPLOAD_FOLDER']):
-            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-            print(f"Created upload folder: {app.config['UPLOAD_FOLDER']}")
-        
-        # Save stego image
-        stego_filename = secure_filename(stego_image.filename)
-        stego_path = os.path.join(app.config['UPLOAD_FOLDER'], stego_filename)
+        stego_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(stego_image.filename))
         stego_image.save(stego_path)
-        print(f"Saved stego image to: {stego_path}")
-        
-        # Check if the file was saved successfully
-        if not os.path.exists(stego_path):
-            return jsonify({'error': f'Failed to save stego image to {stego_path}'}), 500
-        
-        # Get media type and set output filename
+
         media_type = MultiLayerLSB.get_media_type(stego_path)
         extension_map = {
             'text': '.txt',
@@ -398,16 +373,11 @@ def extract_message():
             'audio': '.mp3'
         }
         ext = extension_map.get(media_type, '.bin')
-        
-        output_filename = f"extracted_message{ext}"
-        output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
-        print(f"Output path for extraction: {output_path}")
+        output_path = os.path.join(app.config['UPLOAD_FOLDER'], f"extracted_message{ext}")
 
-        # Convert key and IV from hex strings to bytes if needed
         key_bytes = bytes.fromhex(key) if is_encrypted else None
         iv_bytes = bytes.fromhex(iv) if is_encrypted else None
 
-        # Extract the message
         message, media_type = MultiLayerLSB.extract_message(
             stego_path, 
             output_path=output_path, 
@@ -415,26 +385,12 @@ def extract_message():
             key=key_bytes, 
             iv=iv_bytes
         )
-        
-        # Verify the extracted file exists
-        if not os.path.exists(output_path):
-            print(f"Warning: Output file not found at {output_path}")
-            # Try to create a placeholder file if extraction didn't create one
-            if media_type == 'text' and isinstance(message, (str, bytes)):
-                with open(output_path, 'wb') as f:
-                    if isinstance(message, str):
-                        f.write(message.encode('utf-8'))
-                    else:
-                        f.write(message)
-                print(f"Created placeholder file at {output_path}")
 
-        # Return only the filename, not the full path
         response = {
             'success': True,
-            'output_path': output_filename,  # Return just the filename
+            'output_path': output_path,
             'media_type': media_type
         }
-        
         if media_type == 'text':
             try:
                 if isinstance(message, bytes):
@@ -445,7 +401,6 @@ def extract_message():
             except Exception as e:
                 print(f"Error decoding text message: {str(e)}")
                 response['message'] = ''
-                
         return jsonify(response)
 
     except Exception as e:
@@ -486,38 +441,8 @@ def download_file():
         return jsonify({'error': 'No file path provided'}), 400
     
     try:
-        print(f"Download request for path: {file_path}")
-        
-        if os.path.isabs(file_path):
-            # It's an absolute path
-            if os.path.exists(file_path):
-                print(f"File exists at absolute path, serving: {file_path}")
-                return send_file(file_path, as_attachment=True)
-            else:
-                print(f"File not found at absolute path: {file_path}")
-                
-                # Try to find the file by basename in the uploads folder
-                basename = os.path.basename(file_path)
-                uploads_path = os.path.join(app.config['UPLOAD_FOLDER'], basename)
-                
-                if os.path.exists(uploads_path):
-                    print(f"File found in uploads folder: {uploads_path}")
-                    return send_file(uploads_path, as_attachment=True)
-                else:
-                    print(f"File not found in uploads folder either: {uploads_path}")
-                    return jsonify({'error': f'File not found: {file_path}'}), 404
-        else:
-            # It's a relative path, check in uploads folder
-            uploads_path = os.path.join(app.config['UPLOAD_FOLDER'], file_path)
-            if os.path.exists(uploads_path):
-                print(f"File found in uploads folder: {uploads_path}")
-                return send_file(uploads_path, as_attachment=True)
-            else:
-                print(f"File not found in uploads folder: {uploads_path}")
-                return jsonify({'error': f'File not found: {file_path}'}), 404
+        return send_file(file_path, as_attachment=True)
     except Exception as e:
-        error_msg = f"Error serving file {file_path}: {str(e)}"
-        print(error_msg)
         return jsonify({'error': str(e)}), 500
     
 # FOR TESTING FOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTING
@@ -555,24 +480,7 @@ def add_cors_headers(response):
 
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
-    try:
-        print(f"Request for file: {filename}")
-        print(f"Looking in: {app.config['UPLOAD_FOLDER']}")
-        
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        if os.path.exists(filepath):
-            print(f"File found, serving: {filepath}")
-            return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-        else:
-            print(f"File not found: {filepath}")
-            # List all files in directory for debugging
-            files = os.listdir(app.config['UPLOAD_FOLDER']) if os.path.exists(app.config['UPLOAD_FOLDER']) else []
-            print(f"Files in directory: {files}")
-            return jsonify({"error": f"File not found: {filename}"}), 404
-    except Exception as e:
-        error_msg = f"Error serving file {filename}: {str(e)}"
-        print(error_msg)
-        return jsonify({"error": error_msg}), 500
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/api/steg_rooms/<int:id>', methods=['DELETE'])
 def delete_room(id):
@@ -592,28 +500,13 @@ def delete_room(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+from flask import send_from_directory
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_react_app(path):
-    print(f"Requested path: {path}")
-    
-    # Handle uploads specially - do not abort
-    if path.startswith('uploads/'):
-        filename = path[8:]  # Remove 'uploads/' prefix
-        print(f"Redirecting to uploaded_file handler with filename: {filename}")
-        return uploaded_file(filename)
-        
-    # Handle API endpoints 
-    if path.startswith('api/'):
-        abort(404)  # Let the API routes handle themselves
-        
-    # Handle static resources
-    if path.startswith('static/'):
-        print(f"Serving static file: {path}")
-        return send_from_directory('build', path)
-        
-    # For all other routes, serve the React app
-    print(f"Serving React app for path: {path}")
+    if path.startswith('api') or path.startswith('uploads') or path.startswith('static'):
+        abort(404)
     return send_from_directory('build', 'index.html')
 
 if __name__ == '__main__':     
