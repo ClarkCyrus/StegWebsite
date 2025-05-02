@@ -14,7 +14,7 @@ from mlsb_algo_api.MultiLayerLSB import MultiLayerLSB
 import secrets
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "http://localhost:3000"}})
+CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "https://zydev.pythonanywhere.com"}})
 
 app.config['SECRET_KEY'] = '123'    
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
@@ -451,7 +451,7 @@ def signup():
 
 @app.after_request
 def add_cors_headers(response):
-    response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
+    response.headers['Access-Control-Allow-Origin'] = 'https://zydev.pythonanywhere.com'
     response.headers['Access-Control-Allow-Credentials'] = 'true'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
     response.headers['Access-Control-Allow-Methods'] = 'GET,POST,PUT,DELETE,OPTIONS'
@@ -478,6 +478,15 @@ def delete_room(id):
         return jsonify({"message": "Room deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+from flask import send_from_directory
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_react_app(path):
+    if path.startswith('api') or path.startswith('uploads') or path.startswith('static'):
+        abort(404)
+    return send_from_directory('build', 'index.html')
 
 if __name__ == '__main__':     
     with app.app_context():
