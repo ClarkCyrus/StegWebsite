@@ -84,7 +84,7 @@ def index():
 application = app
 
 # Check if running in production mode
-if os.path.exists('/home/lanticse/StegWebsite/backend/instance/database.db') == False and (os.path.exists('/home/zydev') or os.path.exists('/home/lanticse')):
+if os.path.exists('/home/zydev/StegWebsite/backend/instance/database.db') == False and os.path.exists('/home/zydev'):
     with app.app_context():
         db.create_all()
 
