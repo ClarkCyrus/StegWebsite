@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FiUpload, FiLock, FiDownload, FiArrowLeft, FiAlertTriangle, FiInfo} from 'react-icons/fi';
 import './CreateStegoRoom.css';
-import API_BASE_URL from '../config';
+import config from '../config';
 
 function CreateStegoRoom() {
   const [name, setName] = useState('');
@@ -87,7 +87,7 @@ function CreateStegoRoom() {
     if (coverImage) formData.append('image', coverImage);
     if (messageFile) formData.append('message', messageFile);
     try {
-      const res = await axios.post(`${API_BASE_URL}/api/create_stego_room`, formData, { withCredentials: true });
+      const res = await axios.post(`${config.API_BASE_URL}/api/create_stego_room`, formData, { withCredentials: true });
       setModalData({
         coverPreview,
         messagePreview,

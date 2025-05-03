@@ -6,7 +6,7 @@ import { BsLockFill, BsLock, BsPlusCircle, BsLightningCharge, BsSearch, BsSortDo
 import { FiLogOut, FiX } from 'react-icons/fi';
 import './Dashboard.css';
 import { useAuth } from './AuthContext'; 
-import API_BASE_URL from '../config';
+import config from '../config';
 
 function Dashboard() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -27,18 +27,18 @@ function Dashboard() {
   const { logout } = useAuth();
 
   useEffect(() => {
-    axios.get(`${API_BASE_URL}/api/steg_rooms`, { withCredentials: true })
+    axios.get(`${config.API_BASE_URL}/api/steg_rooms`, { withCredentials: true })
       .then(res => setRooms(res.data))
       .catch(() => setRooms([]));
 
-    axios.get(`${API_BASE_URL}/api/current_user`, { withCredentials: true })  
+    axios.get(`${config.API_BASE_URL}/api/current_user`, { withCredentials: true })  
     .then(res => setCurrentUser(res.data))
     .catch(() => setCurrentUser(null));
   }, []);
 
   const handleLogout = async () => {
     try {
-      await axios.post(`${API_BASE_URL}/api/logout`, {}, { withCredentials: true });
+      await axios.post(`${config.API_BASE_URL}/api/logout`, {}, { withCredentials: true });
       logout(); 
       navigate('/login');
     } catch (error) {
@@ -56,11 +56,11 @@ function Dashboard() {
     // Handle full paths that include uploads directory
     if (normalized.includes('/uploads/')) {
       const filename = normalized.split('/').pop();
-      return `${API_BASE_URL}/uploads/${filename}`;
+      return `${config.API_BASE_URL}/uploads/${filename}`;
     }
     
-    if (normalized.startsWith('uploads/')) return `${API_BASE_URL}/${normalized}`;
-    if (!normalized.startsWith('http')) return `${API_BASE_URL}/uploads/${normalized.replace('uploads/', '')}`;
+    if (normalized.startsWith('uploads/')) return `${config.API_BASE_URL}/${normalized}`;
+    if (!normalized.startsWith('http')) return `${config.API_BASE_URL}/uploads/${normalized.replace('uploads/', '')}`;
     
     return normalized;
   };
@@ -72,7 +72,7 @@ function Dashboard() {
 
   const confirmDelete = () => {
     if (roomToDelete) {
-      axios.delete(`${API_BASE_URL}/api/steg_rooms/${roomToDelete.id}`, { withCredentials: true })
+      axios.delete(`${config.API_BASE_URL}/api/steg_rooms/${roomToDelete.id}`, { withCredentials: true })
         .then(() => {
           setRooms(rooms.filter(r => r.id !== roomToDelete.id));
           setShowModal(false);

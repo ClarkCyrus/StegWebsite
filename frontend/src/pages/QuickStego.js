@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FiArrowLeft, FiDownload } from 'react-icons/fi';
 import './QuickStego.css';
-import API_BASE_URL from '../config';
+import config from '../config';
 
 function QuickStego() {
     const navigate = useNavigate();
@@ -114,7 +114,7 @@ function QuickStego() {
         formData.append('is_encrypted', embedEncrypted);
 
         try {
-            const response = await axios.post(`${API_BASE_URL}/api/mlsb/embed`, formData, {
+            const response = await axios.post(`${config.API_BASE_URL}/api/mlsb/embed`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -167,11 +167,11 @@ function QuickStego() {
         }
 
         try {
-            const response = await axios.post(`${API_BASE_URL}/api/mlsb/extract`, formData);
+            const response = await axios.post(`${config.API_BASE_URL}/api/mlsb/extract`, formData);
             const data = response.data;
             const downloadUrl = data.output_url 
-                ? `${API_BASE_URL}${data.output_url}` 
-                : `${API_BASE_URL}/api/mlsb/download?path=${encodeURIComponent(data.output_path)}`;
+                ? `${config.API_BASE_URL}${data.output_url}` 
+                : `${config.API_BASE_URL}/api/mlsb/download?path=${encodeURIComponent(data.output_path)}`;
             const ext = data.media_type === 'text' ? '.txt' : data.media_type === 'image' ? '.png' : '.mp3';
             
             if (data.media_type === 'text') {

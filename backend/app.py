@@ -13,14 +13,20 @@ sys.path.append('..')
 from mlsb_algo_api.MultiLayerLSB import MultiLayerLSB
 import secrets
 
-app = Flask(__name__)
-CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": ["http://localhost:3000", "https://zydev.pythonanywhere.com"]}})
+from config import get_config
 
-app.config['SECRET_KEY'] = '123'    
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = '/home/zydev/uploads'
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 20MB max file size
+app = Flask(__name__)
+config = get_config()
+
+# Apply configuration
+app.config.from_object(config)
+
+# Configure CORS
+CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": config.CORS_ORIGINS}})
+
+# Ensure upload folder exists
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
 
 db = SQLAlchemy(app)
 
@@ -64,20 +70,16 @@ admin.add_view(ModelView(User, db.session))
 admin.add_view(ModelView(StegoRoom, db.session))
 admin.add_view(ModelView(MLSBDemo, db.session))
 
-if not os.path.exists(app.config['UPLOAD_FOLDER']):
-    os.makedirs(app.config['UPLOAD_FOLDER'])
-
-
 @app.route('/')
 def index():
     return "Flask app with SQLite is set up!"
 
-from app import app as application
+# Create an application variable for WSGI without circular import
+application = app
 
-import os
-if not os.path.exists('/home/zydev/StegWebsite/backend/instance/database.db'):
-    from app import db
-    with application.app_context():
+# Check if running in production mode (PythonAnywhere)
+if os.path.exists('/home/zydev/StegWebsite/backend/instance/database.db') == False and os.path.exists('/home/zydev'):
+    with app.app_context():
         db.create_all()
 
 @app.errorhandler(Exception)
@@ -185,6 +187,11 @@ def create_stego_room():
             message_path,
             is_encrypted=is_encrypted
         )
+
+        # Get the actual filename from the returned path (in case extension changed)
+        stego_filename = os.path.basename(stego_path)
+        print(f"DEBUG - Actual stego path: {stego_path}")
+        print(f"DEBUG - Updated stego filename: {stego_filename}")
 
         with open(stego_path, 'rb') as f:
             stego_image_b64 = base64.b64encode(f.read()).decode('utf-8')
@@ -319,6 +326,11 @@ def embed_message():
             message_path, 
             is_encrypted=is_encrypted
         )
+        
+        # Get the actual filename from the returned path (in case extension changed)
+        stego_filename = os.path.basename(stego_path)
+        print(f"DEBUG - Actual stego path: {stego_path}")
+        print(f"DEBUG - Updated stego filename: {stego_filename}")
 
         # Read the stego image for base64 response
         with open(stego_path, 'rb') as f:

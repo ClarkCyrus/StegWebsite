@@ -15,7 +15,7 @@ import {
   Legend,
 } from 'chart.js';
 import './StegoRoom.css';
-import API_BASE_URL from '../config';
+import config from '../config';
 
 ChartJS.register(
   CategoryScale,
@@ -44,7 +44,7 @@ function StegoRoom() {
   const [expandedMetrics, setExpandedMetrics] = useState({});
 
   useEffect(() => {
-    axios.get(`${API_BASE_URL}/api/stegorooms/${roomId}`, { withCredentials: true })
+    axios.get(`${config.API_BASE_URL}/api/stegorooms/${roomId}`, { withCredentials: true })
       .then(res => {
         setRoom(res.data.room);
         console.log(res.data.room)
@@ -87,7 +87,7 @@ function StegoRoom() {
       formData.append('iv', iv);
     }
     try {
-      const response = await fetch(`${API_BASE_URL}/api/mlsb/extract`, {
+      const response = await fetch(`${config.API_BASE_URL}/api/mlsb/extract`, {
         method: 'POST',
         body: formData
       });
@@ -98,8 +98,8 @@ function StegoRoom() {
 
       // Create preview based on media type
       const downloadUrl = data.output_url 
-        ? `${API_BASE_URL}${data.output_url}` 
-        : `${API_BASE_URL}/api/mlsb/download?path=${encodeURIComponent(data.output_path)}`;
+        ? `${config.API_BASE_URL}${data.output_url}` 
+        : `${config.API_BASE_URL}/api/mlsb/download?path=${encodeURIComponent(data.output_path)}`;
       const ext = data.media_type === 'text' ? '.txt' : data.media_type === 'image' ? '.png' : '.mp3';
       
       if (data.media_type === 'text') {
@@ -159,17 +159,17 @@ function StegoRoom() {
     // Handle full paths that include uploads directory
     if (normalizedPath.includes('/uploads/')) {
       const filename = normalizedPath.split('/').pop();
-      return `${API_BASE_URL}/uploads/${filename}`;
+      return `${config.API_BASE_URL}/uploads/${filename}`;
     }
     
     // Handle uploads directory paths
     if (normalizedPath.startsWith('uploads/')) {
-      return `${API_BASE_URL}/${normalizedPath}`;
+      return `${config.API_BASE_URL}/${normalizedPath}`;
     }
     
     // Handle any other paths that might be relative to uploads
     if (!normalizedPath.startsWith('http')) {
-      return `${API_BASE_URL}/uploads/${normalizedPath.replace('uploads/', '')}`;
+      return `${config.API_BASE_URL}/uploads/${normalizedPath.replace('uploads/', '')}`;
     }
     
     return normalizedPath;
