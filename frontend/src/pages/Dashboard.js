@@ -49,10 +49,19 @@ function Dashboard() {
   const getCoverImageSrc = (room) => {
     if (!room.cover_image) return null;
     const normalized = room.cover_image.replace(/\\/g, '/');
+    
     if (normalized.startsWith('data:image')) return normalized;
     if (normalized.match(/^[A-Za-z0-9+/=]+$/)) return `data:image/png;base64,${normalized}`;
+    
+    // Handle full paths that include uploads directory
+    if (normalized.includes('/uploads/')) {
+      const filename = normalized.split('/').pop();
+      return `${API_BASE_URL}/uploads/${filename}`;
+    }
+    
     if (normalized.startsWith('uploads/')) return `${API_BASE_URL}/${normalized}`;
-    if (!normalized.startsWith('http') && !normalized.startsWith('/uploads/')) return `${API_BASE_URL}/uploads/${normalized}`;
+    if (!normalized.startsWith('http')) return `${API_BASE_URL}/uploads/${normalized.replace('uploads/', '')}`;
+    
     return normalized;
   };
 
@@ -203,63 +212,63 @@ function Dashboard() {
           </div>
         </div>
       ) : (
-        <Row className="g-1 card-row">
+      <Row className="g-1 card-row">
           {filteredAndSortedRooms.map((room) => (
-            <Col key={room.id} md={3} className="mb-2 px-1">
-              <Card className="room-card" onClick={() => navigate(`/room/${room.id}`)}>
-                <div className="room-image-container">
-                  {getCoverImageSrc(room) ? (
-                    <img src={getCoverImageSrc(room)} alt="cover" className="room-image" />
-                  ) : (
-                    <span>No Image</span>
-                  )}
-                  <button
-                    className="close-button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(room); 
-                    }}
-                  >
-                    <FiX size={14} />
-                  </button>
-                </div>
-                <div className="room-footer">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <h3 className="room-name">{room.name || 'Untitled'}</h3>
-                    <div className="encryption-status">
+          <Col key={room.id} md={3} className="mb-2 px-1">
+            <Card className="room-card" onClick={() => navigate(`/room/${room.id}`)}>
+              <div className="room-image-container">
+                {getCoverImageSrc(room) ? (
+                  <img src={getCoverImageSrc(room)} alt="cover" className="room-image" />
+                ) : (
+                  <span>No Image</span>
+                )}
+                <button
+                  className="close-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(room); 
+                  }}
+                >
+                  <FiX size={14} />
+                </button>
+              </div>
+              <div className="room-footer">
+                <div className="d-flex justify-content-between align-items-center">
+                  <h3 className="room-name">{room.name || 'Untitled'}</h3>
+                  <div className="encryption-status">
+                    <OverlayTrigger
+                      placement="top"
+                      overlay={
+                        <Tooltip>
+                          {room.is_encrypted ? 'Encryption enabled' : 'Encryption disabled'}
+                        </Tooltip>
+                     }
+                    >
+                      <div className={`status-dot ${room.is_encrypted ? 'encrypted' : 'unencrypted'}`} />
+                    </OverlayTrigger>
+                    {room.is_encrypted && (
                       <OverlayTrigger
                         placement="top"
                         overlay={
                           <Tooltip>
-                            {room.is_encrypted ? 'Encryption enabled' : 'Encryption disabled'}
+                            {room.is_key_stored ? 'Key is stored' : 'Key is not stored'}
                           </Tooltip>
-                       }
+                        }
                       >
-                        <div className={`status-dot ${room.is_encrypted ? 'encrypted' : 'unencrypted'}`} />
-                      </OverlayTrigger>
-                      {room.is_encrypted && (
-                        <OverlayTrigger
-                          placement="top"
-                          overlay={
-                            <Tooltip>
-                              {room.is_key_stored ? 'Key is stored' : 'Key is not stored'}
-                            </Tooltip>
-                          }
-                        >
-                        {room.is_key_stored ? (
-                          <BsLockFill color="var(--danger-color)" size={16} />
-                        ) : (
-                          <BsLock color="var(--danger-color)" size={16} />
-                        )}
-                        </OverlayTrigger>
+                      {room.is_key_stored ? (
+                        <BsLockFill color="var(--danger-color)" size={16} />
+                      ) : (
+                        <BsLock color="var(--danger-color)" size={16} />
                       )}
-                    </div>
+                      </OverlayTrigger>
+                    )}
                   </div>
                 </div>
-              </Card>
-            </Col>
-          ))}
-        </Row>
+              </div>
+            </Card>
+          </Col>
+        ))}
+      </Row>
       )}
 
       <div className="action-buttons">

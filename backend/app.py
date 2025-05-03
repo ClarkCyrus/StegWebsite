@@ -200,15 +200,19 @@ def create_stego_room():
 
         user_id = session["user_id"]
 
+        # Store just the filenames instead of full paths
+        cover_filename = os.path.basename(cover_path)
+        message_filename = os.path.basename(message_path)
+        stego_filename = os.path.basename(stego_path)
 
         new_room = StegoRoom(
             name=name,
             is_encrypted=is_encrypted,
             key=key.hex() if key else None,
             iv=iv.hex() if iv else None,
-            message_file=message_path,
-            cover_image=cover_path,
-            stego_image=stego_path,
+            message_file=message_filename,
+            cover_image=cover_filename,
+            stego_image=stego_filename,
             metrics=str(metrics),
             user_id=user_id,
             is_key_stored=store_key
@@ -224,8 +228,9 @@ def create_stego_room():
                 "is_encrypted": new_room.is_encrypted,
                 "key": new_room.key,
                 "iv": new_room.iv,
-                "cover_image": cover_path,
+                "cover_image": cover_filename,
                 "stego_image": stego_image_b64,
+                "stego_filename": stego_filename,
                 "metrics": metrics,
                 "user_id": new_room.user_id
             }

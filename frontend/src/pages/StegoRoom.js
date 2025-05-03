@@ -156,6 +156,12 @@ function StegoRoom() {
       return `data:image/png;base64,${normalizedPath}`;
     }
     
+    // Handle full paths that include uploads directory
+    if (normalizedPath.includes('/uploads/')) {
+      const filename = normalizedPath.split('/').pop();
+      return `${API_BASE_URL}/uploads/${filename}`;
+    }
+    
     // Handle uploads directory paths
     if (normalizedPath.startsWith('uploads/')) {
       return `${API_BASE_URL}/${normalizedPath}`;
