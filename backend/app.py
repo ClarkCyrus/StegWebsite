@@ -19,7 +19,7 @@ CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": ["http://
 app.config['SECRET_KEY'] = '123'    
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = '/home/zydev/StegWebsite/backend/uploads'
+app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 20MB max file size
 
 db = SQLAlchemy(app)
@@ -122,37 +122,19 @@ def get_steg_rooms():
     user_id = session['user_id']
     stego_rooms = StegoRoom.query.filter_by(user_id=user_id).all()
     
-    rooms_list = []
-    for room in stego_rooms:
-        # Convert absolute paths to web-friendly paths
-        message_file_path = room.message_file
-        cover_image_path = room.cover_image
-        stego_image_path = room.stego_image
-        
-        # Extract filenames from absolute paths
-        if message_file_path and os.path.isabs(message_file_path):
-            message_file_name = os.path.basename(message_file_path)
-            message_file_path = f"uploads/{message_file_name}"
-        
-        if cover_image_path and os.path.isabs(cover_image_path):
-            cover_image_name = os.path.basename(cover_image_path)
-            cover_image_path = f"uploads/{cover_image_name}"
-            
-        if stego_image_path and os.path.isabs(stego_image_path):
-            stego_image_name = os.path.basename(stego_image_path)
-            stego_image_path = f"uploads/{stego_image_name}"
-            
-        rooms_list.append({
+    rooms_list = [
+        {
             "id": room.id,
             "name": room.name,
             "is_encrypted": room.is_encrypted,
-            "message_file": message_file_path,
-            "cover_image": cover_image_path,
-            "stego_image": stego_image_path,
+            "message_file": room.message_file,
+            "cover_image": room.cover_image,
+            "stego_image": room.stego_image,
             "metrics": room.metrics,
             "is_key_stored": room.is_key_stored
-        })
-        
+        }
+        for room in stego_rooms
+    ]
     return jsonify(rooms_list)
 
 @app.route('/api/current_user', methods=['GET'])
@@ -188,13 +170,9 @@ def create_stego_room():
         return jsonify({"error": "Missing files"}), 400
 
     # Save files to disk
-    cover_filename = secure_filename(cover_image_file.filename)
-    message_filename = secure_filename(message_file.filename)
-    stego_filename = f"stego_{cover_filename}"
-    
-    cover_path = os.path.join(app.config['UPLOAD_FOLDER'], cover_filename)
-    message_path = os.path.join(app.config['UPLOAD_FOLDER'], message_filename)
-    stego_path = os.path.join(app.config['UPLOAD_FOLDER'], stego_filename)
+    cover_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(cover_image_file.filename))
+    message_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(message_file.filename))
+    stego_path = os.path.join(app.config['UPLOAD_FOLDER'], f"stego_{cover_image_file.filename}")
 
     cover_image_file.save(cover_path)
     message_file.save(message_path)
@@ -222,19 +200,15 @@ def create_stego_room():
 
         user_id = session["user_id"]
 
-        # Create web-accessible paths for frontend
-        web_cover_path = f"uploads/{cover_filename}"
-        web_message_path = f"uploads/{message_filename}"
-        web_stego_path = f"uploads/{stego_filename}"
 
         new_room = StegoRoom(
             name=name,
             is_encrypted=is_encrypted,
             key=key.hex() if key else None,
             iv=iv.hex() if iv else None,
-            message_file=message_path,  # Keep full path in database for server-side operations
-            cover_image=cover_path,     # Keep full path in database for server-side operations
-            stego_image=stego_path,     # Keep full path in database for server-side operations
+            message_file=message_path,
+            cover_image=cover_path,
+            stego_image=stego_path,
             metrics=str(metrics),
             user_id=user_id,
             is_key_stored=store_key
@@ -248,11 +222,10 @@ def create_stego_room():
                 "id": new_room.id,
                 "name": new_room.name,
                 "is_encrypted": new_room.is_encrypted,
-                "key": new_room.key if store_key else None,
-                "iv": new_room.iv if store_key else None,
-                "cover_image": web_cover_path,
-                "message_file": web_message_path,
-                "stego_image": web_stego_path,
+                "key": new_room.key,
+                "iv": new_room.iv,
+                "cover_image": cover_path,
+                "stego_image": stego_image_b64,
                 "metrics": metrics,
                 "user_id": new_room.user_id
             }
@@ -267,32 +240,14 @@ def get_stegoroom(room_id):
     # Fetch the StegoRoom entry from the database (404 if not found)
     room = StegoRoom.query.get_or_404(room_id)
 
-    # Convert absolute paths to web-accessible paths
-    message_file_path = room.message_file
-    cover_image_path = room.cover_image
-    stego_image_path = room.stego_image
-    
-    # Extract filenames from absolute paths
-    if message_file_path and os.path.isabs(message_file_path):
-        message_file_name = os.path.basename(message_file_path)
-        message_file_path = f"uploads/{message_file_name}"
-    
-    if cover_image_path and os.path.isabs(cover_image_path):
-        cover_image_name = os.path.basename(cover_image_path)
-        cover_image_path = f"uploads/{cover_image_name}"
-        
-    if stego_image_path and os.path.isabs(stego_image_path):
-        stego_image_name = os.path.basename(stego_image_path)
-        stego_image_path = f"uploads/{stego_image_name}"
-
     # Construct a detailed response dictionary.
     room_info = {
         "id": room.id,
         "name": room.name,
         "is_encrypted": room.is_encrypted,
-        "message_file": message_file_path,
-        "cover_image": cover_image_path,
-        "stego_image": stego_image_path,
+        "message_file": room.message_file,
+        "cover_image": room.cover_image,
+        "stego_image": room.stego_image,
         "metrics": room.metrics,
         "user_id": room.user_id,
         "user": {
@@ -306,9 +261,9 @@ def get_stegoroom(room_id):
         f"StegoRoom (ID: {room.id})\n"
         f"Name: {room.name}\n"
         f"Encrypted: {'Yes' if room.is_encrypted else 'No'}\n"
-        f"Message File: {message_file_path}\n"
-        f"Cover Image: {cover_image_path}\n"
-        f"Stego Image: {stego_image_path}\n"
+        f"Message File: {room.message_file}\n"
+        f"Cover Image: {room.cover_image}\n"
+        f"Stego Image: {room.stego_image}\n"
         f"Metrics: {room.metrics}\n"
         f"Associated User ID: {room.user_id}\n"
         f"User Email: {room.user.email if room.user else 'N/A'}\n"
@@ -338,17 +293,10 @@ def embed_message():
         return jsonify({'error': 'No selected files'}), 400
 
     try:
-        # Create filenames
-        cover_filename = secure_filename(cover_image.filename)
-        message_filename = secure_filename(message_file.filename)
-        stego_filename = f'stego_{cover_filename}'
-        
-        # Create full paths
-        cover_path = os.path.join(app.config['UPLOAD_FOLDER'], cover_filename)
-        message_path = os.path.join(app.config['UPLOAD_FOLDER'], message_filename)
-        stego_path = os.path.join(app.config['UPLOAD_FOLDER'], stego_filename)
+        cover_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(cover_image.filename))
+        message_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(message_file.filename))
+        stego_path = os.path.join(app.config['UPLOAD_FOLDER'], f'stego_{cover_image.filename}')
 
-        # Save files
         cover_image.save(cover_path)
         message_file.save(message_path)
 
@@ -360,11 +308,9 @@ def embed_message():
             is_encrypted=is_encrypted
         )
 
-        # Read the stego image for base64 response
         with open(stego_path, 'rb') as f:
             stego_image = base64.b64encode(f.read()).decode('utf-8')
 
-        # Calculate metrics
         message_size = os.path.getsize(message_path)
         metrics = {
             'psnr': MultiLayerLSB.calculate_psnr(cover_path, stego_path),
@@ -375,12 +321,6 @@ def embed_message():
             'message_size': message_size
         }
 
-        # Create web paths for frontend
-        web_cover_path = f"uploads/{cover_filename}"
-        web_message_path = f"uploads/{message_filename}"
-        web_stego_path = f"uploads/{stego_filename}"
-
-        # Save to database (with full paths)
         demo = MLSBDemo(
             cover_image=cover_path,
             message_file=message_path,
@@ -391,14 +331,10 @@ def embed_message():
         db.session.add(demo)
         db.session.commit()
 
-        # Build response (with web paths)
         response = {
             'success': True,
-            'stego_image': stego_image,  # Base64 encoded data
-            'metrics': metrics,
-            'stego_image_path': web_stego_path,  # Web path for downloading
-            'cover_image_path': web_cover_path,  # Web path for comparing
-            'message_file_path': web_message_path  # Web path for downloading
+            'stego_image': stego_image,
+            'metrics': metrics
         }
 
         if is_encrypted:
@@ -437,10 +373,7 @@ def extract_message():
             'audio': '.mp3'
         }
         ext = extension_map.get(media_type, '.bin')
-        
-        # Define filenames and paths
-        extracted_filename = f"extracted_message{ext}"
-        output_path = os.path.join(app.config['UPLOAD_FOLDER'], extracted_filename)
+        output_path = os.path.join(app.config['UPLOAD_FOLDER'], f"extracted_message{ext}")
 
         key_bytes = bytes.fromhex(key) if is_encrypted else None
         iv_bytes = bytes.fromhex(iv) if is_encrypted else None
@@ -453,12 +386,9 @@ def extract_message():
             iv=iv_bytes
         )
 
-        # For frontend download URL, use a relative path that includes uploads/
-        download_path = f"uploads/{extracted_filename}"
-        
         response = {
             'success': True,
-            'output_path': download_path,  # Return a web-friendly path with uploads/ prefix
+            'output_path': output_path,
             'media_type': media_type
         }
         if media_type == 'text':
@@ -511,22 +441,7 @@ def download_file():
         return jsonify({'error': 'No file path provided'}), 400
     
     try:
-        # Handle paths with uploads/ prefix
-        if file_path.startswith('uploads/'):
-            filename = file_path.replace('uploads/', '', 1)
-            full_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            return send_file(full_path, as_attachment=True)
-        
-        # Handle absolute paths
-        if os.path.isabs(file_path) and os.path.exists(file_path):
-            return send_file(file_path, as_attachment=True)
-        
-        # Handle simple filenames
-        full_path = os.path.join(app.config['UPLOAD_FOLDER'], file_path)
-        if os.path.exists(full_path):
-            return send_file(full_path, as_attachment=True)
-            
-        return jsonify({'error': f'File not found: {file_path}'}), 404
+        return send_file(file_path, as_attachment=True)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
@@ -565,13 +480,7 @@ def add_cors_headers(response):
 
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
-    try:
-        full_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        if os.path.exists(full_path):
-            return send_file(full_path)
-        return jsonify({"error": f"File not found: {filename}"}), 404
-    except Exception as e:
-        return jsonify({"error": f"Error serving file: {str(e)}"}), 500
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/api/steg_rooms/<int:id>', methods=['DELETE'])
 def delete_room(id):
@@ -596,16 +505,8 @@ from flask import send_from_directory
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_react_app(path):
-    # Handle uploads requests - serve the file directly
-    if path.startswith('uploads/'):
-        filename = path[8:]  # Remove 'uploads/' prefix
-        return uploaded_file(filename)
-        
-    # Block API requests and static routes
-    if path.startswith('api') or path.startswith('static'):
+    if path.startswith('api') or path.startswith('uploads') or path.startswith('static'):
         abort(404)
-        
-    # For all other routes, serve the React app
     return send_from_directory('build', 'index.html')
 
 if __name__ == '__main__':     
