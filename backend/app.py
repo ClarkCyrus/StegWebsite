@@ -172,11 +172,7 @@ def create_stego_room():
     # Save files to disk
     cover_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(cover_image_file.filename))
     message_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(message_file.filename))
-    
-    # Preserve the original file extension for the stego image
-    filename, ext = os.path.splitext(secure_filename(cover_image_file.filename))
-    stego_filename = f'stego_{filename}{ext}'
-    stego_path = os.path.join(app.config['UPLOAD_FOLDER'], stego_filename)
+    stego_path = os.path.join(app.config['UPLOAD_FOLDER'], f"stego_{cover_image_file.filename}")
 
     cover_image_file.save(cover_path)
     message_file.save(message_path)
@@ -209,11 +205,6 @@ def create_stego_room():
         message_filename = os.path.basename(message_path)
         stego_filename = os.path.basename(stego_path)
 
-        # Create web paths for frontend
-        web_cover_path = f"uploads/{cover_filename}"
-        web_message_path = f"uploads/{message_filename}"
-        web_stego_path = f"uploads/{stego_filename}"
-
         new_room = StegoRoom(
             name=name,
             is_encrypted=is_encrypted,
@@ -238,10 +229,8 @@ def create_stego_room():
                 "key": new_room.key,
                 "iv": new_room.iv,
                 "cover_image": cover_filename,
-                "cover_image_path": f"uploads/{cover_filename}",
                 "stego_image": stego_image_b64,
                 "stego_filename": stego_filename,
-                "stego_image_path": f"uploads/{stego_filename}",
                 "metrics": metrics,
                 "user_id": new_room.user_id
             }
@@ -264,9 +253,6 @@ def get_stegoroom(room_id):
         "message_file": room.message_file,
         "cover_image": room.cover_image,
         "stego_image": room.stego_image,
-        "cover_image_path": f"uploads/{room.cover_image}",
-        "stego_image_path": f"uploads/{room.stego_image}",
-        "message_file_path": f"uploads/{room.message_file}",
         "metrics": room.metrics,
         "user_id": room.user_id,
         "user": {
@@ -315,10 +301,7 @@ def embed_message():
         # Create filenames
         cover_filename = secure_filename(cover_image.filename)
         message_filename = secure_filename(message_file.filename)
-        
-        # Preserve the original file extension for the stego image
-        filename, ext = os.path.splitext(cover_filename)
-        stego_filename = f'stego_{filename}{ext}'
+        stego_filename = f'stego_{cover_filename}'
         
         # Create full paths
         cover_path = os.path.join(app.config['UPLOAD_FOLDER'], cover_filename)
