@@ -144,6 +144,43 @@ function CreateStegoRoom() {
     }
   };
 
+  // Format metric values with appropriate units and decimal places
+  const formatMetricValue = (key, value) => {
+    if (typeof value === 'string') {
+      try {
+        value = parseFloat(value);
+      } catch (e) {
+        return value;
+      }
+    }
+
+    switch (key) {
+      case 'psnr':
+        return `${value.toFixed(2)} dB`;
+      case 'mse':
+        return value.toFixed(4);
+      case 'ssim':
+        return value.toFixed(4);
+      case 'bpp':
+        return `${value.toFixed(3)} bits/pixel`;
+      case 'capacity':
+        return formatBytes(value);
+      case 'message_size':
+        return formatBytes(value);
+      default:
+        return value;
+    }
+  };
+
+  // Format bytes to human-readable format
+  const formatBytes = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+  };
+
   return (
     <div className="create-room-container">
       <div className="create-room-card">
@@ -276,7 +313,7 @@ function CreateStegoRoom() {
                 <li>PNG format is recommended for cover images to ensure best quality.</li>
                 <li>Your output stego image will always be saved as PNG regardless of input format.</li>
                 <li>JPEG cannot be an output stego image as some hidden data is destroyed due to lossy format.</li>
-                <li>File size limits: 10MB for cover images, 10MB for secret messages.</li>
+                <li>File size limits: 10MB for cover images, 10MB for secret messages, 100MB for stego images.</li>
               </ul>
             </div>
           </div>
@@ -354,8 +391,8 @@ function CreateStegoRoom() {
                     <div className="metrics-grid">
                       {Object.entries(modalData.metrics).map(([key, value]) => (
                         <div key={key} className="metric-item">
-                          <span className="metric-label">{key}:</span>
-                          <span className="metric-value">{value}</span>
+                          <span className="metric-label">{formatMetricLabel(key)}:</span>
+                          <span className="metric-value">{formatMetricValue(key, value)}</span>
                         </div>
                       ))}
                     </div>
@@ -387,6 +424,26 @@ function CreateStegoRoom() {
       )}
     </div>
   );
+}
+
+// Helper function to format metric labels for better display
+function formatMetricLabel(key) {
+  switch (key) {
+    case 'psnr':
+      return 'PSNR';
+    case 'mse':
+      return 'MSE';
+    case 'ssim':
+      return 'SSIM';
+    case 'bpp':
+      return 'Bits Per Pixel';
+    case 'capacity':
+      return 'Maximum Capacity';
+    case 'message_size':
+      return 'Message Size';
+    default:
+      return key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+  }
 }
 
 export default CreateStegoRoom; 

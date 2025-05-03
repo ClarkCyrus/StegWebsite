@@ -221,6 +221,63 @@ function QuickStego() {
         document.body.removeChild(element);
     };
 
+    // Format metric values with appropriate units and decimal places
+    const formatMetricValue = (key, value) => {
+        if (typeof value === 'string') {
+            try {
+                value = parseFloat(value);
+            } catch (e) {
+                return value;
+            }
+        }
+
+        switch (key) {
+            case 'psnr':
+                return `${value.toFixed(2)} dB`;
+            case 'mse':
+                return value.toFixed(4);
+            case 'ssim':
+                return value.toFixed(4);
+            case 'bpp':
+                return `${value.toFixed(3)} bits/pixel`;
+            case 'capacity':
+                return formatBytes(value);
+            case 'message_size':
+                return formatBytes(value);
+            default:
+                return value;
+        }
+    };
+
+    // Format bytes to human-readable format
+    const formatBytes = (bytes) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+    };
+
+    // Format metric labels for better display
+    const formatMetricLabel = (key) => {
+        switch (key) {
+            case 'psnr':
+                return 'PSNR';
+            case 'mse':
+                return 'MSE';
+            case 'ssim':
+                return 'SSIM';
+            case 'bpp':
+                return 'Bits Per Pixel';
+            case 'capacity':
+                return 'Maximum Capacity';
+            case 'message_size':
+                return 'Message Size';
+            default:
+                return key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+        }
+    };
+
     const renderMetricsSection = () => {
         if (!metrics) return null;
         
@@ -230,27 +287,27 @@ function QuickStego() {
                 <div className="metrics-container">
                     <div className="metric-item">
                         <span className="metric-label">Capacity:</span>
-                        <span className="metric-value">{metrics.capacity.toLocaleString()} bytes</span>
+                        <span className="metric-value">{formatMetricValue('capacity', metrics.capacity)}</span>
                     </div>
                     <div className="metric-item">
                         <span className="metric-label">Message Size:</span>
-                        <span className="metric-value">{metrics.message_size.toLocaleString()} bytes</span>
+                        <span className="metric-value">{formatMetricValue('message_size', metrics.message_size)}</span>
                     </div>
                     <div className="metric-item">
                         <span className="metric-label">Bits Per Pixel:</span>
-                        <span className="metric-value">{metrics.bpp.toFixed(2)}</span>
+                        <span className="metric-value">{formatMetricValue('bpp', metrics.bpp)}</span>
                     </div>
                     <div className="metric-item">
                         <span className="metric-label">PSNR:</span>
-                        <span className="metric-value">{metrics.psnr.toFixed(2)} dB</span>
+                        <span className="metric-value">{formatMetricValue('psnr', metrics.psnr)}</span>
                     </div>
                     <div className="metric-item">
                         <span className="metric-label">MSE:</span>
-                        <span className="metric-value">{metrics.mse.toFixed(4)}</span>
+                        <span className="metric-value">{formatMetricValue('mse', metrics.mse)}</span>
                     </div>
                     <div className="metric-item">
                         <span className="metric-label">SSIM:</span>
-                        <span className="metric-value">{metrics.ssim.toFixed(4)}</span>
+                        <span className="metric-value">{formatMetricValue('ssim', metrics.ssim)}</span>
                     </div>
                 </div>
             </div>
