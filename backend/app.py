@@ -61,7 +61,7 @@ class StegoRoom(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     is_key_stored = db.Column(db.Boolean, default=False)
 
-# FOR TESTING FOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTING
+# FOR TESTING FOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTING
 class MLSBDemo(db.Model):
     __tablename__ = 'mlsb_demo'
     id = db.Column(db.Integer, primary_key=True)
@@ -86,7 +86,7 @@ google = oauth.register(
     authorize_url='https://accounts.google.com/o/oauth2/auth',
     access_token_url='https://accounts.google.com/o/oauth2/token',
     api_base_url='https://www.googleapis.com/oauth2/v1/',
-    redirect_uri='http://localhost:5000/api/google/callback',
+    redirect_uri=f"{config.BASE_URL}/api/google/callback",
     client_kwargs={
         'scope': 'openid email profile',
     },

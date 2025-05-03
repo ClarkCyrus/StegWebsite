@@ -36,12 +36,12 @@ function Login() {
       // Extract the Google credential (JWT token)
       const token = credentialResponse.credential;
 
-      const nonceResponse = await axios.get('http://localhost:5000/api/google/login', { withCredentials: true });
+      const nonceResponse = await axios.get(`${config.API_BASE_URL}/api/google/login`, { withCredentials: true });
       const nonce = nonceResponse.data.nonce;
   
       // Send the token to the backend for verification and login
       const response = await axios.post(
-        'http://localhost:5000/api/google/callback',
+        `${config.API_BASE_URL}/api/google/callback`,
         { token, nonce }, // Send the token in the request body
         { withCredentials: true } // Include cookies for session handling
       );
