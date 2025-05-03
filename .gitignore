@@ -11,3 +11,4 @@ backend/instance/database.db
 backend/instance/database.db
 mlsb_algo_api/__pycache__/MultiLayerLSB.cpython-312.pyc
 mlsb_algo_api/__pycache__/MultiLayerLSB.cpython-312.pyc
+.env
