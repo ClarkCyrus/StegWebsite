@@ -97,7 +97,9 @@ function StegoRoom() {
       setMessage(data.message);
 
       // Create preview based on media type
-      const downloadUrl = `${API_BASE_URL}/api/mlsb/download?path=${encodeURIComponent(data.output_path)}`;
+      const downloadUrl = data.output_url 
+        ? `${API_BASE_URL}${data.output_url}` 
+        : `${API_BASE_URL}/api/mlsb/download?path=${encodeURIComponent(data.output_path)}`;
       const ext = data.media_type === 'text' ? '.txt' : data.media_type === 'image' ? '.png' : '.mp3';
       
       if (data.media_type === 'text') {

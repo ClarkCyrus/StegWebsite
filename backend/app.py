@@ -19,7 +19,7 @@ CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": ["http://
 app.config['SECRET_KEY'] = '123'    
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['UPLOAD_FOLDER'] = '/home/zydev/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 20MB max file size
 
 db = SQLAlchemy(app)
@@ -293,10 +293,17 @@ def embed_message():
         return jsonify({'error': 'No selected files'}), 400
 
     try:
-        cover_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(cover_image.filename))
-        message_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(message_file.filename))
-        stego_path = os.path.join(app.config['UPLOAD_FOLDER'], f'stego_{cover_image.filename}')
+        # Create filenames
+        cover_filename = secure_filename(cover_image.filename)
+        message_filename = secure_filename(message_file.filename)
+        stego_filename = f'stego_{cover_filename}'
+        
+        # Create full paths
+        cover_path = os.path.join(app.config['UPLOAD_FOLDER'], cover_filename)
+        message_path = os.path.join(app.config['UPLOAD_FOLDER'], message_filename)
+        stego_path = os.path.join(app.config['UPLOAD_FOLDER'], stego_filename)
 
+        # Save files
         cover_image.save(cover_path)
         message_file.save(message_path)
 
@@ -308,9 +315,11 @@ def embed_message():
             is_encrypted=is_encrypted
         )
 
+        # Read the stego image for base64 response
         with open(stego_path, 'rb') as f:
             stego_image = base64.b64encode(f.read()).decode('utf-8')
 
+        # Calculate metrics
         message_size = os.path.getsize(message_path)
         metrics = {
             'psnr': MultiLayerLSB.calculate_psnr(cover_path, stego_path),
@@ -321,6 +330,12 @@ def embed_message():
             'message_size': message_size
         }
 
+        # Create web paths for frontend
+        web_cover_path = f"uploads/{cover_filename}"
+        web_message_path = f"uploads/{message_filename}"
+        web_stego_path = f"uploads/{stego_filename}"
+
+        # Save to database (with full paths)
         demo = MLSBDemo(
             cover_image=cover_path,
             message_file=message_path,
@@ -331,10 +346,14 @@ def embed_message():
         db.session.add(demo)
         db.session.commit()
 
+        # Build response (with web paths)
         response = {
             'success': True,
-            'stego_image': stego_image,
-            'metrics': metrics
+            'stego_image': stego_image,  # Base64 encoded data
+            'metrics': metrics,
+            'stego_image_path': web_stego_path,  # Web path for downloading
+            'cover_image_path': web_cover_path,  # Web path for comparing
+            'message_file_path': web_message_path  # Web path for downloading
         }
 
         if is_encrypted:
@@ -389,7 +408,8 @@ def extract_message():
         response = {
             'success': True,
             'output_path': output_path,
-            'media_type': media_type
+            'media_type': media_type,
+            'output_url': f'/uploads/{os.path.basename(output_path)}'
         }
         if media_type == 'text':
             try:
@@ -441,6 +461,15 @@ def download_file():
         return jsonify({'error': 'No file path provided'}), 400
     
     try:
+        # Handle different path formats
+        if not os.path.isabs(file_path):
+            # If not absolute, assume it's relative to UPLOAD_FOLDER
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], os.path.basename(file_path))
+        
+        # Check if file exists
+        if not os.path.exists(file_path):
+            return jsonify({'error': f'File not found: {file_path}'}), 404
+            
         return send_file(file_path, as_attachment=True)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -480,7 +509,10 @@ def add_cors_headers(response):
 
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    try:
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    except Exception as e:
+        return jsonify({"error": f"Error serving file: {str(e)}"}), 500
 
 @app.route('/api/steg_rooms/<int:id>', methods=['DELETE'])
 def delete_room(id):
