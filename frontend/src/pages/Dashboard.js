@@ -114,7 +114,7 @@ function Dashboard() {
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h1 className="dashboard-title">Stego Dashboard</h1>
+        <h1 className="dashboard-title">StegX Dashboard</h1>
         <div className="user-info">
           {currentUser && (
             <span className="user-email">{currentUser.email}</span>
