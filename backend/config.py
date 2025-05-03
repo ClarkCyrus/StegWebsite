@@ -18,16 +18,16 @@ class ProductionConfig(Config):
     """Production configuration."""
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
-    UPLOAD_FOLDER = '/home/zydev/uploads'
-    BASE_URL = 'https://zydev.pythonanywhere.com'
-    CORS_ORIGINS = ["https://zydev.pythonanywhere.com"]
+    UPLOAD_FOLDER = '/home/lanticse/uploads'
+    BASE_URL = 'https://stegx.lanticse.me'
+    CORS_ORIGINS = ["https://stegx.lanticse.me"]
 
 def get_config():
     """Return the appropriate configuration object based on the environment."""
     env = os.environ.get('FLASK_ENV', 'development')
     
-    # Check if we're running on PythonAnywhere
-    if os.path.exists('/home/zydev'):
+    # Check if we're running in production
+    if os.path.exists('/home/zydev') or os.path.exists('/home/lanticse'):
         return ProductionConfig()
     
     if env == 'production':
