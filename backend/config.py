@@ -18,7 +18,7 @@ class ProductionConfig(Config):
     """Production configuration."""
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
-    UPLOAD_FOLDER = '/home/lanticse/uploads'
+    UPLOAD_FOLDER = '/home/zydev/uploads'
     BASE_URL = 'https://stegx.lanticse.me'
     CORS_ORIGINS = ["https://stegx.lanticse.me"]
 
@@ -27,7 +27,7 @@ def get_config():
     env = os.environ.get('FLASK_ENV', 'development')
     
     # Check if we're running in production
-    if os.path.exists('/home/zydev') or os.path.exists('/home/lanticse'):
+    if os.path.exists('/home/zydev'):
         return ProductionConfig()
     
     if env == 'production':
