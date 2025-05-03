@@ -298,6 +298,11 @@ function QuickStego() {
                                                 className="preview-image"
                                             />
                                         </div>
+                                    ) || (
+                                        <div className="info-text">
+                                            <p>Upload a cover image (PNG recommended)</p>
+                                            <p className="file-size-info">Max file size: 10MB</p>
+                                        </div>
                                     )}
                                 </div>
                                 <div className="form-group">
@@ -323,6 +328,12 @@ function QuickStego() {
                                                     {embedMessagePreview.content}
                                                 </div>
                                             )}
+                                        </div>
+                                    ) || (
+                                        <div className="info-text">
+                                            <p>Upload a secret message (TXT, MP3, PNG)</p>
+                                            <p className="file-size-info">Max file size: 10MB</p>
+                                            <p className="file-size-info">Stego image output will be in PNG format (≤100MB)</p>
                                         </div>
                                     )}
                                 </div>
@@ -410,6 +421,11 @@ function QuickStego() {
                                                 alt="Stego Preview" 
                                                 className="preview-image"
                                             />
+                                        </div>
+                                    ) || (
+                                        <div className="info-text">
+                                            <p>Upload the stego image containing hidden data</p>
+                                            <p className="file-size-info">Max file size: 100MB</p>
                                         </div>
                                     )}
                                 </div>

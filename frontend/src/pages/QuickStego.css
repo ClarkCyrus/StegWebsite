@@ -242,6 +242,20 @@
   margin: 0;
 }
 
+.info-text {
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.file-size-info {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-top: 5px;
+}
+
 @media (max-width: 768px) {
   .quick-stego-container {
     padding: 1rem;

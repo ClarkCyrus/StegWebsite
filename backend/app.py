@@ -21,6 +21,12 @@ config = get_config()
 # Apply configuration
 app.config.from_object(config)
 
+# Configure file size limits (in bytes)
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max total request size
+app.config['MAX_COVER_IMAGE_SIZE'] = 10 * 1024 * 1024  # 10MB for cover images
+app.config['MAX_SECRET_MESSAGE_SIZE'] = 10 * 1024 * 1024  # 10MB for secret messages
+app.config['MAX_STEGO_IMAGE_SIZE'] = 100 * 1024 * 1024  # 100MB for stego images
+
 # Configure CORS
 CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": config.CORS_ORIGINS}})
 
@@ -170,6 +176,27 @@ def create_stego_room():
     message_file = request.files.get("message")
     if not cover_image_file or not message_file:
         return jsonify({"error": "Missing files"}), 400
+        
+    # Check file sizes against configured limits
+    cover_image_file.seek(0, os.SEEK_END)
+    cover_image_size = cover_image_file.tell()
+    cover_image_file.seek(0)  # Reset file pointer
+    
+    if cover_image_size > app.config['MAX_COVER_IMAGE_SIZE']:
+        return jsonify({
+            'error': f'Cover image exceeds size limit of {app.config["MAX_COVER_IMAGE_SIZE"] // (1024 * 1024)}MB',
+            'size': cover_image_size
+        }), 413
+        
+    message_file.seek(0, os.SEEK_END)
+    message_size = message_file.tell()
+    message_file.seek(0)  # Reset file pointer
+    
+    if message_size > app.config['MAX_SECRET_MESSAGE_SIZE']:
+        return jsonify({
+            'error': f'Secret message exceeds size limit of {app.config["MAX_SECRET_MESSAGE_SIZE"] // (1024 * 1024)}MB',
+            'size': message_size
+        }), 413
 
     # Save files to disk
     cover_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(cover_image_file.filename))
@@ -192,6 +219,16 @@ def create_stego_room():
         stego_filename = os.path.basename(stego_path)
         print(f"DEBUG - Actual stego path: {stego_path}")
         print(f"DEBUG - Updated stego filename: {stego_filename}")
+        
+        # Check if stego image exceeds size limit
+        stego_size = os.path.getsize(stego_path)
+        if stego_size > app.config['MAX_STEGO_IMAGE_SIZE']:
+            # Clean up the file to avoid wasting space
+            os.remove(stego_path)
+            return jsonify({
+                'error': f'Generated stego image exceeds size limit of {app.config["MAX_STEGO_IMAGE_SIZE"] // (1024 * 1024)}MB',
+                'size': stego_size
+            }), 413
 
         with open(stego_path, 'rb') as f:
             stego_image_b64 = base64.b64encode(f.read()).decode('utf-8')
@@ -305,6 +342,27 @@ def embed_message():
         return jsonify({'error': 'No selected files'}), 400
 
     try:
+        # Check file sizes against configured limits
+        cover_image.seek(0, os.SEEK_END)
+        cover_image_size = cover_image.tell()
+        cover_image.seek(0)  # Reset file pointer
+        
+        if cover_image_size > app.config['MAX_COVER_IMAGE_SIZE']:
+            return jsonify({
+                'error': f'Cover image exceeds size limit of {app.config["MAX_COVER_IMAGE_SIZE"] // (1024 * 1024)}MB',
+                'size': cover_image_size
+            }), 413
+            
+        message_file.seek(0, os.SEEK_END)
+        message_size = message_file.tell()
+        message_file.seek(0)  # Reset file pointer
+        
+        if message_size > app.config['MAX_SECRET_MESSAGE_SIZE']:
+            return jsonify({
+                'error': f'Secret message exceeds size limit of {app.config["MAX_SECRET_MESSAGE_SIZE"] // (1024 * 1024)}MB',
+                'size': message_size
+            }), 413
+        
         # Create filenames
         cover_filename = secure_filename(cover_image.filename)
         message_filename = secure_filename(message_file.filename)
@@ -331,6 +389,16 @@ def embed_message():
         stego_filename = os.path.basename(stego_path)
         print(f"DEBUG - Actual stego path: {stego_path}")
         print(f"DEBUG - Updated stego filename: {stego_filename}")
+        
+        # Check if stego image exceeds size limit
+        stego_size = os.path.getsize(stego_path)
+        if stego_size > app.config['MAX_STEGO_IMAGE_SIZE']:
+            # Clean up the file to avoid wasting space
+            os.remove(stego_path)
+            return jsonify({
+                'error': f'Generated stego image exceeds size limit of {app.config["MAX_STEGO_IMAGE_SIZE"] // (1024 * 1024)}MB',
+                'size': stego_size
+            }), 413
 
         # Read the stego image for base64 response
         with open(stego_path, 'rb') as f:
@@ -397,10 +465,24 @@ def extract_message():
 
     if is_encrypted and (not key or not iv):
         return jsonify({'error': 'Encryption key and IV are required when encryption is enabled'}), 400
+        
+    # Check stego image size
+    stego_image.seek(0, os.SEEK_END)
+    stego_size = stego_image.tell()
+    stego_image.seek(0)  # Reset file pointer
+    
+    if stego_size > app.config['MAX_STEGO_IMAGE_SIZE']:
+        return jsonify({
+            'error': f'Stego image exceeds size limit of {app.config["MAX_STEGO_IMAGE_SIZE"] // (1024 * 1024)}MB',
+            'size': stego_size
+        }), 413
 
     try:
         stego_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(stego_image.filename))
         stego_image.save(stego_path)
+        
+        # Check if this is a JPEG image for better error messages
+        is_jpeg = stego_path.lower().endswith(('.jpg', '.jpeg'))
 
         media_type = MultiLayerLSB.get_media_type(stego_path)
         extension_map = {
@@ -440,6 +522,24 @@ def extract_message():
                 response['message'] = ''
         return jsonify(response)
 
+    except ValueError as ve:
+        error_msg = str(ve)
+        print(f"Extraction error: {error_msg}")
+        
+        # Provide a more user-friendly message for JPEG-related issues
+        if "Unsupported message type" in error_msg and stego_path.lower().endswith(('.jpg', '.jpeg')):
+            return jsonify({
+                'error': "Failed to extract message from JPEG image. JPEG compression may have corrupted the hidden data. Consider using PNG for better results.",
+                'jpeg_warning': True
+            }), 400
+        elif "Termination sequence not found" in error_msg and stego_path.lower().endswith(('.jpg', '.jpeg')):
+            return jsonify({
+                'error': "Failed to decrypt message from JPEG image. JPEG compression likely corrupted the hidden data. Please try using a PNG format instead.",
+                'jpeg_warning': True
+            }), 400
+        else:
+            return jsonify({'error': error_msg}), 400
+            
     except Exception as e:
         print(f"Extraction error: {str(e)}")
         return jsonify({'error': str(e)}), 500

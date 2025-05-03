@@ -315,7 +315,14 @@ class MultiLayerLSB:
                         break
 
         stego_image = Image.fromarray(cover_array.astype(np.uint8))
+        
+        # Ensure stego_image_path has .png extension
+        stego_base, _ = os.path.splitext(stego_image_path)
+        stego_image_path = stego_base + '.png'
+        
+        # Always save as PNG for all stego images regardless of input format
         stego_image.save(stego_image_path, format='PNG')
+
         return stego_image_path, key, iv
 
     @staticmethod

@@ -454,4 +454,10 @@ input:checked + .slider:before {
   background-color: #553c9a;
   transform: translateY(-1px);
   box-shadow: 0 4px 6px rgba(107, 70, 193, 0.2);
+}
+
+.file-size-info {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-top: 5px;
 } 

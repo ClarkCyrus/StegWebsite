@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FiUpload, FiDownload, FiLock, FiArrowLeft, FiImage, FiFileText, FiMusic } from 'react-icons/fi';
+import { FiUpload, FiDownload, FiLock, FiArrowLeft, FiImage, FiFileText, FiMusic, FiInfo } from 'react-icons/fi';
 import { Line, Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -611,6 +611,10 @@ function StegoRoom() {
                     onChange={handleStegoUpload}
                     accept="image/*"
                   />
+                  <div className="file-size-info">
+                    <FiInfo size={16} style={{ marginRight: '5px' }} />
+                    <span>Maximum file size: 100MB. Only PNG format is only accepted for reliable extraction.</span>
+                  </div>
                 </div>
 
                 <button 

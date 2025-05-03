@@ -217,6 +217,7 @@ function CreateStegoRoom() {
                 ) : (
                   <div className="upload-placeholder">
                     <p>Upload a cover image (PNG, TIFF, BMP, JPEG)</p>
+                    <p className="file-size-info">Max file size: 10MB</p>
                   </div>
                 )}
               </div>
@@ -257,7 +258,26 @@ function CreateStegoRoom() {
                     )}
                   </div>
                 )}
+                {!messagePreview && (
+                  <div className="upload-placeholder">
+                    <p>Upload a secret message file (TXT, MP3, PNG)</p>
+                    <p className="file-size-info">Max file size: 10MB</p>
+                  </div>
+                )}
               </div>
+            </div>
+          </div>
+
+          <div className="warning-info">
+            <FiInfo size={20} />
+            <div>
+              <p><strong>Important Information:</strong></p>
+              <ul>
+                <li>PNG format is recommended for cover images to ensure best quality.</li>
+                <li>Your output stego image will always be saved as PNG regardless of input format.</li>
+                <li>JPEG cannot be an output stego image as some hidden data is destroyed due to lossy format.</li>
+                <li>File size limits: 10MB for cover images, 10MB for secret messages.</li>
+              </ul>
             </div>
           </div>
 
