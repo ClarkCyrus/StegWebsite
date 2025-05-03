@@ -315,7 +315,29 @@ class MultiLayerLSB:
                         break
 
         stego_image = Image.fromarray(cover_array.astype(np.uint8))
-        stego_image.save(stego_image_path, format='PNG')
+        
+        # Determine the output format based on the input format
+        _, input_ext = os.path.splitext(cover_image_path)
+        input_ext = input_ext.lower()
+        
+        # Set format based on input extension
+        if input_ext in ['.jpg', '.jpeg']:
+            output_format = 'JPEG'
+            stego_image.save(stego_image_path, format=output_format, quality=95)
+        elif input_ext == '.png':
+            output_format = 'PNG'
+            stego_image.save(stego_image_path, format=output_format)
+        elif input_ext == '.bmp':
+            output_format = 'BMP'
+            stego_image.save(stego_image_path, format=output_format)
+        elif input_ext == '.tiff':
+            output_format = 'TIFF'
+            stego_image.save(stego_image_path, format=output_format)
+        else:
+            # Default to PNG for unknown formats
+            output_format = 'PNG'
+            stego_image.save(stego_image_path, format=output_format)
+            
         return stego_image_path, key, iv
 
     @staticmethod
