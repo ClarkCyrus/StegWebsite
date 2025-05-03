@@ -1,9 +1,11 @@
-from flask import Flask, jsonify, request, session, abort, send_file, send_from_directory
+from flask import Flask, jsonify, request, session, abort, url_for, send_file, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_cors import CORS
 import base64
+import requests
+from authlib.integrations.flask_client import OAuth
 
 import os
 import base64
@@ -13,9 +15,12 @@ sys.path.append('..')
 from mlsb_algo_api.MultiLayerLSB import MultiLayerLSB
 import secrets
 
+
+
 app = Flask(__name__)
 CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "http://localhost:3000"}})
 
+# CHANGE SECRET KEY CHANGE SECRET KEY CHANGE SECRET KEY CHANGE SECRET KEY CHANGE SECRET KEY CHANGE SECRET KEY
 app.config['SECRET_KEY'] = '123'    
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -23,6 +28,7 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 20MB max file size
 
 db = SQLAlchemy(app)
+oauth = OAuth(app)
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -67,11 +73,78 @@ admin.add_view(ModelView(MLSBDemo, db.session))
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
+google = oauth.register(
+    name='google',
+    client_id=os.getenv('GOOGLE_CLIENT_ID'),
+    client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
+    authorize_url='https://accounts.google.com/o/oauth2/auth',
+    access_token_url='https://accounts.google.com/o/oauth2/token',
+    api_base_url='https://www.googleapis.com/oauth2/v1/',
+    redirect_uri='http://localhost:5000/api/google/callback',
+    client_kwargs={
+        'scope': 'openid email profile',
+    },
+)
 
 @app.route('/')
 def index():
     return "Flask app with SQLite is set up!"
 
+@app.route('/api/google/login', methods=['GET'])
+def google_login():
+    nonce = secrets.token_urlsafe(16)
+    session['_google_authlib_nonce_'] = nonce
+    print(f"Nonce set in session: {nonce}")
+    return jsonify({'nonce': nonce})
+
+@app.route('/api/google/callback', methods=['POST'])
+def google_callback():
+    try:
+        data = request.json
+        token = data.get('token')
+        nonce = data.get('nonce')
+
+        if not token:
+            raise ValueError("Token is missing")
+        
+        if not nonce:
+            raise ValueError("Nonce is missing")
+
+        # Retrieve the nonce from the session
+        session_nonce = session.get('_google_authlib_nonce_')
+        if not session_nonce or session_nonce != nonce:
+            raise ValueError("Invalid nonce")
+
+        # Verify the token using Google's OAuth 2.0 tokeninfo endpoint
+        response = requests.get(f'https://oauth2.googleapis.com/tokeninfo?id_token={token}')
+        if response.status_code != 200:
+            raise ValueError("Invalid token")
+
+        user_info = response.json()
+        google_id = user_info['sub']
+        email = user_info['email']
+
+        # Check if a user with this Google ID already exists
+        user = User.query.filter_by(google_id=google_id).first()
+        if not user:
+            user = User.query.filter_by(email=email).first()
+            if user:
+                user.google_id = google_id
+            else:
+                user = User(email=email, google_id=google_id)
+                db.session.add(user)
+            db.session.commit()
+
+        session['user_id'] = user.id
+        return jsonify({
+            'message': 'Logged in successfully with Google',
+            'user_id': user.id,
+            'email': user.email
+        })
+    except Exception as e:
+        print(f"Error in Google callback: {e}")
+        return jsonify({'error': str(e)}), 500
+    
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.json
