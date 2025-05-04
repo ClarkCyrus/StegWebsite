@@ -111,9 +111,8 @@ function Login() {
             Don't have an account? <a href="/signup">Sign up</a>
           </div>
         </div>
-        <div className="auth-image-section">
+        <div className="auth-image-section auth-img">
           <div className="auth-image-content">
-            <h2 className="auth-image-title">StegoWeb</h2>
             <p className="auth-image-subtitle">Hide your messages in plain sight</p>
           </div>
         </div>

@@ -152,8 +152,16 @@
   }
   
   .auth-image-subtitle {
-    font-size: 1.1rem;
+    font-size: 1.55rem;
     opacity: 0.9;
+    color: black;
+    margin-top: 180px;
+  }
+
+  .auth-img{
+    background-image: url('../Frontend-Assets/StegXlogo.png');
+     background-size: 120%;
+     background-position: center;
   }
   
   @media (max-width: 768px) {
