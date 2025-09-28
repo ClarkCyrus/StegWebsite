@@ -18,7 +18,7 @@ class ProductionConfig(Config):
     """Production configuration."""
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
-    UPLOAD_FOLDER = '/home/zydev/uploads'
+    UPLOAD_FOLDER = '/home/stegx/uploads'
     BASE_URL = 'https://stegx.pythonanywhere.com '
     CORS_ORIGINS = ["https://stegx.pythonanywhere.com "]
 
