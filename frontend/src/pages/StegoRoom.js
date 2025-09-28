@@ -131,13 +131,52 @@ function StegoRoom() {
     }
   };
 
-  const handleDownload = (downloadUrl, filename) => {
-    const element = document.createElement('a');
-    element.href = downloadUrl;
-    element.download = filename;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+  const handleDownload = async (downloadUrl, filename) => {
+    try {
+      let url, blob;
+      
+      // If it's a data URL, use it directly
+      if (downloadUrl.startsWith('data:')) {
+        blob = await (await fetch(downloadUrl)).blob();
+        url = window.URL.createObjectURL(blob);
+      } 
+      // For regular URLs, fetch with credentials
+      else if (downloadUrl.startsWith('http')) {
+        const response = await fetch(downloadUrl, {
+          method: 'GET',
+          credentials: 'include', // Include cookies for authenticated requests
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to download file: ${response.statusText}`);
+        }
+        
+        blob = await response.blob();
+        url = window.URL.createObjectURL(blob);
+      } else {
+        throw new Error('Invalid download URL');
+      }
+      
+      // Create a temporary anchor element
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = filename || 'extracted_file';
+      
+      // Append to body, trigger click, and remove
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 100);
+      
+    } catch (error) {
+      console.error('Download error:', error);
+      setError('Failed to download file. Please try again.');
+    }
   };
 
   const getImageSrc = (img) => {
