@@ -12,7 +12,7 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
     UPLOAD_FOLDER = 'uploads'
     BASE_URL = 'http://localhost:5000'
-    CORS_ORIGINS = ["http://localhost:3000"]
+    CORS_ORIGINS = ["*"]
 
 class ProductionConfig(Config):
     """Production configuration."""
@@ -21,15 +21,16 @@ class ProductionConfig(Config):
     UPLOAD_FOLDER = '/home/stegx/uploads'
     BASE_URL = 'https://stegx.pythonanywhere.com'
     CORS_ORIGINS = ["https://stegx.pythonanywhere.com"]
+    SESSION_COOKIE_SAMESITE = 'None'
+    SESSION_COOKIE_SECURE = True
 
 def get_config():
     """Return the appropriate configuration object based on the environment."""
     env = os.environ.get('FLASK_ENV', 'development')
     
-    # Check if we're running in production
-    if os.path.exists('/home/stegx'):
-        return ProductionConfig()
-    
     if env == 'production':
+        print("Using PRODUCTION config")
         return ProductionConfig()
-    return DevelopmentConfig() 
+
+    print("Using Development config")
+    return DevelopmentConfig()
