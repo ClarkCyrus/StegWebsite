@@ -19,8 +19,8 @@ class ProductionConfig(Config):
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
     UPLOAD_FOLDER = '/home/stegx/uploads'
-    BASE_URL = 'https://stegx.pythonanywhere.com '
-    CORS_ORIGINS = ["https://stegx.pythonanywhere.com "]
+    BASE_URL = 'https://stegx.pythonanywhere.com'
+    CORS_ORIGINS = ["https://stegx.pythonanywhere.com"]
 
 def get_config():
     """Return the appropriate configuration object based on the environment."""

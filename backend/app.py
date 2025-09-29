@@ -17,11 +17,16 @@ import secrets
 
 from config import get_config
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='build', static_url_path='')
 config = get_config()
 
 # Apply configuration
 app.config.from_object(config)
+
+# Set static folder for production
+if os.environ.get('FLASK_ENV') == 'production' or os.path.exists('/home/stegx'):
+    app.static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'build')
+    app.static_url_path = ''
 
 # Configure file size limits (in bytes)
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max total request size
@@ -725,9 +730,13 @@ from flask import send_from_directory
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_react_app(path):
-    if path.startswith('api') or path.startswith('uploads') or path.startswith('static'):
+    if path.startswith('api/') or path.startswith('uploads/') or path.startswith('static/'):
         abort(404)
-    return send_from_directory('build', 'index.html')
+    
+    if path and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+        
+    return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == '__main__':     
     with app.app_context():
