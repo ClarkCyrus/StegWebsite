@@ -17,8 +17,8 @@ import secrets
 
 from config import get_config
 
-app = Flask(__name__)
-# app = Flask(__name__, static_folder='build', static_url_path='')
+# app = Flask(__name__)
+app = Flask(__name__, static_folder='build', static_url_path='')
 config = get_config()
 
 # Apply configuration
@@ -738,19 +738,19 @@ def delete_room(id):
 #     return send_from_directory(app.static_folder, 'index.html')
 
 
-# @app.route("/")
-# def index():
-#     return send_from_directory(app.static_folder, "index.html")
+@app.route("/")
+def index():
+    return send_from_directory(app.static_folder, "index.html")
 
-# # Catch-all route for client-side routing
-# @app.route("/<path:path>")
-# def catch_all(path):
-#     # First try to serve the exact file
-#     try:
-#         return send_from_directory(app.static_folder, path)
-#     except:
-#         # If file doesn't exist, serve index.html for SPA routing
-#         return send_from_directory(app.static_folder, "index.html")
+# Catch-all route for client-side routing
+@app.route("/<path:path>")
+def catch_all(path):
+    # First try to serve the exact file
+    try:
+        return send_from_directory(app.static_folder, path)
+    except:
+        # If file doesn't exist, serve index.html for SPA routing
+        return send_from_directory(app.static_folder, "index.html")
 
 
 if __name__ == '__main__':     
