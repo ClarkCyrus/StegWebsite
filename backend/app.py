@@ -112,6 +112,21 @@ if os.path.exists('/home/stegx/StegWebsite/backend/instance/database.db') == Fal
     with app.app_context():
         db.create_all()
 
+# Catch-all route must be the last route
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    # Don't interfere with API routes
+    if path.startswith('api/'):
+        abort(404)
+        
+    # If the path points to an actual file, serve it
+    if path and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    
+    # Otherwise, serve index.html and let React Router handle the routing
+    return send_from_directory(app.static_folder, 'index.html')
+
 @app.errorhandler(Exception)
 def handle_exception(e):
     import traceback
@@ -745,22 +760,6 @@ def delete_room(id):
 
 # Register the API blueprint with the correct URL prefix
 app.register_blueprint(api_bp, url_prefix='/api')
-
-# Catch-all route must be the last route
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve(path):
-    # Don't interfere with API routes
-    if path.startswith('api/'):
-        abort(404)
-        
-    # If the path points to an actual file, serve it
-    if path and os.path.exists(os.path.join(app.static_folder, path)):
-        return send_from_directory(app.static_folder, path)
-    
-    # Otherwise, serve index.html and let React Router handle the routing
-    return send_from_directory(app.static_folder, 'index.html')
-
 
 with app.app_context():
     db.create_all() 
