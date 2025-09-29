@@ -97,10 +97,6 @@ google = oauth.register(
     },
 )
 
-@app.route('/')
-def index():
-    return "Flask app with SQLite is set up!"
-
 # Create an application variable for WSGI without circular import
 application = app
 
