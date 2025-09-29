@@ -751,6 +751,30 @@ def serve(path):
     return send_from_directory(app.static_folder, 'index.html')
 
 
+with app.app_context():
+    db.create_all() 
+
+    if not User.query.first():
+        sample_user = User(email="test@example.com", password="testpass")
+        db.session.add(sample_user)
+        db.session.commit()
+        
+        room1 = StegoRoom(
+            name="Room One",
+            is_encrypted=False,
+            message_file="This is a sample message",
+            user_id=sample_user.id
+        )
+        room2 = StegoRoom(
+            name="Room Two",
+            is_encrypted=True,
+            message_file="This is an encrypted message",
+            user_id=sample_user.id
+        )
+        db.session.add_all([room1, room2])
+        db.session.commit()
+        print("Sample user and stego rooms added.")
+
 if __name__ == '__main__':     
     with app.app_context():
             db.create_all() 
