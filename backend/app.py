@@ -670,6 +670,7 @@ def download_file():
 
 @app.route('/api/signup', methods=['POST'])
 def signup():
+    print("\n=== Signup Endpoint Hit ===")
     data = request.json
     email = data.get('email')
     password = data.get('password')
@@ -742,10 +743,16 @@ def delete_room(id):
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
+
+    print(f"\n=== New Request ===")
+    print(f"Path: {path}")
+    print(f"Request method: {request.method}")
+    print(f"Request headers: {dict(request.headers)}")
+
     # If the path starts with /api/, let the API handle it
     if path.startswith('api/'):
         abort(404)
-    
+
     # If the path points to an actual file, serve it
     if path and os.path.exists(os.path.join(app.static_folder, path)):
         return send_from_directory(app.static_folder, path)
