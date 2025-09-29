@@ -737,19 +737,21 @@ def delete_room(id):
         
 #     return send_from_directory(app.static_folder, 'index.html')
 
-@app.route("/")
-def index():
-    return send_from_directory(app.static_folder, "index.html")
+# Replace your current route handlers with this:
 
-# Catch-all route for client-side routing
-@app.route("/<path:path>")
-def catch_all(path):
-    # First try to serve the exact file
-    try:
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    # If the path starts with /api/, let the API handle it
+    if path.startswith('api/'):
+        abort(404)
+    
+    # If the path points to an actual file, serve it
+    if path and os.path.exists(os.path.join(app.static_folder, path)):
         return send_from_directory(app.static_folder, path)
-    except:
-        # If file doesn't exist, serve index.html for SPA routing
-        return send_from_directory(app.static_folder, "index.html")
+    
+    # Otherwise, serve index.html and let React Router handle the routing
+    return send_from_directory(app.static_folder, 'index.html')
 
 
 if __name__ == '__main__':     
