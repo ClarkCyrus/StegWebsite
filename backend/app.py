@@ -25,7 +25,7 @@ app.config.from_object(config)
 
 # Set static folder for production
 if os.environ.get('FLASK_ENV') == 'production' or os.path.exists('/home/stegx'):
-    app.static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'build')
+    app.static_folder = 'build'
     app.static_url_path = ''
 
 # Configure file size limits (in bytes)
@@ -723,16 +723,32 @@ def delete_room(id):
     
 from flask import send_from_directory
 
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve_react_app(path):
-    # if path.startswith('api/') or path.startswith('uploads/') or path.startswith('static/'):
-    #     abort(404)
+# @app.route('/', defaults={'path': ''})
+# @app.route('/<path:path>')
+# def serve_react_app(path):
+#     if path.startswith('api/') or path.startswith('uploads/') or path.startswith('static/'):
+#         abort(404)
     
-    if path and os.path.exists(os.path.join(app.static_folder, path)):
-        return send_from_directory(app.static_folder, path)
+#     if path and os.path.exists(os.path.join(app.static_folder, path)):
+#         return send_from_directory(app.static_folder, path)
         
-    return send_from_directory(app.static_folder, 'index.html')
+#     return send_from_directory(app.static_folder, 'index.html')
+
+
+@app.route("/")
+def index():
+    return send_from_directory(app.static_folder, "index.html")
+
+# Catch-all route for client-side routing
+@app.route("/<path:path>")
+def catch_all(path):
+    # First try to serve the exact file
+    try:
+        return send_from_directory(app.static_folder, path)
+    except:
+        # If file doesn't exist, serve index.html for SPA routing
+        return send_from_directory(app.static_folder, "index.html")
+
 
 if __name__ == '__main__':     
     with app.app_context():
