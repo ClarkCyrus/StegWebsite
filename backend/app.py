@@ -726,8 +726,8 @@ from flask import send_from_directory
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_react_app(path):
-    if path.startswith('api/') or path.startswith('uploads/') or path.startswith('static/'):
-        abort(404)
+    # if path.startswith('api/') or path.startswith('uploads/') or path.startswith('static/'):
+    #     abort(404)
     
     if path and os.path.exists(os.path.join(app.static_folder, path)):
         return send_from_directory(app.static_folder, path)
