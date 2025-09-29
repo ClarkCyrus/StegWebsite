@@ -6,6 +6,8 @@ const API_BASE_URL = isDevelopment
   ? "http://localhost:5000"
   : "https://stegx.pythonanywhere.com/";
 
+console.log(API_BASE_URL);
+
 // Create a complete config object for easier extension
 const config = {
   API_BASE_URL,

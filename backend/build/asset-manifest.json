@@ -1,16 +1,16 @@
 {
   "files": {
     "main.css": "/static/css/main.ee0b1acf.css",
-    "main.js": "/static/js/main.ad98938b.js",
+    "main.js": "/static/js/main.b6d31856.js",
     "static/js/453.8ab44547.chunk.js": "/static/js/453.8ab44547.chunk.js",
     "static/media/StegXlogo.png": "/static/media/StegXlogo.7a99840d80e84a7a589e.png",
     "index.html": "/index.html",
     "main.ee0b1acf.css.map": "/static/css/main.ee0b1acf.css.map",
-    "main.ad98938b.js.map": "/static/js/main.ad98938b.js.map",
+    "main.b6d31856.js.map": "/static/js/main.b6d31856.js.map",
     "453.8ab44547.chunk.js.map": "/static/js/453.8ab44547.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.ee0b1acf.css",
-    "static/js/main.ad98938b.js"
+    "static/js/main.b6d31856.js"
   ]
 }
