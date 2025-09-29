@@ -25,8 +25,10 @@ app.config.from_object(config)
 
 # Set static folder for production
 if os.environ.get('FLASK_ENV') == 'production' or os.path.exists('/home/stegx'):
-    app.static_folder = 'build'
+    app.static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'build')
     app.static_url_path = ''
+
+print(app.static_folder)
 
 # Configure file size limits (in bytes)
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max total request size
