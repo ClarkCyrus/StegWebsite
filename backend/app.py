@@ -16,9 +16,13 @@ from mlsb_algo_api.MultiLayerLSB import MultiLayerLSB
 import secrets
 
 from config import get_config
+from flask import Blueprint
 
 # app = Flask(__name__)
 app = Flask(__name__, static_folder='build', static_url_path='')
+
+api_bp = Blueprint('api', __name__)
+
 config = get_config()
 
 # Apply configuration
@@ -118,14 +122,14 @@ def handle_exception(e):
     print(error_details)  # This will show in the error log
     return jsonify(error_details), 500
 
-@app.route('/api/google/login', methods=['GET'])
+@api_bp.route('/google/login', methods=['GET'])
 def google_login():
     nonce = secrets.token_urlsafe(16)
     session['_google_authlib_nonce_'] = nonce
     print(f"Nonce set in session: {nonce}")
     return jsonify({'nonce': nonce})
 
-@app.route('/api/google/callback', methods=['POST'])
+@api_bp.route('/google/callback', methods=['POST'])
 def google_callback():
     try:
         data = request.json
@@ -173,7 +177,7 @@ def google_callback():
         print(f"Error in Google callback: {e}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/login', methods=['POST'])
+@api_bp.route('/login', methods=['POST'])
 def login():
     data = request.json
     email = data.get('email')
@@ -192,12 +196,12 @@ def login():
         })
     return jsonify({"error": "Invalid credentials."}), 401
 
-@app.route('/api/logout', methods=['POST'])
+@api_bp.route('/logout', methods=['POST'])
 def logout():
     session.pop('user_id', None)
     return jsonify({"message": "Logged out successfully."})
 
-@app.route('/api/steg_rooms', methods=['GET'])
+@api_bp.route('/steg_rooms', methods=['GET'])
 def get_steg_rooms():
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized"}), 401
@@ -220,7 +224,7 @@ def get_steg_rooms():
     ]
     return jsonify(rooms_list)
 
-@app.route('/api/current_user', methods=['GET'])
+@api_bp.route('/current_user', methods=['GET'])
 def current_user():
 
     if "user_id" not in session:
@@ -236,7 +240,7 @@ def current_user():
         "google_id": user.google_id
     })
 
-@app.route("/api/create_stego_room", methods=["POST"])
+@api_bp.route("/create_stego_room", methods=["POST"])
 def create_stego_room():
     if "user_id" not in session:
         return jsonify({"error": "Unauthorized"}), 401
@@ -359,7 +363,7 @@ def create_stego_room():
             return jsonify({'error': str(e)}), 500
 
 
-@app.route('/api/stegorooms/<int:room_id>', methods=['GET'])
+@api_bp.route('/stegorooms/<int:room_id>', methods=['GET'])
 def get_stegoroom(room_id):
     # Fetch the StegoRoom entry from the database (404 if not found)
     room = StegoRoom.query.get_or_404(room_id)
@@ -404,7 +408,7 @@ def get_stegoroom(room_id):
     
 # FOR TESTING FOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTING
 
-@app.route('/api/mlsb/embed', methods=['POST'])
+@api_bp.route('/mlsb/embed', methods=['POST'])
 def embed_message():
     if 'cover_image' not in request.files or 'message_file' not in request.files:
         return jsonify({'error': 'Missing required files'}), 400
@@ -525,7 +529,7 @@ def embed_message():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/mlsb/extract', methods=['POST'])
+@api_bp.route('/mlsb/extract', methods=['POST'])
 def extract_message():
     if 'stego_image' not in request.files:
         return jsonify({'error': 'Missing stego image'}), 400
@@ -619,7 +623,7 @@ def extract_message():
         print(f"Extraction error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/mlsb/capacity', methods=['POST'])
+@api_bp.route('/mlsb/capacity', methods=['POST'])
 def calculate_capacity():
     if 'image' not in request.files:
         return jsonify({'error': 'Missing image file'}), 400
@@ -646,7 +650,7 @@ def calculate_capacity():
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/api/mlsb/download', methods=['GET'])
+@api_bp.route('/mlsb/download', methods=['GET'])
 def download_file():
     file_path = request.args.get('path')
     if not file_path:
@@ -668,7 +672,7 @@ def download_file():
     
 # FOR TESTING FOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTINGFOR TESTING
 
-@app.route('/api/signup', methods=['POST'])
+@api_bp.route('/signup', methods=['POST'])
 def signup():
     data = request.json
     email = data.get('email')
@@ -706,7 +710,7 @@ def uploaded_file(filename):
     except Exception as e:
         return jsonify({"error": f"Error serving file: {str(e)}"}), 500
 
-@app.route('/api/steg_rooms/<int:id>', methods=['DELETE'])
+@api_bp.route('/steg_rooms/<int:id>', methods=['DELETE'])
 def delete_room(id):
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized"}), 401
@@ -723,6 +727,8 @@ def delete_room(id):
         return jsonify({"message": "Room deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+app.register_blueprint(api_bp, url_prefix="/api")
     
 # from flask import send_from_directory
 
