@@ -728,8 +728,6 @@ def delete_room(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-app.register_blueprint(api_bp, url_prefix="/api")
-    
 # from flask import send_from_directory
 
 # @app.route('/', defaults={'path': ''})
@@ -745,10 +743,17 @@ app.register_blueprint(api_bp, url_prefix="/api")
 
 # Replace your current route handlers with this:
 
+# Register the API blueprint with the correct URL prefix
+app.register_blueprint(api_bp, url_prefix='/api')
+
+# Catch-all route must be the last route
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
-
+    # Don't interfere with API routes
+    if path.startswith('api/'):
+        abort(404)
+        
     # If the path points to an actual file, serve it
     if path and os.path.exists(os.path.join(app.static_folder, path)):
         return send_from_directory(app.static_folder, path)
