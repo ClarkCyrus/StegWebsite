@@ -20,7 +20,7 @@ class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
     UPLOAD_FOLDER = '/home/stegx/uploads'
     BASE_URL = 'https://stegx.pythonanywhere.com'
-    CORS_ORIGINS = ["https://stegx.pythonanywhere.com"]
+    CORS_ORIGINS = ["*"]
     SESSION_COOKIE_SAMESITE = 'None'
     SESSION_COOKIE_SECURE = True
 
