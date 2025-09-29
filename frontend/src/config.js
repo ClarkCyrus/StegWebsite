@@ -4,7 +4,7 @@ const isDevelopment = process.env.NODE_ENV !== "production";
 // Base URLs
 const API_BASE_URL = isDevelopment
   ? "http://localhost:5000"
-  : "https://stegx.lanticse.me";
+  : "https://stegx.pythonanywhere.com/";
 
 // Create a complete config object for easier extension
 const config = {
