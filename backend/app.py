@@ -17,18 +17,19 @@ import secrets
 
 from config import get_config
 
-app = Flask(__name__, static_folder='build', static_url_path='')
+app = Flask(__name__)
+# app = Flask(__name__, static_folder='build', static_url_path='')
 config = get_config()
 
 # Apply configuration
 app.config.from_object(config)
 
 # Set static folder for production
-if os.environ.get('FLASK_ENV') == 'production' or os.path.exists('/home/stegx'):
-    app.static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'build')
-    app.static_url_path = ''
+# if os.environ.get('FLASK_ENV') == 'production' or os.path.exists('/home/stegx'):
+#     app.static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'build')
+#     app.static_url_path = ''
 
-print(app.static_folder)
+#print(app.static_folder)
 
 # Configure file size limits (in bytes)
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max total request size
