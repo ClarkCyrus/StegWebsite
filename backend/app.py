@@ -723,7 +723,7 @@ def delete_room(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-from flask import send_from_directory
+# from flask import send_from_directory
 
 # @app.route('/', defaults={'path': ''})
 # @app.route('/<path:path>')
@@ -737,19 +737,19 @@ from flask import send_from_directory
 #     return send_from_directory(app.static_folder, 'index.html')
 
 
-@app.route("/")
-def index():
-    return send_from_directory(app.static_folder, "index.html")
+# @app.route("/")
+# def index():
+#     return send_from_directory(app.static_folder, "index.html")
 
-# Catch-all route for client-side routing
-@app.route("/<path:path>")
-def catch_all(path):
-    # First try to serve the exact file
-    try:
-        return send_from_directory(app.static_folder, path)
-    except:
-        # If file doesn't exist, serve index.html for SPA routing
-        return send_from_directory(app.static_folder, "index.html")
+# # Catch-all route for client-side routing
+# @app.route("/<path:path>")
+# def catch_all(path):
+#     # First try to serve the exact file
+#     try:
+#         return send_from_directory(app.static_folder, path)
+#     except:
+#         # If file doesn't exist, serve index.html for SPA routing
+#         return send_from_directory(app.static_folder, "index.html")
 
 
 if __name__ == '__main__':     
