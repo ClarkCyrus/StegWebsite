@@ -46,6 +46,16 @@
   transform: translateY(-2px);
 }
 
+@media (max-width: 768px) {
+  .dashboard-title {
+    font-size: clamp(1.2rem, 1.8vw + 0.5rem, 2.4rem);
+  }
+  .user-email {
+    font-size: clamp(0.75rem, 0.9vw, 0.95rem);
+  }
+}
+
+
 .row.card-row {
   margin-left: -0.25rem;
   margin-right: -0.25rem;
