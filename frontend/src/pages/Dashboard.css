@@ -1,25 +1,32 @@
 .dashboard-container {
   background-color: var(--background-light);
   min-height: 100vh;
-  padding: 1.5rem 0.5rem;
+  padding: 0rem 1.5rem 0.5rem;
 }
 
 .dashboard-header {
   display: flex;
+  height: 72px;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
   padding: 1rem;
   background-color: var(--white);
-  border-radius: 12px;
   box-shadow: var(--shadow-sm);
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
 }
 
-.dashboard-title {
-  color: var(--primary-color);
-  font-weight: 700;
-  font-size: 1.8rem;
-  margin: 0;
+
+.dashboard-brand {
+  display:inline-block;
+  width:110px;
+  height:56px;
+  background-image:url('../Frontend-Assets/StegXlogo_NoBg.PNG');
+  background-size:contain;
+  background-repeat:no-repeat;
+  background-position:left;
+  text-decoration:none;
 }
 
 .user-info {
@@ -34,8 +41,8 @@
 }
 
 .logout-button {
-  background-color: var(--primary-color);
-  color: var(--white);
+  background-color: var(--white);
+  color: var(--primary-color);
   padding: 0.5rem 1rem;
   border-radius: 8px;
   transition: var(--transition);
@@ -43,6 +50,7 @@
 
 .logout-button:hover {
   background-color: var(--primary-hover);
+  color: var(--white);
   transform: translateY(-2px);
 }
 
@@ -54,7 +62,6 @@
     font-size: clamp(0.75rem, 0.9vw, 0.95rem);
   }
 }
-
 
 .row.card-row {
   margin-left: -0.25rem;
