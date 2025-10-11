@@ -125,6 +125,11 @@ function Dashboard() {
         </div>
       </div>
 
+      <h1 className="dashboard-text">Dashboard</h1>
+      <div className="dashboard-subtext">
+        {rooms.length} Item{rooms.length !== 1 ? 's' : ''}
+      </div>
+
       <div className="search-and-filters">
         <div className="search-section">
           <InputGroup className="search-input-group">
@@ -133,13 +138,13 @@ function Dashboard() {
             </InputGroup.Text>
             <Form.Control
               className="search-input"
-              placeholder="Search rooms by name..."
+              placeholder="   Search rooms by name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <Button
               className="sort-button"
-              variant="outline-secondary"
+              variant="none"
               onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
               title={sortOrder === 'asc' ? 'Sort A-Z' : 'Sort Z-A'}
             >
