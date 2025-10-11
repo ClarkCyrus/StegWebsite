@@ -14,6 +14,7 @@ import sys
 sys.path.append('..')
 from mlsb_algo_api.MultiLayerLSB import MultiLayerLSB
 import secrets
+from datetime import timedelta
 
 from config import get_config
 
@@ -28,6 +29,11 @@ app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max total request 
 app.config['MAX_COVER_IMAGE_SIZE'] = 10 * 1024 * 1024  # 10MB for cover images
 app.config['MAX_SECRET_MESSAGE_SIZE'] = 10 * 1024 * 1024  # 10MB for secret messages
 app.config['MAX_STEGO_IMAGE_SIZE'] = 100 * 1024 * 1024  # 100MB for stego images
+
+# Configure session
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=20)  # Session lifetime
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SECURE'] = True  # Use True in production with HTTPS
 
 # Configure CORS
 CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": config.CORS_ORIGINS}})
@@ -160,6 +166,7 @@ def google_callback():
             db.session.commit()
 
         session['user_id'] = user.id
+        session.permanent = True
         return jsonify({
             'message': 'Logged in successfully with Google',
             'user_id': user.id,
@@ -182,6 +189,7 @@ def login():
 
     if user and user.password == password:
         session['user_id'] = user.id
+        session.permanent = True
         return jsonify({
             "message": "Logged in successfully.",
             "user_id": user.id
@@ -679,6 +687,7 @@ def signup():
     
     # Set up session after successful signup
     session['user_id'] = new_user.id
+    session.permanent = True
     return jsonify({
         'message': 'User created successfully.',
         'user_id': new_user.id

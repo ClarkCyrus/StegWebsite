@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 // Create the AuthContext
 const AuthContext = createContext();
@@ -17,7 +17,22 @@ export function AuthProvider({ children }) {
   const logout = () => {
     localStorage.removeItem('authToken');
     setAuthToken(null);
+    window.location.href = '/login'; // Redirect to login automatically
   };
+
+  // Periodically check session status
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetch('/api/current_user', { credentials: 'include' })
+        .then(res => {
+          if (res.status === 401) {
+            logout();
+          }
+        });
+    }, 120000); // Check every 120 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ authToken, login, logout }}>
