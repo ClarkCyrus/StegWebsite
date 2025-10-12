@@ -41,40 +41,47 @@ function CreateStegoRoom() {
     }
   };
 
-  const handleMessageChange = (e) => {
+const handleMessageChange = (e) => {
     const file = e.target.files[0];
-    const allowedFormats = ['text/plain', 'audio/mpeg', 'image/png']; // MIME
+    if (!file) {
+      setMessageFile(null);
+      setMessagePreview(null);
+      return;
+    }
 
+    const allowedFormats = ['text/plain', 'audio/mpeg', 'image/png']; 
     if (!allowedFormats.includes(file.type)) {
       setError('Invalid file format. Please upload a TXT, MP3, or PNG file.'); 
       e.target.value = null;
       setMessageFile(null);
       return;
     }
-
+  
+    setError(null);
     setMessageFile(file);
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (file.type.startsWith('image/')) {
-          setMessagePreview({ type: 'image', content: reader.result });
-        } else if (file.type.startsWith('audio/')) {
-          setMessagePreview({ type: 'audio', content: reader.result });
-        } else if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
-          reader.onload = (e) => {
-            setMessagePreview({ type: 'text', content: e.target.result });
-          };
-          reader.readAsText(file);
-          return;
-        } else {
-          setMessagePreview({ type: 'unknown', name: file.name });
-        }
-      };
-      reader.readAsDataURL(file);
+    setMessagePreview(null);
+
+    const isText = file.type.startsWith('text/') || file.name.endsWith('.txt');
+    const reader = new FileReader();  
+
+    if (isText) {
+      reader.readAsText(file);
     } else {
-      setMessagePreview(null);
+      reader.readAsDataURL(file);
     }
-  };
+
+    reader.onload = (ev) => {
+      const type = isText ? 'text' : (file.type.startsWith('image/') ? 'image' : 'audio');
+      const newPreview = { type, content: String(ev.target.result) };
+      requestAnimationFrame(() => setMessagePreview(newPreview));
+    };
+
+    reader.onerror = () => { 
+      setError('Failed to read text file'); 
+      setMessagePreview(null); 
+    };
+
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
