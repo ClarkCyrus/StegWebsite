@@ -66,6 +66,20 @@ function Dashboard() {
     return normalized;
   };
 
+  const getPSNRFromMetrics = (metrics) => {
+  if (!metrics) return null;
+  try {
+    const clean = metrics
+      .replace(/'/g, '"')
+      .replace(/np\.float64\(([\d.]+)\)/g, '$1');
+    const parsed = JSON.parse(clean);
+    return parsed.psnr || null;
+  } catch (error) {
+    console.error("Error parsing metrics:", error);
+    return null;
+  }
+};
+
   const handleDelete = (room) => {
     setRoomToDelete(room);
     setShowModal(true); 
@@ -269,6 +283,14 @@ function Dashboard() {
                       </OverlayTrigger>
                     )}
                   </div>
+                </div>
+                <div className="room-meta">
+                  <span className="room-size">
+                    {(() => {
+                     const psnr = getPSNRFromMetrics(room.metrics);
+                      return psnr ? `• PSNR: ${psnr.toFixed(2)} dB` : '• N/A';
+                    })()}          
+                  </span>
                 </div>
               </div>
             </Card>

@@ -153,6 +153,20 @@
   background-color: var(--success-color);
 }
 
+.room-meta {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--text-color, #333333);
+  margin-top: 8px;
+  margin-bottom: 2px;
+  max-width: 75%;
+}
+
+.room-size, .room-date {
+  opacity: 0.8;
+}
+
 .action-buttons {
   position: fixed;
   left: 50%;
