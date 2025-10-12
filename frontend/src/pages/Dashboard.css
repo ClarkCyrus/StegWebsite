@@ -44,12 +44,27 @@
 
 .dashboard-text {
   color: var(--primary-color);
-  margin-top: 1.5rem;
+  margin-top: 30px;
   font-size: clamp(1.5rem, 2.5vw + 0.5rem, 2.5rem);
+  font-weight: bold;
 }
 
 .dashboard-subtext{
   font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .dashboard-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+    width: 100%;
+  }
+  .dashboard-subtext{
+      font-size: clamp(0.75rem, 1.5vw, 2.5rem);
+      color: var(--text-secondary);
+  }
 }
 
 .user-info {
@@ -208,7 +223,7 @@
 }
 
 .action-button {
-  width: 150px;
+  width: 160px;
   height: 45px;
   display: flex;
   flex-direction: column;
@@ -349,6 +364,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .search-and-filters {
+    margin: 10px 0 20px;
+  }
 }
 
 .search-section {

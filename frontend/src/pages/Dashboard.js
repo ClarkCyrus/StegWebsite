@@ -140,9 +140,9 @@ function Dashboard() {
         </div>
       </div>
 
-      <h1 className="dashboard-text">Dashboard</h1>
-      <div className="dashboard-subtext">
-        {rooms.length} item{rooms.length !== 1 ? 's' : ''}
+      <div className="dashboard-title-row">
+        <h1 className="dashboard-text">Dashboard</h1>
+        <div className="dashboard-subtext">{rooms.length} item{rooms.length !== 1 ? 's' : ''}</div>
       </div>
 
       <div className="search-and-filters">
