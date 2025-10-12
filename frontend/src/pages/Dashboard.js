@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Container, OverlayTrigger, Tooltip, Row, Col, Card, Modal, Button, Form, InputGroup } from 'react-bootstrap';
 import axios from 'axios';
 import { BsLockFill, BsLock, BsPlusCircle, BsLightningCharge, BsSearch, BsSortDown, BsSortUp } from 'react-icons/bs';
+import { BiSolidLock, BiLockOpen } from 'react-icons/bi';
 import { FiLogOut, FiX } from 'react-icons/fi';
 import './Dashboard.css';
 import { useAuth } from './AuthContext'; 
@@ -127,7 +128,7 @@ function Dashboard() {
 
       <h1 className="dashboard-text">Dashboard</h1>
       <div className="dashboard-subtext">
-        {rooms.length} Item{rooms.length !== 1 ? 's' : ''}
+        {rooms.length} item{rooms.length !== 1 ? 's' : ''}
       </div>
 
       <div className="search-and-filters">
@@ -261,9 +262,9 @@ function Dashboard() {
                         }
                       >
                       {room.is_key_stored ? (
-                        <BsLockFill color="var(--danger-color)" size={16} />
+                        <BiSolidLock color="var(--danger-color)" size={18}/>
                       ) : (
-                        <BsLock color="var(--danger-color)" size={16} />
+                        <BiLockOpen color="var(--success-color)" size={18}/>
                       )}
                       </OverlayTrigger>
                     )}
@@ -295,11 +296,11 @@ function Dashboard() {
         centered
         className="custom-modal"
       >
-        <Modal.Header closeButton>
+        <Modal.Header closeButton closeVariant="white">
           <Modal.Title>Confirm Deletion</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Are you sure you want to delete the room "{roomToDelete?.name}"?
+          Are you sure you want to <span style={{ color: 'red', }}>delete</span>  the room "{roomToDelete?.name}"?
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
@@ -314,4 +315,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard; 
+export default Dashboard;

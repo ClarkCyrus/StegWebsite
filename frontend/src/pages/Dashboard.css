@@ -34,6 +34,10 @@
   font-size: clamp(1.5rem, 2.5vw + 0.5rem, 2.5rem);
 }
 
+.dashboard-subtext{
+  font-weight: bold;
+}
+
 .user-info {
   display: flex;
   align-items: center;
@@ -75,11 +79,12 @@
 
 .room-card {
   background-color: var(--white);
-  border-radius: 8px;
+  border-radius: 15px;
   overflow: hidden;
   transition: var(--transition);
   box-shadow: var(--shadow-sm);
-  max-width: 400px;
+  min-height: 240px;
+  max-width: 340px;
   width: 100%;
   margin: 0;
   border: none;
@@ -91,7 +96,7 @@
 }
 
 .room-image-container {
-  height: 160px;
+  height: 180px;
   position: relative;
   overflow: hidden;
   padding: 0;
@@ -110,7 +115,8 @@
 }
 
 .room-footer {
-  padding: 0.5rem 0.75rem;
+  position: relative; 
+  padding: 1rem 1rem;
   background-color: var(--white);
   border-top: none;
 }
@@ -130,6 +136,7 @@
   display: flex;
   align-items: center;
   gap: 0.3rem;
+  margin: 0 !important;
 }
 
 .status-dot {
@@ -249,7 +256,7 @@
 }
 
 .close-button:hover {
-  background-color: #6c63ff; 
+  background-color: var(--primary-color); 
   color: white; 
 }
 
@@ -266,9 +273,15 @@
 }
 
 .custom-modal .modal-header {
-  background-color: #6c63ff; 
+  background-color: var(--primary-color); 
   color: white; 
   border-bottom: none;
+  padding: 16px 32px 16px 32px;
+  margin: -32px -32px 0 -32px; 
+}
+
+.custom-modal .modal-body {
+  margin-top: 32px;
 }
 
 .custom-modal .modal-title {
@@ -281,15 +294,15 @@
 
 .custom-modal .btn-secondary {
   background: none; 
-  border: 1px solid #6c63ff;
-  color: #6c63ff
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
 }
 .custom-modal .btn-secondary:hover {
   background-color: rgba(111, 66, 193, 0.1);
 }
 
 .custom-modal .btn-danger {
-  background-color: #6c63ff; 
+  background-color: var(--primary-color); 
   border: none;
 }
 
