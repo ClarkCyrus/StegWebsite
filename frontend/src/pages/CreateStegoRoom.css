@@ -48,6 +48,31 @@
   font-weight: 600;
 }
 
+@media (max-width: 576px) {
+  .create-room-header {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin-bottom: 0.5rem;
+  }
+
+  .create-room-header > .back-button {
+    width: auto; 
+    align-self: flex-start; 
+    padding: 8px 10px;  
+    font-size: clamp(0.75rem, 1.5vw, 1.2rem);
+  }
+
+  .create-room-title {
+    margin: 0;
+    width: 100%;
+    font-size: clamp(1.1rem, 1.8vw, 1.75rem);
+    padding-top: 10px;
+  }
+}
+
 .error-alert {
   background-color: #fff5f5;
   color: #c53030;
