@@ -4,6 +4,12 @@
   padding: 0rem 1.5rem 0.5rem;
 }
 
+@media screen and (min-width: 992px) {
+  .dashboard-container {
+    padding: 0rem 5rem 0.5rem;
+  }
+}
+
 .dashboard-header {
   display: flex;
   height: 72px;
@@ -13,8 +19,16 @@
   padding: 1rem;
   background-color: var(--white);
   box-shadow: var(--shadow-sm);
-  margin-left: -1.5rem;
-  margin-right: -1.5rem;
+  margin-left: -5rem;
+  margin-right: -5rem;
+  padding: 0 4rem;
+}
+
+@media screen and (max-width: 992px) {
+  .dashboard-header {
+    margin: 0 -1.5rem 0!important;
+    padding: 0 1rem !important;
+  }
 }
 
 .dashboard-brand {
@@ -73,8 +87,7 @@
 }
 
 .row.card-row {
-  margin-left: -0.25rem;
-  margin-right: -0.25rem;
+  width: 100%
 }
 
 .room-card {
@@ -84,7 +97,6 @@
   transition: var(--transition);
   box-shadow: var(--shadow-sm);
   min-height: 240px;
-  max-width: 340px;
   width: 100%;
   margin: 0;
   border: none;
@@ -173,15 +185,13 @@
   bottom: 2rem;
   transform: translateX(-50%);
   z-index: 1000;
-  background-color: rgba(255, 255, 255, 0.95);
   padding: 1.0rem 1.5rem;
   border-radius: 20px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
   display: flex;
   align-items: center;
+  max-width: 100;
+  width: fit-content;
+  box-sizing: border-box;
 }
 
 .action-buttons-title {
@@ -198,9 +208,8 @@
 }
 
 .action-button {
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
+  width: 150px;
+  height: 45px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -211,7 +220,8 @@
   color: var(--primary-color);
   background-color: var(--white);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 0;
+  padding-bottom: 10px;
+  border-radius: 10px;
 }
 
 .action-button:hover {
@@ -250,6 +260,11 @@
   font-weight: 600;
   text-align: center;
   max-width: 80%;
+}
+
+.action-button-svg{
+  margin-left: 10px;
+  margin-bottom: 2px;
 }
 
 .close-button {

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, OverlayTrigger, Tooltip, Row, Col, Card, Modal, Button, Form, InputGroup } from 'react-bootstrap';
 import axios from 'axios';
-import { BsLockFill, BsLock, BsPlusCircle, BsLightningCharge, BsSearch, BsSortDown, BsSortUp } from 'react-icons/bs';
+import { BsLockFill, BsLock, BsPlusCircle, BsPlusLg, BsLightningCharge, BsSearch, BsSortDown, BsSortUp } from 'react-icons/bs';
 import { BiSolidLock, BiLockOpen } from 'react-icons/bi';
 import { FiLogOut, FiX } from 'react-icons/fi';
 import './Dashboard.css';
@@ -234,7 +234,7 @@ function Dashboard() {
       ) : (
       <Row className="g-1 card-row">
           {filteredAndSortedRooms.map((room) => (
-          <Col key={room.id} md={3} className="mb-2 px-1">
+          <Col key={room.id} md={3} className="mb-2 px-3">
             <Card className="room-card" onClick={() => navigate(`/room/${room.id}`)}>
               <div className="room-image-container">
                 {getCoverImageSrc(room) ? (
@@ -302,12 +302,16 @@ function Dashboard() {
       <div className="action-buttons">
         <div className="action-buttons-container">
           <button className="action-button create" onClick={() => navigate('/create')}>
-            <BsPlusCircle size={24} />
-            <span className="action-button-text">Create Stego</span>
+            <span className="action-button-text">
+              Create Stego
+              <BsPlusLg className='action-button-svg' size={20} />
+            </span>
           </button>
           <button className="action-button quick" onClick={() => navigate('/quick-stego')}>
-            <BsLightningCharge size={24} />
-            <span className="action-button-text">Quick Stego</span>
+            <span className="action-button-text">
+              Quick Stego
+              <BsLightningCharge className='action-button-svg' size={20} />
+            </span>
           </button>
         </div>
       </div>
