@@ -71,7 +71,8 @@ function Login() {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-form-section">
-          <h1 className="auth-title">Welcome Back</h1>
+          <h1 className="auth-title">Login</h1>
+          <div className="auth-subtitle">Enter your email and password to access your account. </div>
           {error && <div className="alert alert-danger">{error}</div>}
           <form className="auth-form" onSubmit={handleSubmit}>
             <div className="form-group">
@@ -97,12 +98,12 @@ function Login() {
               />
             </div>
             <button type="submit" className="auth-button">
-              <FiLogIn size={20} style={{ marginRight: '8px' }} />
-              Login
+              Sign In
             </button>
           </form>
           <div className="google-login-container mt-4">
               <GoogleLogin
+                shape='pill'
                 onSuccess={handleGoogleLogin}
                 onError={handleGoogleFailure}
               />
@@ -113,7 +114,7 @@ function Login() {
         </div>
         <div className="auth-image-section auth-img">
           <div className="auth-image-content">
-            <p className="auth-image-subtitle">Hide your messages in plain sight</p>
+            <p className="auth-image-subtitle">Hide your messages <br></br> in plain sight</p>
           </div>
         </div>
       </div>

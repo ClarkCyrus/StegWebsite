@@ -59,6 +59,7 @@ function Signup() {
       <div className="auth-card">
         <div className="auth-form-section">
           <h1 className="auth-title">Create Account</h1>
+          <div className="auth-subtitle">Create your own account to start using StegX. </div>
           {error && <div className="alert alert-danger">{error}</div>}
           <form className="auth-form" onSubmit={handleSubmit}>
             <div className="form-group">
@@ -105,7 +106,7 @@ function Signup() {
         </div>
         <div className="auth-image-section auth-img">
           <div className="auth-image-content">
-            <p className="auth-image-subtitle">Hide your messages in plain sight</p>
+            <p className="auth-image-subtitle">Hide your messages <br></br> in plain sight</p>
           </div>
         </div>
       </div>
