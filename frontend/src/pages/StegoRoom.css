@@ -45,6 +45,45 @@
   color: #333;
 }
 
+@media (max-width: 576px) {
+  .stego-room-header {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .stego-room-header > .back-button {
+    width: auto; 
+    align-self: flex-start; 
+    padding: 8px 10px;  
+    font-size: clamp(0.75rem, 1.5vw, 1.2rem);
+  }
+
+  .stego-room-title {
+    margin: 0;
+    width: 100%;
+    font-size: clamp(1.1rem, 1.8vw, 1.75rem);
+    padding-top: 10px;
+  }
+
+  .image-section,
+  .metrics-section {
+    width: 100%; 
+    box-sizing: border-box;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .chart-container {
+    width: calc(100% - 0.1px);
+    box-sizing: border-box;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
 .error-alert {
   background-color: #ff4444;
   color: white;
