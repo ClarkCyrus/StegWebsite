@@ -140,10 +140,17 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="dashboard-title-row">
-        <h1 className="dashboard-text">Dashboard</h1>
-        <div className="dashboard-subtext">{rooms.length} item{rooms.length !== 1 ? 's' : ''}</div>
+      <div className="dashboard-head-row">
+        <div className="dashboard-title-col">
+          <h1 className="dashboard-text">Dashboard</h1>
+          <div className="dashboard-subtext">Welcome Back to StegX!</div>
+        </div>
+
+        <div className="dashboard-info-col">
+            <div className="dashboard-subtext">{rooms.length} item{rooms.length !== 1 ? 's' : ''}</div>
+        </div>
       </div>
+
 
       <div className="search-and-filters">
         <div className="search-section">
