@@ -42,6 +42,8 @@ function StegoRoom() {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
   const [expandedMetrics, setExpandedMetrics] = useState({});
+  const [showKey, setShowKey] = useState(false);
+  const [showIV, setShowIV] = useState(false);
 
   useEffect(() => {
     axios.get(`${config.API_BASE_URL}/api/stegorooms/${roomId}`, { withCredentials: true })
@@ -664,9 +666,14 @@ function StegoRoom() {
                 {room.is_encrypted && (
                   <div className="encryption-inputs">
                     <div className="form-group">
-                      <label className="form-label">Encryption Key</label>
+                      <label className="form-label" htmlFor="encryptionKey">
+                        Encryption Key
+                        <button type="button" onClick={() => setShowKey(s => !s)} aria-pressed={showKey} className="label-toggle-btn" >
+                          {showKey ? 'Hide' : 'Show'}
+                        </button>
+                      </label>
                       <input
-                        type="text"
+                        type={showKey ? 'text' : 'password'}
                         className="form-control"
                         value={key}
                         onChange={e => setKey(e.target.value)}
@@ -674,9 +681,14 @@ function StegoRoom() {
                       />
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Initialization Vector (IV)</label>
+                      <label className="form-label" htmlFor="initializationVector">
+                        Initialization Vector (IV)
+                        <button type="button" onClick={() => setShowIV(s => !s)} aria-pressed={showKey} className="label-toggle-btn" >
+                          {showIV ? 'Hide' : 'Show'}
+                        </button>
+                      </label>
                       <input
-                        type="text"
+                        type={showIV ? 'text' : 'password'}
                         className="form-control"
                         value={iv}
                         onChange={e => setIV(e.target.value)}
