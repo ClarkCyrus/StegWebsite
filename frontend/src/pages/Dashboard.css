@@ -104,6 +104,9 @@
       font-size: clamp(0.75rem, 1.5vw, 2.5rem);
       color: var(--text-secondary);
   }
+  button.logout-button {
+    padding: 0.5rem 1rem 0.5rem 0rem;
+  }
 }
 
 .user-info {
