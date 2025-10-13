@@ -1,0 +1,13 @@
+Concise results summary
+=======================
+
+MANOVA result saved in manova_results.txt. Check Pillai/Wilks for multivariate significance.
+
+PSNR_dB: 4-LSB vs LSB significant (p_adj=1.267e-21), direction: LSB > 4-LSB
+PSNR_dB: LSB vs ML-LSB significant (p_adj=8.251e-06), direction: LSB > ML-LSB
+MSE: 4-LSB vs LSB significant (p_adj=2.279e-06), direction: 4-LSB > LSB
+SSIM: 4-LSB vs LSB significant (p_adj=1.491e-05), direction: LSB > 4-LSB
+SSIM: LSB vs ML-LSB significant (p_adj=0.003336), direction: LSB > ML-LSB
+BPP: 4-LSB vs LSB significant (p_adj=0.001795), direction: 4-LSB > LSB
+BPP: 4-LSB vs ML-LSB significant (p_adj=0.04326), direction: ML-LSB > 4-LSB
+BPP: LSB vs ML-LSB significant (p_adj=1.802e-05), direction: ML-LSB > LSB

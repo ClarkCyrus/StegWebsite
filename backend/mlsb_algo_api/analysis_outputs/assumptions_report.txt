@@ -1,0 +1,29 @@
+Shapiro-Wilk by metric and Algorithm (p-values)
+
+PSNR_dB
+  4-LSB: p=0.0237
+  LSB: p=0.0003
+  ML-LSB: p=0.0006
+
+MSE
+  4-LSB: p=0.0007
+  LSB: p=0.0003
+  ML-LSB: p=0.0000
+
+SSIM
+  4-LSB: p=0.0151
+  LSB: p=0.9600
+  ML-LSB: p=0.0000
+
+BPP
+  4-LSB: p=0.0004
+  LSB: p=0.0003
+  ML-LSB: p=0.0002
+
+Box's M (raw): 1035.6483
+
+Group sizes:
+Algorithm
+ML-LSB    35
+4-LSB     25
+LSB       10
