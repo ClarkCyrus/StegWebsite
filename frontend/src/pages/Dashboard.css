@@ -278,6 +278,20 @@
   border-radius: 10px;
 }
 
+@media (max-width: 768px) {
+  .action-button {
+    width: 120px;
+    height: 40px;
+  }
+  .action-button-text {
+    font-size: 0.65rem !important;
+  }
+  .action-button-svg{
+    width: 14px !important;
+    height: 14px !important;
+  }
+}
+
 .action-button:hover {
   background-color: var(--primary-color);
   color: var(--white);
