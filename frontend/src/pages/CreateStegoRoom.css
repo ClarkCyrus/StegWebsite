@@ -16,6 +16,15 @@
   padding: 2rem;
 }
 
+@media (max-width: 768px) {
+  .create-room-container {
+    padding: 1rem;
+  }
+  .create-room-card {
+    padding: 2rem;
+  }
+}
+
 .create-room-header {
   display: flex;
   align-items: center;
@@ -69,7 +78,7 @@
     margin: 0;
     width: 100%;
     font-size: clamp(1.1rem, 1.8vw, 1.75rem);
-    padding-top: 10px;
+    padding-top: 2px;
   }
 }
 
@@ -241,6 +250,12 @@ input:checked + .slider:before {
 .upload-placeholder:hover {
   border-color: #6b46c1;
   color: #6b46c1;
+}
+
+@media (max-width: 768px) {
+  .upload-placeholder {
+    padding: 1rem;
+  }
 }
 
 .preview-container {
