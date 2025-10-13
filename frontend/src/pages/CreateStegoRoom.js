@@ -49,9 +49,9 @@ const handleMessageChange = (e) => {
       return;
     }
 
-    const allowedFormats = ['text/plain', 'audio/mpeg', 'image/png']; 
+    const allowedFormats = ['text/plain', 'audio/mpeg', 'image/png', 'image/jpeg']; 
     if (!allowedFormats.includes(file.type)) {
-      setError('Invalid file format. Please upload a TXT, MP3, or PNG file.'); 
+      setError('Invalid file format. Please upload a TXT, MP3, JPEG, or PNG file.'); 
       e.target.value = null;
       setMessageFile(null);
       return;
@@ -304,7 +304,7 @@ const handleMessageChange = (e) => {
                 )}
                 {!messagePreview && (
                   <div className="upload-placeholder">
-                    <p>Upload a secret message file (TXT, MP3, PNG)</p>
+                    <p>Upload a secret message file (TXT, MP3, PNG, JPEG)</p>
                     <p className="file-size-info">Max file size: 10MB</p>
                   </div>
                 )}

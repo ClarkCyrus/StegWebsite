@@ -63,10 +63,10 @@ function QuickStego() {
 
     const handleEmbedMessageUpload = (e) => {
         const file = e.target.files[0];
-        const allowedFormats = ['text/plain', 'audio/mpeg', 'image/png']
+        const allowedFormats = ['text/plain', 'audio/mpeg', 'image/png', 'image/jpeg']
 
         if (!allowedFormats.includes(file.type) && !file.name.endsWith('.txt')) {
-            setError('Invalid file format. Please upload a TXT, MP3, or PNG file.'); 
+            setError('Invalid file format. Please upload a TXT, MP3, JPEG, or PNG file.'); 
             e.target.value = null;
             setEmbedMessageFile(null);
             return;
@@ -427,7 +427,7 @@ function QuickStego() {
                                         </div>
                                     ) || (
                                         <div className="info-text">
-                                            <p>Upload a secret message (TXT, MP3, PNG)</p>
+                                            <p>Upload a secret message (TXT, MP3, PNG, JPEG)</p>
                                             <p className="file-size-info">Max file size: 10MB</p>
                                             <p className="file-size-info">Stego image output will be in PNG format (≤100MB)</p>
                                         </div>
