@@ -101,7 +101,7 @@ for metric in metrics:
 
 # Apply Holm correction across all pairwise p-values (stronger than Bonferroni, less conservative)
 pvals = np.array([p if p is not None else 1.0 for p in all_pvals])
-reject, pvals_corrected, _, _ = multipletests(pvals, alpha=0.05, method='holm')
+reject, pvals_corrected, _, _ = multipletests(pvals, alpha=0.05, method='bonferroni')
 
 # Attach corrected p back to records
 out_rows = []
