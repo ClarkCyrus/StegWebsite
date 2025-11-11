@@ -259,9 +259,9 @@ input:checked + .slider:before {
 
 .input-mode-label{
   padding-left: 0.25rem;
-  white-space: nowrap;       /* Prevent wrapping */
-  overflow: hidden;          /* Hide overflowing text */
-  text-overflow: ellipsis;   /* Show "..." for overflow */
+  white-space: nowrap;       
+  overflow: hidden;          
+  text-overflow: ellipsis;   
 }
 
 .input-placeholder {
@@ -334,6 +334,16 @@ input:checked + .slider:before {
   color: white;
 }
 
+.audio-player {
+  width: 35%;       
+}
+
+@media (max-width: 768px) { 
+  .audio-player {
+    width: 80%;      
+  }
+}
+
 .manual-camera {
   display: flex;
   flex-direction: column;
@@ -360,6 +370,23 @@ input:checked + .slider:before {
   border: 2px solid var(--secondary-color);
   color: white;
 }
+
+.photo-container {
+  width: 400px;         
+  height: 300px;        
+  border-radius: 8px;
+  background-color: #000;
+  margin-top: 1rem;
+  object-fit: cover;    
+}
+
+@media (max-width: 768px) { 
+  .photo-container {
+    width: 80%;       
+    height: auto;        
+  }
+}
+
 
 .file-input {
   display: flex;

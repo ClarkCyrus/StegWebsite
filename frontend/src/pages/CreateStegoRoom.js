@@ -379,7 +379,7 @@ function CreateStegoRoom() {
                 autoPlay
                 playsInline
                 muted
-                style={{ width: 400, height: 300, borderRadius: 8, backgroundColor: '#000',  marginTop: '1rem'}}
+                className="photo-container"
               />
               <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
                 <button
@@ -591,7 +591,7 @@ function CreateStegoRoom() {
                               )}
                             </>
                           ) : (
-                              <audio controls style={{ width: '35%' }}>
+                              <audio controls className="audio-player">
                                 <source src={messagePreview.content} />
                               </audio>
                           )}
