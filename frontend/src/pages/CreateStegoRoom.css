@@ -259,6 +259,9 @@ input:checked + .slider:before {
 
 .input-mode-label{
   padding-left: 0.25rem;
+  white-space: nowrap;       /* Prevent wrapping */
+  overflow: hidden;          /* Hide overflowing text */
+  text-overflow: ellipsis;   /* Show "..." for overflow */
 }
 
 .input-placeholder {
@@ -368,6 +371,7 @@ input:checked + .slider:before {
   background: white;
   cursor: pointer;
   transition: all 0.2s;
+    text-overflow: ellipsis;
 }
 
 .file-input:hover {
