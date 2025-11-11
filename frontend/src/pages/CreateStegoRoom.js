@@ -449,6 +449,10 @@ function CreateStegoRoom() {
                   />
                   <span className="slider"></span>
                   <span className="switch-label">Enable Encryption</span>
+                  <div className="tooltip-container">
+                    <FiInfo size={22} className='tooltip-icon'/>
+                <span className="tooltip-text">When enabled, your stego image will be encrypted.</span>
+                </div>
                 </label>
                 {encrypted && (
                   <label className="switch">
@@ -459,6 +463,10 @@ function CreateStegoRoom() {
                     />
                     <span className="slider"></span>
                     <span className="switch-label">Store Key in Database</span>
+                    <div className="tooltip-container">
+                    <FiInfo size={22} className='tooltip-icon'/>
+                <span className="tooltip-text">When enabled, the Encryption key and Encryption IV will be saved to the database.</span>
+                </div>
                   </label>
                 )}
               </div>
@@ -508,6 +516,10 @@ function CreateStegoRoom() {
                   />
                   <span className="slider"></span>
                   <span className="switch-label">Manual Input</span>
+                  <div className="tooltip-container">
+                    <FiInfo size={22} className='tooltip-icon manual-input'/>
+                <span className="tooltip-text">When enabled, manually input your secret message by typing text, capturing a photo, or recording audio </span>
+                </div>
                 </label>
               </div>
               <div className="upload-content">

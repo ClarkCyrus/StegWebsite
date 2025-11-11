@@ -1,3 +1,51 @@
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+  margin-left: 2px;
+  cursor: pointer;
+  bottom: 2px;
+}
+
+.manual-input{
+  margin-left:6px;
+}
+.tooltip-icon {
+  background-color: white;
+  color: #6b46c1;
+  border-radius: 50%;
+  font-size: 15px;
+  font-weight: bold;
+  transition: transform 300ms ease;
+  display: inline-block;
+}
+
+.tooltip-icon:hover {
+  transform: scale(1.2);
+}
+
+.tooltip-text {
+  visibility: hidden;
+  font-size: 15px;
+  width: 200px;
+  background-color: #333;
+  color: white;
+  text-align: center;
+  padding: 8px;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 10;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
 .create-room-container {
   min-height: 100vh;
   display: flex;
@@ -416,6 +464,11 @@ input:checked + .slider:before {
   border: 1px dashed #cbd5e0;
   color: #718096;
   transition: all 0.2s;
+  gap:10px;
+}
+.upload-placeholder p {
+  display: inline;
+  margin: 0;
 }
 
 .upload-placeholder:hover {
@@ -672,5 +725,5 @@ input:checked + .slider:before {
 .file-size-info {
   font-size: 0.8rem;
   color: #6c757d;
-  margin-top: 5px;
+  margin-left: 20px;
 } 
