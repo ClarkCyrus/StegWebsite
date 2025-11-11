@@ -78,40 +78,60 @@ with open(OUT / "manova_results.txt","w") as f:
 pairs = list(combinations(algos, 2))
 pairwise_records = []
 all_pvals = []
-all_keys = []
 
 for metric in metrics:
-    model = ols(f"{metric} ~ C(Algorithm)", data=df).fit()
-    aov = stats.f_oneway(*[df.loc[df['Algorithm']==g,metric].dropna() for g in algos])
-    anova_p = float(aov.pvalue) if hasattr(aov,'pvalue') else np.nan
-    for a,b in pairs:
-        g1 = df.loc[df['Algorithm']==a, metric].dropna()
-        g2 = df.loc[df['Algorithm']==b, metric].dropna()
-        if len(g1) < 2 or len(g2) < 2:
-            p = np.nan
-            direction = 'insufficient data'
-        else:
-            stat,p = stats.ttest_ind(g1, g2, equal_var=False, nan_policy='omit')
-            # direction: which has larger mean
-            direction = f"{a} > {b}" if g1.mean() > g2.mean() else f"{b} > {a}"
-        key = f"{metric} | {a} vs {b}"
-        all_pvals.append(p if not np.isnan(p) else 1.0)
-        all_keys.append((metric,a,b,anova_p))
-        pairwise_records.append({'metric':metric,'pair':f"{a} vs {b}",'p_raw':p,'anova_p':anova_p,'direction':direction})
+    # run one-way ANOVA (we keep anova_p if you ever want to report it)
+    aov = stats.f_oneway(*[
+        df.loc[df['Algorithm']==g, metric].dropna()
+        for g in algos
+    ])
+    anova_p = float(aov.pvalue)
 
-# Apply Holm correction across all pairwise p-values (stronger than Bonferroni, less conservative)
-pvals = np.array([p if p is not None else 1.0 for p in all_pvals])
-reject, pvals_corrected, _, _ = multipletests(pvals, alpha=0.05, method='bonferroni')
+    for a, b in pairs:
+        g1 = df[df['Algorithm']==a][metric].dropna()
+        g2 = df[df['Algorithm']==b][metric].dropna()
+        stat, p_raw = stats.ttest_ind(g1, g2, equal_var=False)
 
-# Attach corrected p back to records
+        direction = f"{a} > {b}" if g1.mean() > g2.mean() else f"{b} > {a}"
+
+        # compute mean difference and standard error
+        mean_diff = g1.mean() - g2.mean()
+        std_error = np.sqrt(g1.var(ddof=1)/len(g1) + g2.var(ddof=1)/len(g2))
+
+        # stash the raw p for the global Bonferroni
+        all_pvals.append(p_raw if not np.isnan(p_raw) else 1.0)
+
+        # record everything except any Boolean flag
+        pairwise_records.append({
+            'metric':    metric,
+            'pair':      f"{a} vs {b}",
+            'mean_diff': mean_diff,
+            'std_error': std_error,
+            'p_raw':     p_raw,
+            'direction': direction, 
+        })
+
+# apply Bonferroni correction across all stored p-values
+reject, pvals_corrected, _, _ = multipletests(
+    np.array(all_pvals), alpha=0.05, method='bonferroni'
+)
+
+# build final rows with only mean_diff, std_error, and p_adj
 out_rows = []
-for i, rec in enumerate(pairwise_records):
-    rec_out = rec.copy()
-    rec_out['p_adj'] = float(pvals_corrected[i])
-    rec_out['significant'] = bool(reject[i])
-    out_rows.append(rec_out)
+for rec, p_adj in zip(pairwise_records, pvals_corrected):
+    out_rows.append({
+        'metric':     rec['metric'],
+        'pair':       rec['pair'],
+        'mean_diff':  rec['mean_diff'],
+        'std_error':  rec['std_error'],
+        'direction':  rec['direction'], 
+        'p_adj':      float(p_adj),
+        
+    })
 
+# save your CSV
 pd.DataFrame(out_rows).to_csv(OUT / "pairwise_results.csv", index=False)
+
 
 # 5) Concise human summary
 with open(OUT / "concise_summary.txt","w") as f:
@@ -120,11 +140,15 @@ with open(OUT / "concise_summary.txt","w") as f:
     f.write("MANOVA result saved in manova_results.txt. Check Pillai/Wilks for multivariate significance.\n\n")
     sig_any = False
     for row in out_rows:
-        if row['significant']:
+        # test the numeric p_adj instead of a missing key
+        if row['p_adj'] < 0.05:
             sig_any = True
-            f.write(f"{row['metric']}: {row['pair']} significant (p_adj={row['p_adj']:.4g}), direction: {row['direction']}\n")
+            f.write(
+                f"{row['metric']}: {row['pair']} significant "
+                f"(p_adj={row['p_adj']:.4g}), direction: {row['direction']}\n"
+            )
     if not sig_any:
-        f.write("No pairwise differences survived Holm correction across all tests at alpha=0.05.\n")
+        f.write("No pairwise differences survived Bonferroni correction across all tests at alpha=0.05.\n")
 
 print("Done — outputs in:", OUT.resolve())
 print("Group counts:\n", df['Algorithm'].value_counts())

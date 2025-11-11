@@ -138,35 +138,39 @@ def run_comprehensive_experiment():
                     
                     # Calculate capacity and BPP based on algorithm
                     if algo_name == 'ML-LSB':
-                        capacity = MultiLayerLSB.calculate_capacity(cover_image_path, rounds)
-                        bpp = MultiLayerLSB.calculate_bpp(payload_path, cover_image_path, rounds)
-                    elif algo_name == '4-LSB':
+                        # Fixed rounds for calculation
+                        max_rounds = 8
+                        capacity = MultiLayerLSB.calculate_capacity(cover_image_path, max_rounds)
+                        bpp = MultiLayerLSB.calculate_bpp(payload_path, cover_image_path, rounds=max_rounds)
+
+                        # Determine actual layers used
+                        img = Image.open(cover_image_path)
+                        channels = 3 if img.mode == 'RGB' else 1
+                        bits_per_channel = bpp / channels
+                        actual_layers_used = int(np.ceil(bits_per_channel))
+
+                        rounds_used = min(actual_layers_used, max_rounds)  # cap at 8
+                    else:
+                        rounds_used = 4 if algo_name == '4-LSB' else 1
                         capacity = algo_class.calculate_capacity(cover_image_path)
-                        bpp = MultiLayerLSB.calculate_bpp(payload_path, cover_image_path, rounds=4)
-                    else:  # LSB
-                        capacity = algo_class.calculate_capacity(cover_image_path)
-                        bpp = MultiLayerLSB.calculate_bpp(payload_path, cover_image_path, rounds=1)
-                    
-                    # Calculate embedding efficiency (payload size / capacity)
-                    embedding_efficiency = (payload_size / capacity) * 100 if capacity > 0 else 0
-                    
-                    # Store results
+                        bpp = MultiLayerLSB.calculate_bpp(payload_path, cover_image_path, rounds=rounds_used)
+
+                    # Use rounds_used in results instead of the fixed rounds
                     result = {
                         'Image': image_name,
                         'Payload': payload_name,
                         'Payload_Size_Bytes': payload_size,
                         'Algorithm': algo_name,
-                        'Rounds': rounds if rounds else (4 if algo_name == '4-LSB' else 1),
+                        'Rounds': rounds_used,
                         'MSE': mse,
                         'PSNR_dB': psnr,
                         'SSIM': ssim,
                         'Capacity_Bytes': capacity,
                         'BPP': bpp,
-                        'Embedding_Efficiency_%': embedding_efficiency,
                         'Embed_Time_Seconds': embed_time,
                         'Stego_Image': stego_filename
                     }
-                    
+           
                     results.append(result)
                     
                     print(f"✓ (MSE: {mse:.4f}, PSNR: {psnr:.2f} dB, SSIM: {ssim:.4f}, BPP: {bpp:.4f})")
@@ -377,6 +381,91 @@ def generate_latex_tables(df, output_dir):
     print("SSIM table saved to: latex_tables/ssim_by_image.tex")
     
     print(f"\nAll LaTeX tables saved to: {latex_dir}")
+
+    # --- Final: Combined Heatmap (Algorithm grouped, better spacing + visible N/A) ---
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    from matplotlib.colors import ListedColormap
+
+    # assume df exists and has columns: ['Image','Algorithm','Payload','PSNR_dB']
+    output_dir = output_dir
+
+    algorithms = ['LSB', '4-LSB', 'ML-LSB']
+    images = sorted(df['Image'].unique())
+    payloads = sorted(df['Payload'].unique())
+
+    # Build row order (Algorithm grouped)
+    row_order = [f"{img} ({algo})" for algo in algorithms for img in images]
+
+    # Create pivot
+    pivot_full = pd.DataFrame(index=row_order, columns=payloads, dtype=float)
+    pivot_layer = pd.DataFrame(index=row_order, columns=payloads, dtype=object)
+
+    for _, r in df.iterrows():
+        row_label = f"{r['Image']} ({r['Algorithm']})"
+        if row_label in pivot_full.index and r['Payload'] in pivot_full.columns:
+            pivot_full.loc[row_label, r['Payload']] = r['PSNR_dB']
+            pivot_layer.loc[row_label, r['Payload']] = r['Rounds']  # store layer used
+
+                # Color mask
+    mask_colors = pivot_full.applymap(lambda x: 1 if pd.notna(x) and x >= 30
+                                    else 0 if pd.notna(x) and x < 30
+                                    else np.nan)
+
+    # Annotate PSNR + Layer or N/A
+    annot = pivot_full.round(1).astype(str)
+    for i in pivot_full.index:
+        for j in pivot_full.columns:
+            if pd.isna(pivot_full.loc[i, j]):
+                annot.loc[i, j] = "N/A"
+            else:
+                layer = pivot_layer.loc[i, j]
+                annot.loc[i, j] = f"{pivot_full.loc[i, j]:.1f} ({layer})" if layer is not None else f"{pivot_full.loc[i, j]:.1f}"
+
+
+    # Colormap: red (<30), gray (N/A), green (≥30)
+    custom_cmap = ListedColormap(["#efd3d0", "#7a7a7a", "#dae9c9"])
+
+    # Plot heatmap
+    plt.figure(figsize=(12, 6))  # wider aspect ratio
+    ax = sns.heatmap(
+        mask_colors,
+        cmap=custom_cmap,
+        annot=annot,
+        fmt='',
+        cbar=False,
+        linewidths=0.5,
+        linecolor="white",
+        annot_kws={"fontsize": 8, "weight": "bold"}
+    )
+
+    # Add strong black horizontal lines between algorithm blocks
+    n_images = len(images)
+    for i in range(1, len(algorithms)):
+        ax.axhline(i * n_images, color='grey', lw=1)
+
+    # Improve visibility for N/A text
+    for t in ax.texts:
+        if t.get_text() == "N/A":
+            t.set_color('black')
+            t.set_fontweight('bold')
+
+    # Simplify y-axis labels (remove "LSB" repetition)
+    ax.set_yticklabels(pivot_full.index, rotation=0, fontsize=8, ha='right')
+
+    # Title and labels
+    plt.title("Combined Heatmap: LSB → 4-LSB → ML-LSB", fontsize=13, weight='bold')
+    ax.set_xlabel("Text Dataset")
+    ax.set_ylabel("Image Dataset")
+
+    # Tight layout
+    plt.tight_layout(rect=[0.28, 0, 1, 1]) 
+    # Save
+    out_path = os.path.join(output_dir, "Combined_LSB_GroupedByAlgorithm_Fixed2.png")
+    plt.savefig(out_path, bbox_inches="tight", dpi=300)
+    plt.close()
+
+    print("Saved:", out_path)
 
 
 if __name__ == "__main__":
