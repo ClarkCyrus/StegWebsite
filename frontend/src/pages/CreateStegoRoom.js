@@ -518,7 +518,7 @@ function CreateStegoRoom() {
                   <span className="switch-label">Manual Input</span>
                   <div className="tooltip-container">
                     <FiInfo size={22} className='tooltip-icon manual-input'/>
-                <span className="tooltip-text">When enabled, manually input your secret message by typing text, capturing a photo, or recording audio </span>
+                <span className="tooltip-text">When enabled, manually input your secret message by typing text, capturing a photo, or recording audio. </span>
                 </div>
                 </label>
               </div>

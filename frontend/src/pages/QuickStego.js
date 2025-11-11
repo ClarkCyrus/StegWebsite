@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Container, Row, Col, Form, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FiArrowLeft, FiDownload } from 'react-icons/fi';
+import { FiArrowLeft, FiDownload, FiInfo } from 'react-icons/fi';
 import './QuickStego.css';
 import config from '../config';
 
@@ -433,15 +433,23 @@ function QuickStego() {
                                         </div>
                                     )}
                                 </div>
-                                <div className="switch-container">
-                                    <Form.Check
-                                        type="switch"
-                                        id="embed-encryption"
-                                        label="Enable Encryption"
-                                        checked={embedEncrypted}
-                                        onChange={(e) => setEmbedEncrypted(e.target.checked)}
-                                    />
-                                </div>
+                              <div className="switch-container">
+    <label className="switch-label">
+        <input
+            type="checkbox"
+            id="embed-encryption"
+            checked={embedEncrypted}
+            onChange={(e) => setEmbedEncrypted(e.target.checked)}
+            style={{ display: 'none' }}
+        />
+        <span className="slider"></span>
+        Enable Encryption
+    </label>
+    <div className="tooltip-container">
+        <FiInfo size={22} className='tooltip-icon'/>
+        <span className="tooltip-text">When enabled, your stego image will be encrypted.</span>
+    </div>
+</div>
                                 <button 
                                     className="submit-button"
                                     type="submit" 
@@ -526,14 +534,22 @@ function QuickStego() {
                                     )}
                                 </div>
                                 <div className="switch-container">
-                                    <Form.Check
-                                        type="switch"
-                                        id="extract-encryption"
-                                        label="Enable Decryption"
-                                        checked={extractEncrypted}
-                                        onChange={(e) => setExtractEncrypted(e.target.checked)}
-                                    />
-                                </div>
+    <label className="switch-label">
+        <input
+            type="checkbox"
+            id="extract-encryption"
+            checked={extractEncrypted}
+            onChange={(e) => setExtractEncrypted(e.target.checked)}
+            style={{ display: 'none' }}
+        />
+        <span className="slider"></span>
+        Enable Decryption
+    </label>
+    <div className="tooltip-container">
+        <FiInfo size={22} className='tooltip-icon'/>
+        <span className="tooltip-text">When enabled, you will be able to see the hidden message inside the image.</span>
+    </div>
+</div>
                                 {extractEncrypted && (
                                     <>
                                         <div className="form-group">
