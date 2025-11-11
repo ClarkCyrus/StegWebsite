@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FiUpload, FiLock, FiDownload, FiArrowLeft, FiAlertTriangle, FiInfo} from 'react-icons/fi';
+import { FiUpload, FiLock, FiDownload, FiArrowLeft, FiAlertTriangle, FiInfo, FiMic, FiStopCircle, FiCamera} from 'react-icons/fi';
+import { Dropdown } from 'react-bootstrap';
 import './CreateStegoRoom.css';
 import config from '../config';
 
@@ -19,6 +20,21 @@ function CreateStegoRoom() {
   const [modalData, setModalData] = useState(null);
   const [newRoomId, setNewRoomId] = useState(null);
   const navigate = useNavigate();
+
+  const [manualInput, setManualInput] = useState(false); 
+  const [inputMode, setInputMode] = useState('text');
+  const [manualText, setManualText] = useState("");
+  const [recording, setRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const timerRef = useRef(null);
+  const [seconds, setSeconds] = useState(0);
+
+  useEffect(() => {
+    setMessagePreview(null);
+    setMessageFile(null);
+    setManualText("");
+  }, [inputMode]);
 
   const handleCoverChange = (e) => {
     const file = e.target.files[0];
@@ -41,7 +57,7 @@ function CreateStegoRoom() {
     }
   };
 
-const handleMessageChange = (e) => {
+  const handleMessageChange = (e) => {
     const file = e.target.files[0];
     if (!file) {
       setMessageFile(null);
@@ -187,6 +203,213 @@ const handleMessageChange = (e) => {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
+  
+  const handleTextChange = (e) => {
+    const value = e.target.value;
+    setManualText(value);
+    const textFile = new File([value], "message.txt", { type: "text/plain" });
+    setMessageFile(textFile);
+    setMessagePreview(null); 
+  };
+
+  // ---------------- AUDIO HELPERS ----------------
+  const startRecording = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const recorder = new MediaRecorder(stream);
+    mediaRecorderRef.current = recorder;
+
+    chunksRef.current = []; 
+    recorder.ondataavailable = (e) => {
+      chunksRef.current.push(e.data); 
+    };
+
+    recorder.start();
+    setRecording(true);
+
+    timerRef.current = setInterval(() => {
+      setSeconds(prev => prev + 1);
+    }, 1000);
+  };
+
+  const stopRecording = () => {
+    setRecording(false); 
+    clearInterval(timerRef.current);
+
+    return new Promise((resolve) => {
+      mediaRecorderRef.current.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        chunksRef.current = []; 
+        setRecording(false);
+        setSeconds(0);
+
+        if (mediaRecorderRef.current.stream) {
+          mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+        }
+        
+        resolve(blob);
+      };
+      mediaRecorderRef.current.stop();
+    });
+  };
+
+  const handleRecordedBlob = (blob) => {
+    if (!blob) return;
+
+    const file = new File([blob], `recording-${Date.now()}.webm`, { type: blob.type });
+    setMessageFile(file);
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (ev) => {
+      setMessagePreview({ type: "audio", content: ev.target.result });
+    };
+  };
+
+  const formatTime = (s) => {
+    const m = Math.floor(s / 60).toString().padStart(2, "0");
+    const sec = (s % 60).toString().padStart(2, "0");
+    return `${m}:${sec}`;
+  };
+
+  // ---------------- CAMERA HELPERS ----------------
+  function WebCameraCapture({ onImageCaptured }) {
+    const videoRef = useRef(null);
+    const [stream, setStream] = useState(null);
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
+
+    const startCamera = async () => {
+      setError(null);
+      setLoading(true);
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('Camera not supported by this browser');
+        }
+
+        const constraints = { video: { facingMode: 'environment' } }; 
+        const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
+          try {
+            await videoRef.current.play();
+          } catch (playErr) {
+            console.warn('video.play() failed:', playErr);
+          }
+        }
+
+        setStream(mediaStream);
+      } catch (err) {
+        console.error('startCamera error', err);
+        setError(err.message || 'Failed to open camera');
+        if (err?.name === 'NotAllowedError' || err?.name === 'SecurityError') {
+          setError('Camera permission denied');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const stopCamera = () => {
+      if (stream) {
+        stream.getTracks().forEach((t) => t.stop());
+        setStream(null);
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    };
+
+    const captureImage = () => {
+      const video = videoRef.current;
+      if (!video || !stream) return;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          setError('Failed to capture image');
+          return;
+        }
+        const file = new File([blob], `photo-${Date.now()}.png`, { type: 'image/png' });
+        
+        if (setMessageFile) setMessageFile(file);
+
+        if (setMessagePreview) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            setMessagePreview({ type: 'image', content: ev.target.result });
+          };
+          reader.readAsDataURL(file);
+        }
+      
+        onImageCaptured(file);
+      }, 'image/png');
+    };
+
+    useEffect(() => {
+      if (stream && videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {});
+      }
+
+      // Cleanup on unmount
+      return () => {
+        if (stream) {
+          stream.getTracks().forEach((t) => t.stop());
+        }
+      };
+    }, [stream]);
+
+    return (
+      <div className="manual-panel manual-camera">
+        {!messagePreview ? (
+          !stream ? (
+            <button type="button" onClick={startCamera} disabled={loading}>
+              <FiCamera size={16} /> {loading ? 'Opening camera...' : 'Take A Photo'}
+            </button>
+          ) : (
+            <>
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                style={{ width: 400, height: 300, borderRadius: 8, backgroundColor: '#000',  marginTop: '1rem'}}
+              />
+              <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={captureImage}
+                  style={{ padding: '0.5rem 1rem', borderRadius: 6, backgroundColor: '#6b46c1', color: 'white', border: 'none' }}
+                >
+                  Capture
+                </button>
+                <button
+                  type="button"
+                  onClick={stopCamera}
+                  style={{ padding: '0.5rem 1rem', borderRadius: 6, backgroundColor: '#e53e3e', color: 'white', border: 'none' }}
+                >
+                  Stop
+                </button>
+              </div>
+            </>
+          ) 
+        ) : (
+          <img 
+            src={messagePreview.content} 
+            alt="message preview" 
+            className="preview-image"
+          />
+        )}
+        {error && <div className="camera-error" role="alert" style={{ color: '#c00', marginTop: 8 }}>{error}</div>}
+      </div>
+    );
+  }
 
   return (
     <div className="create-room-container">
@@ -272,45 +495,155 @@ const handleMessageChange = (e) => {
                 <FiLock size={24} />
                 <h3>Secret Message</h3>
               </div>
+              <div className="input-option">
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={manualInput}
+                    onChange={e => {
+                      const enabled = e.target.checked
+                      setManualInput(enabled)
+                      setInputMode(enabled ? 'text' : null);
+                    }}
+                  />
+                  <span className="slider"></span>
+                  <span className="switch-label">Manual Input</span>
+                </label>
+              </div>
               <div className="upload-content">
-                <input
-                  type="file"
-                  accept=".txt, .mp3, .jpg, .png"
-                  onChange={handleMessageChange}
-                  required
-                  className="file-input"
-                />
-                {messagePreview && (
-                  <div className="preview-container">
-                    {messagePreview.type === 'image' && (
-                      <img src={messagePreview.content} alt="message preview" className="preview-image" />
-                    )}
-                    {messagePreview.type === 'audio' && (
-                      <audio controls className="preview-audio">
-                        <source src={messagePreview.content} />
-                      </audio>
-                    )}
-                    {messagePreview.type === 'text' && (
-                      <div className="preview-text">
-                        {messagePreview.content.length > 200
-                          ? `${messagePreview.content.substring(0, 200)}...`
-                          : messagePreview.content}
-                      </div>
-                    )}
-                    {messagePreview.type === 'unknown' && (
-                      <span className="preview-filename">File selected: {messagePreview.name}</span>
-                    )}
-                  </div>
+                {manualInput ? (
+                  <>
+                    <div className="file-input">
+                      <Dropdown>
+                        <Dropdown.Toggle 
+                          variant="light" 
+                          id="inputModeSelect" 
+                          className="input-mode-select"
+                        >
+                          {inputMode.charAt(0).toUpperCase() + inputMode.slice(1)}
+                        </Dropdown.Toggle>
+
+                        <Dropdown.Menu>
+                          <Dropdown.Item 
+                            active={inputMode === 'text'} 
+                            onClick={() => setInputMode('text')}
+                          >
+                            Text
+                          </Dropdown.Item>
+                          <Dropdown.Item 
+                            active={inputMode === 'audio'} 
+                            onClick={() => setInputMode('audio')}
+                          >
+                            Audio
+                          </Dropdown.Item>
+                          <Dropdown.Item 
+                            active={inputMode === 'image'} 
+                            onClick={() => setInputMode('image')}
+                          >
+                            Image
+                          </Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                      <label htmlFor="inputModeSelect" className="input-mode-label">Choose input format</label>
+                    </div>
+                    <div className="input-placeholder">
+                      {inputMode === "text" && (
+                        <div className="manual-panel manual-text">
+                          {!messagePreview ? (
+                            <textarea
+                              value={manualText}
+                              onChange={handleTextChange}
+                              placeholder="Type your secret message here..."
+                            />
+                          ) : (
+                            <div className="preview-text">
+                              {messagePreview.content.length > 200
+                                ? `${messagePreview.content.substring(0, 200)}...`
+                                : messagePreview.content}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {inputMode === "audio" && (
+                        <div className="manual-panel manual-record">
+                          {!messagePreview ? (
+                            <>
+                              {!recording ? (
+                                <button  onClick={(e) => 
+                                  {
+                                    e.preventDefault();
+                                    startRecording();
+                                  }}>
+                                  <FiMic size={16} /> Start Recording
+                                </button>
+                              ) : (
+                                <>
+                                  <span style={{ color: "#718096", fontWeight: "bold" }}>Recording</span>
+                                  <div style={{ color: '#718096', fontSize: '1.5rem' }}>{formatTime(seconds)}</div>
+                                  <button onClick={async (e) => {
+                                    e.preventDefault();
+                                    const blob = await stopRecording();
+                                    handleRecordedBlob(blob);
+                                  }}>
+                                    <FiStopCircle size={18} /> Stop Recording
+                                  </button>
+                                </>
+                              )}
+                            </>
+                          ) : (
+                              <audio controls style={{ width: '35%' }}>
+                                <source src={messagePreview.content} />
+                              </audio>
+                          )}
+                        </div>
+                      )}
+                      {inputMode === 'image' && (
+                        <WebCameraCapture onImageCaptured={(file) => console.log(file)} />
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                  <input
+                    type="file"
+                    accept=".txt, .mp3, .jpg, .png"
+                    onChange={handleMessageChange}
+                    required
+                    className="file-input"
+                  />
+                  {messagePreview && (
+                    <div className="preview-container">
+                      {messagePreview.type === 'image' && (
+                        <img src={messagePreview.content} alt="message preview" className="preview-image" />
+                      )}
+                      {messagePreview.type === 'audio' && (
+                        <audio controls className="preview-audio">
+                          <source src={messagePreview.content} />
+                        </audio>
+                      )}
+                      {messagePreview.type === 'text' && (
+                        <div className="preview-text">
+                          {messagePreview.content.length > 200
+                            ? `${messagePreview.content.substring(0, 200)}...`
+                            : messagePreview.content}
+                        </div>
+                      )}
+                      {messagePreview.type === 'unknown' && (
+                        <span className="preview-filename">File selected: {messagePreview.name}</span>
+                      )}
+                    </div>
+                  )}
+                  {!messagePreview && (
+                    <div className="upload-placeholder">
+                      <p>Upload a secret message file (TXT, MP3, PNG, JPEG)</p>
+                      <p className="file-size-info">Max file size: 10MB</p>
+                    </div>
+                  )}
+                  </>
                 )}
-                {!messagePreview && (
-                  <div className="upload-placeholder">
-                    <p>Upload a secret message file (TXT, MP3, PNG, JPEG)</p>
-                    <p className="file-size-info">Max file size: 10MB</p>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
-          </div>
 
           <div className="warning-info">
             <FiInfo size={20} />
