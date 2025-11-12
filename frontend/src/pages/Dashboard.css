@@ -339,10 +339,45 @@
   margin-bottom: 2px;
 }
 
-.close-button {
+.room-action-buttons {
   position: absolute;
   top: 5px;
   right: 5px;
+  display: flex;
+  gap: 5px;
+  z-index: 10;
+}
+
+.share-button {
+  background: transparent;
+  border: 2px solid #28a745;
+  border-radius: 50%;
+  color: #28a745;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.share-button:hover {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.share-button svg {
+  font-size: 12px;
+  transition: color 0.3s;
+  pointer-events: none;
+}
+
+.share-button:hover svg {
+  color: white;
+}
+
+.close-button {
   background: transparent;
   border: 2px solid #6c63ff; 
   border-radius: 50%;
@@ -409,6 +444,54 @@
 
 .custom-modal .btn-danger:hover {
   background-color: #5a0ca0; 
+}
+
+.custom-modal .btn-primary {
+  background-color: var(--primary-color); 
+  border: none;
+}
+
+.custom-modal .btn-primary:hover {
+  background-color: var(--secondary-color); 
+}
+
+.custom-modal .btn-primary:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.share-modal-content {
+  padding: 1rem 0;
+}
+
+.share-modal-content .form-group {
+  margin-bottom: 1rem;
+}
+
+.share-modal-content .form-label {
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.share-modal-content .form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.share-modal-content .form-control:disabled {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
+}
+
+.share-modal-content .form-control:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
 }
 
 .search-and-filters {

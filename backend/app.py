@@ -728,6 +728,62 @@ def delete_room(id):
         return jsonify({"message": "Room deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/steg_rooms/<int:id>/share', methods=['POST'])
+def share_room(id):
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    # Get the room to share
+    room = StegoRoom.query.filter_by(id=id, user_id=session['user_id']).first()
+    if not room:
+        return jsonify({"error": "Room not found or unauthorized"}), 404
+
+    # Get the sender's email
+    sender = User.query.get(session['user_id'])
+    if not sender:
+        return jsonify({"error": "Sender user not found"}), 404
+
+    # Get receiver email from request
+    data = request.json
+    receiver_email = data.get('receiver_email')
+    
+    if not receiver_email:
+        return jsonify({"error": "Receiver email is required"}), 400
+
+    # Find the receiver user
+    receiver = User.query.filter_by(email=receiver_email).first()
+    if not receiver:
+        return jsonify({"error": "Receiver user not found"}), 404
+
+    # Don't allow sharing to self
+    if receiver.id == session['user_id']:
+        return jsonify({"error": "Cannot share room with yourself"}), 400
+
+    try:
+        # Create a copy of the room for the receiver with sender's email
+        shared_room = StegoRoom(
+            name=f"{room.name} (Shared by {sender.email})",
+            is_encrypted=room.is_encrypted,
+            key=room.key if room.is_key_stored else None,
+            iv=room.iv if room.is_key_stored else None,
+            cover_image=room.cover_image,
+            message_file=room.message_file,
+            stego_image=room.stego_image,
+            metrics=room.metrics,
+            user_id=receiver.id,
+            is_key_stored=room.is_key_stored
+        )
+        db.session.add(shared_room)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Room shared successfully",
+            "shared_room_id": shared_room.id
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
     
 from flask import send_from_directory
 

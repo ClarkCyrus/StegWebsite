@@ -4,7 +4,7 @@ import { Container, OverlayTrigger, Tooltip, Row, Col, Card, Modal, Button, Form
 import axios from 'axios';
 import { BsLockFill, BsLock, BsPlusCircle, BsPlusLg, BsLightningCharge, BsSearch, BsSortDown, BsSortUp } from 'react-icons/bs';
 import { BiSolidLock, BiLockOpen } from 'react-icons/bi';
-import { FiLogOut, FiX } from 'react-icons/fi';
+import { FiLogOut, FiX, FiShare2 } from 'react-icons/fi';
 import './Dashboard.css';
 import { useAuth } from './AuthContext'; 
 import config from '../config';
@@ -14,6 +14,11 @@ function Dashboard() {
   const [rooms, setRooms] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [roomToDelete, setRoomToDelete] = useState(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [roomToShare, setRoomToShare] = useState(null);
+  const [receiverEmail, setReceiverEmail] = useState('');
+  const [shareError, setShareError] = useState(null);
+  const [shareSuccess, setShareSuccess] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     encrypted: false,
@@ -94,6 +99,42 @@ function Dashboard() {
           setRoomToDelete(null); 
         })
         .catch(err => console.error('Failed to delete room:', err));
+    }
+  };
+
+  const handleShare = (room) => {
+    setRoomToShare(room);
+    setReceiverEmail('');
+    setShareError(null);
+    setShareSuccess(null);
+    setShowShareModal(true);
+  };
+
+  const confirmShare = async () => {
+    if (!roomToShare || !receiverEmail) {
+      setShareError('Please enter a receiver email');
+      return;
+    }
+
+    setShareError(null);
+    setShareSuccess(null);
+
+    try {
+      const response = await axios.post(
+        `${config.API_BASE_URL}/api/steg_rooms/${roomToShare.id}/share`,
+        { receiver_email: receiverEmail },
+        { withCredentials: true }
+      );
+      
+      setShareSuccess(response.data.message);
+      setTimeout(() => {
+        setShowShareModal(false);
+        setRoomToShare(null);
+        setReceiverEmail('');
+        setShareSuccess(null);
+      }, 2000);
+    } catch (error) {
+      setShareError(error.response?.data?.error || 'Failed to share room');
     }
   };
 
@@ -249,15 +290,27 @@ function Dashboard() {
                 ) : (
                   <span>No Image</span>
                 )}
-                <button
-                  className="close-button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(room); 
-                  }}
-                >
-                  <FiX size={14} />
-                </button>
+                <div className="room-action-buttons">
+                  <button
+                    className="share-button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleShare(room);
+                    }}
+                    title="Share room"
+                  >
+                    <FiShare2 size={12} />
+                  </button>
+                  <button
+                    className="close-button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(room); 
+                    }}
+                  >
+                    <FiX size={14} />
+                  </button>
+                </div>
               </div>
               <div className="room-footer">
                 <div className="d-flex justify-content-between align-items-center">
@@ -341,6 +394,73 @@ function Dashboard() {
           </Button>
           <Button variant="danger" onClick={confirmDelete}>
             Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal
+        show={showShareModal}
+        onHide={() => {
+          setShowShareModal(false);
+          setRoomToShare(null);
+          setReceiverEmail('');
+          setShareError(null);
+          setShareSuccess(null);
+        }}
+        centered
+        className="custom-modal share-modal"
+      >
+        <Modal.Header closeButton closeVariant="white">
+          <Modal.Title>Share Stego Room</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="share-modal-content">
+            <div className="form-group">
+              <label className="form-label">Stego Room</label>
+              <input
+                type="text"
+                className="form-control"
+                value={roomToShare?.name || ''}
+                disabled
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Receiver Email</label>
+              <input
+                type="email"
+                className="form-control"
+                value={receiverEmail}
+                onChange={(e) => setReceiverEmail(e.target.value)}
+                placeholder="Enter receiver's email"
+              />
+            </div>
+            {shareError && (
+              <div className="alert alert-danger" style={{ marginTop: '1rem' }}>
+                {shareError}
+              </div>
+            )}
+            {shareSuccess && (
+              <div className="alert alert-success" style={{ marginTop: '1rem' }}>
+                {shareSuccess}
+              </div>
+            )}
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            variant="secondary" 
+            onClick={() => {
+              setShowShareModal(false);
+              setRoomToShare(null);
+              setReceiverEmail('');
+              setShareError(null);
+              setShareSuccess(null);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={confirmShare} disabled={!receiverEmail}>
+            Share Room
           </Button>
         </Modal.Footer>
       </Modal>
