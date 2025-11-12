@@ -370,7 +370,7 @@ function CreateStegoRoom() {
         {!messagePreview ? (
           !stream ? (
             <button type="button" onClick={startCamera} disabled={loading}>
-              <FiCamera size={16} /> {loading ? 'Opening camera...' : 'Take A Photo'}
+              <FiCamera size={16} /> {loading ? 'Opening Camera...' : 'Take A Photo'}
             </button>
           ) : (
             <>
