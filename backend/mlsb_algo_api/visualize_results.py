@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from PIL import Image
 import numpy as np
+import seaborn as sns
+from scipy import stats
 
 
 def visualize_comparison(results_csv_path, output_dir):
@@ -220,6 +222,261 @@ def create_metrics_summary_chart(results_csv_path, output_dir):
     print(f"✓ Generated: metrics_summary.png")
 
 
+def create_detailed_metrics_charts(results_csv_path):
+    """
+    Create detailed charts focusing on MSE, PSNR, SSIM, and BPP metrics.
+    """
+    df = pd.read_csv(results_csv_path)
+    df = df[df['MSE'].notna()]
+    
+    viz_dir = os.path.join(os.path.dirname(results_csv_path), 'visualizations')
+    os.makedirs(viz_dir, exist_ok=True)
+    
+    print("\n" + "="*80)
+    print("GENERATING DETAILED METRICS CHARTS")
+    print("="*80)
+    
+    algorithms = ['LSB', '4-LSB', 'ML-LSB']
+    colors = {'LSB': '#2ecc71', '4-LSB': '#3498db', 'ML-LSB': '#e74c3c'}
+    
+    # 1. Box plots for each metric
+    print("\n[1/8] Creating box plots for metric distributions...")
+    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+    fig.suptitle('Metric Distributions by Algorithm', fontsize=16, fontweight='bold')
+    
+    metrics = [('PSNR_dB', 'PSNR (dB)'), ('SSIM', 'SSIM'), ('MSE', 'MSE'), ('BPP', 'BPP')]
+    positions = [(0, 0), (0, 1), (1, 0), (1, 1)]
+    
+    for (metric, label), pos in zip(metrics, positions):
+        data_to_plot = [df[df['Algorithm'] == algo][metric].values for algo in algorithms]
+        bp = axes[pos].boxplot(data_to_plot, labels=algorithms, patch_artist=True,
+                               showmeans=True, meanline=True)
+        
+        # Color the boxes
+        for patch, algo in zip(bp['boxes'], algorithms):
+            patch.set_facecolor(colors[algo])
+            patch.set_alpha(0.6)
+        
+        axes[pos].set_ylabel(label, fontsize=12, fontweight='bold')
+        axes[pos].set_title(f'{label} Distribution', fontsize=13, fontweight='bold')
+        axes[pos].grid(True, alpha=0.3, axis='y')
+        
+        if metric == 'MSE':
+            axes[pos].set_yscale('log')
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(viz_dir, 'metrics_boxplots.png'), dpi=150, bbox_inches='tight')
+    plt.close()
+    print("✓ Saved: metrics_boxplots.png")
+    
+    # 2. Scatter plot: PSNR vs SSIM
+    print("[2/8] Creating PSNR vs SSIM scatter plot...")
+    fig, ax = plt.subplots(figsize=(12, 8))
+    
+    for algo in algorithms:
+        algo_data = df[df['Algorithm'] == algo]
+        ax.scatter(algo_data['PSNR_dB'], algo_data['SSIM'], 
+                  label=algo, color=colors[algo], alpha=0.6, s=100, edgecolors='black')
+    
+    ax.set_xlabel('PSNR (dB)', fontsize=13, fontweight='bold')
+    ax.set_ylabel('SSIM', fontsize=13, fontweight='bold')
+    ax.set_title('PSNR vs SSIM Correlation', fontsize=15, fontweight='bold')
+    ax.legend(fontsize=11)
+    ax.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(viz_dir, 'psnr_vs_ssim_scatter.png'), dpi=150, bbox_inches='tight')
+    plt.close()
+    print("✓ Saved: psnr_vs_ssim_scatter.png")
+    
+    # 3. MSE vs BPP scatter plot
+    print("[3/8] Creating MSE vs BPP scatter plot...")
+    fig, ax = plt.subplots(figsize=(12, 8))
+    
+    for algo in algorithms:
+        algo_data = df[df['Algorithm'] == algo]
+        ax.scatter(algo_data['BPP'], algo_data['MSE'], 
+                  label=algo, color=colors[algo], alpha=0.6, s=100, edgecolors='black')
+    
+    ax.set_xlabel('BPP (Bits Per Pixel)', fontsize=13, fontweight='bold')
+    ax.set_ylabel('MSE', fontsize=13, fontweight='bold')
+    ax.set_title('MSE vs BPP Relationship', fontsize=15, fontweight='bold')
+    ax.set_yscale('log')
+    ax.legend(fontsize=11)
+    ax.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(viz_dir, 'mse_vs_bpp_scatter.png'), dpi=150, bbox_inches='tight')
+    plt.close()
+    print("✓ Saved: mse_vs_bpp_scatter.png")
+    
+    # 4. Heatmap of average metrics by image and algorithm
+    print("[4/8] Creating heatmap of metrics by image...")
+    fig, axes = plt.subplots(2, 2, figsize=(18, 14))
+    fig.suptitle('Average Metrics by Image and Algorithm', fontsize=16, fontweight='bold')
+    
+    for (metric, label), ax in zip(metrics, axes.flat):
+        pivot_data = df.pivot_table(values=metric, index='Image', columns='Algorithm', aggfunc='mean')
+        pivot_data = pivot_data[algorithms]  # Ensure correct order
+        
+        sns.heatmap(pivot_data, annot=True, fmt='.3f', cmap='RdYlGn_r' if metric == 'MSE' else 'RdYlGn',
+                   ax=ax, cbar_kws={'label': label}, linewidths=0.5)
+        ax.set_title(f'Average {label} by Image', fontsize=13, fontweight='bold')
+        ax.set_xlabel('Algorithm', fontsize=11, fontweight='bold')
+        ax.set_ylabel('Image', fontsize=11, fontweight='bold')
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(viz_dir, 'metrics_heatmap_by_image.png'), dpi=150, bbox_inches='tight')
+    plt.close()
+    print("✓ Saved: metrics_heatmap_by_image.png")
+    
+    # 5. Line plots showing metric trends with payload size
+    print("[5/8] Creating metric trends by payload size...")
+    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+    fig.suptitle('Metric Trends vs Payload Size', fontsize=16, fontweight='bold')
+    
+    # Group by payload size and algorithm
+    grouped = df.groupby(['Payload_Size_Bytes', 'Algorithm']).agg({
+        'PSNR_dB': 'mean',
+        'SSIM': 'mean',
+        'MSE': 'mean',
+        'BPP': 'mean'
+    }).reset_index()
+    
+    for (metric, label), ax in zip(metrics, axes.flat):
+        for algo in algorithms:
+            algo_data = grouped[grouped['Algorithm'] == algo].sort_values('Payload_Size_Bytes')
+            ax.plot(algo_data['Payload_Size_Bytes'] / 1000, algo_data[metric], 
+                   marker='o', linewidth=2.5, label=algo, color=colors[algo], markersize=8)
+        
+        ax.set_xlabel('Payload Size (KB)', fontsize=12, fontweight='bold')
+        ax.set_ylabel(label, fontsize=12, fontweight='bold')
+        ax.set_title(f'{label} vs Payload Size', fontsize=13, fontweight='bold')
+        ax.legend(fontsize=10)
+        ax.grid(True, alpha=0.3)
+        
+        if metric == 'MSE':
+            ax.set_yscale('log')
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(viz_dir, 'metrics_vs_payload_size.png'), dpi=150, bbox_inches='tight')
+    plt.close()
+    print("✓ Saved: metrics_vs_payload_size.png")
+    
+    # 6. Statistical comparison table
+    print("[6/8] Creating statistical summary table...")
+    fig, ax = plt.subplots(figsize=(14, 8))
+    ax.axis('tight')
+    ax.axis('off')
+    
+    stats_data = []
+    for algo in algorithms:
+        algo_df = df[df['Algorithm'] == algo]
+        stats_data.append([
+            algo,
+            f"{algo_df['PSNR_dB'].mean():.2f} ± {algo_df['PSNR_dB'].std():.2f}",
+            f"{algo_df['SSIM'].mean():.4f} ± {algo_df['SSIM'].std():.4f}",
+            f"{algo_df['MSE'].mean():.4f} ± {algo_df['MSE'].std():.4f}",
+            f"{algo_df['BPP'].mean():.4f} ± {algo_df['BPP'].std():.4f}",
+            f"{algo_df['Embed_Time_Seconds'].mean():.3f}s",
+            f"{algo_df['Embedding_Efficiency_%'].mean():.1f}%"
+        ])
+    
+    table = ax.table(cellText=stats_data,
+                    colLabels=['Algorithm', 'PSNR (dB)', 'SSIM', 'MSE', 'BPP', 'Avg Time', 'Efficiency'],
+                    cellLoc='center',
+                    loc='center',
+                    colWidths=[0.12, 0.15, 0.15, 0.15, 0.15, 0.13, 0.13])
+    
+    table.auto_set_font_size(False)
+    table.set_fontsize(11)
+    table.scale(1, 2.5)
+    
+    # Style header
+    for i in range(7):
+        table[(0, i)].set_facecolor('#34495e')
+        table[(0, i)].set_text_props(weight='bold', color='white')
+    
+    # Color rows by algorithm
+    for i, algo in enumerate(algorithms, start=1):
+        table[(i, 0)].set_facecolor(colors[algo])
+        table[(i, 0)].set_text_props(weight='bold', color='white')
+        for j in range(1, 7):
+            table[(i, j)].set_facecolor(colors[algo])
+            table[(i, j)].set_alpha(0.2)
+    
+    plt.title('Statistical Summary of Metrics (Mean ± Std)', fontsize=15, fontweight='bold', pad=20)
+    plt.savefig(os.path.join(viz_dir, 'statistical_summary.png'), dpi=150, bbox_inches='tight')
+    plt.close()
+    print("✓ Saved: statistical_summary.png")
+    
+    # 7. Radar chart comparing algorithms
+    print("[7/8] Creating radar chart for algorithm comparison...")
+    fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(projection='polar'))
+    
+    # Normalize metrics to 0-1 scale for comparison
+    categories = ['PSNR', 'SSIM', 'BPP', 'Speed', 'Efficiency']
+    N = len(categories)
+    
+    angles = [n / float(N) * 2 * np.pi for n in range(N)]
+    angles += angles[:1]
+    
+    ax.set_theta_offset(np.pi / 2)
+    ax.set_theta_direction(-1)
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(categories, fontsize=12, fontweight='bold')
+    
+    for algo in algorithms:
+        algo_df = df[df['Algorithm'] == algo]
+        
+        # Normalize values (higher is better for all)
+        psnr_norm = algo_df['PSNR_dB'].mean() / df['PSNR_dB'].max()
+        ssim_norm = algo_df['SSIM'].mean()
+        bpp_norm = algo_df['BPP'].mean() / df['BPP'].max()
+        speed_norm = 1 - (algo_df['Embed_Time_Seconds'].mean() / df['Embed_Time_Seconds'].max())
+        efficiency_norm = algo_df['Embedding_Efficiency_%'].mean() / 100
+        
+        values = [psnr_norm, ssim_norm, bpp_norm, speed_norm, efficiency_norm]
+        values += values[:1]
+        
+        ax.plot(angles, values, 'o-', linewidth=2, label=algo, color=colors[algo])
+        ax.fill(angles, values, alpha=0.15, color=colors[algo])
+    
+    ax.set_ylim(0, 1)
+    ax.set_title('Algorithm Performance Radar Chart\n(Normalized Metrics)', 
+                fontsize=15, fontweight='bold', pad=20)
+    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1), fontsize=11)
+    ax.grid(True)
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(viz_dir, 'algorithm_radar_chart.png'), dpi=150, bbox_inches='tight')
+    plt.close()
+    print("✓ Saved: algorithm_radar_chart.png")
+    
+    # 8. Correlation matrix
+    print("[8/8] Creating correlation matrix...")
+    fig, ax = plt.subplots(figsize=(10, 8))
+    
+    corr_metrics = ['PSNR_dB', 'SSIM', 'MSE', 'BPP', 'Payload_Size_Bytes', 
+                    'Embed_Time_Seconds', 'Embedding_Efficiency_%']
+    corr_data = df[corr_metrics].corr()
+    
+    sns.heatmap(corr_data, annot=True, fmt='.2f', cmap='coolwarm', center=0,
+               square=True, linewidths=1, cbar_kws={"shrink": 0.8}, ax=ax)
+    
+    ax.set_title('Correlation Matrix of All Metrics', fontsize=15, fontweight='bold', pad=15)
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(viz_dir, 'correlation_matrix.png'), dpi=150, bbox_inches='tight')
+    plt.close()
+    print("✓ Saved: correlation_matrix.png")
+    
+    print("\n" + "="*80)
+    print("✓ All detailed metrics charts generated successfully!")
+    print(f"Location: {viz_dir}")
+    print("="*80)
+
+
 if __name__ == "__main__":
     # Define paths
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -232,10 +489,29 @@ if __name__ == "__main__":
         exit(1)
     
     # Generate visualizations
+    print("\nStarting visualization generation...\n")
+    
+    # 1. Visual comparisons of images
     visualize_comparison(results_csv, results_dir)
     
-    # Generate summary charts
+    # 2. Basic summary charts
     create_metrics_summary_chart(results_csv, results_dir)
     
-    print("\n✓ All visualizations complete!")
-    print(f"Check the 'experiment_results/visualizations' directory.")
+    # 3. Detailed metrics analysis
+    create_detailed_metrics_charts(results_csv)
+    
+    print("\n" + "="*80)
+    print("✓ ALL VISUALIZATIONS COMPLETE!")
+    print("="*80)
+    print(f"\nGenerated Charts:")
+    print("  • Image comparisons (side-by-side with metrics)")
+    print("  • Basic metrics summary")
+    print("  • Box plots (metric distributions)")
+    print("  • Scatter plots (PSNR vs SSIM, MSE vs BPP)")
+    print("  • Heatmaps (metrics by image)")
+    print("  • Trend lines (metrics vs payload size)")
+    print("  • Statistical summary table")
+    print("  • Radar chart (algorithm comparison)")
+    print("  • Correlation matrix")
+    print(f"\nLocation: {os.path.join(results_dir, 'visualizations')}")
+    print("="*80)

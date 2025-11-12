@@ -10,3 +10,7 @@ numpy
 scikit-image
 requests
 authlib
+pandas
+matplotlib
+seaborn
+scipy
