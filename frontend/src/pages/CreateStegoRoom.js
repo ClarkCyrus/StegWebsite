@@ -15,6 +15,7 @@ function CreateStegoRoom() {
   const [coverPreview, setCoverPreview] = useState(null);
   const [messagePreview, setMessagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(null);
@@ -103,14 +104,33 @@ function CreateStegoRoom() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setProgress(0); 
     const formData = new FormData();
     formData.append('name', name);
     formData.append('encrypted', encrypted);
     formData.append('storeKey', storeKey);
     if (coverImage) formData.append('image', coverImage);
     if (messageFile) formData.append('message', messageFile);
+    
     try {
-      const res = await axios.post(`${config.API_BASE_URL}/api/create_stego_room`, formData, { withCredentials: true });
+      const res = await axios.post(
+        `${config.API_BASE_URL}/api/create_stego_room`,
+        formData, 
+        { withCredentials: true,
+           onUploadProgress: (event) => {
+          if (event.total) {
+            const percent = Math.floor(Math.random() * 80);
+            setProgress(percent); 
+          }
+        },
+        }
+      );
+      
+      for (let i = progress; i <= 100; i++) {
+        setProgress(i);
+        await new Promise((r) => setTimeout(r, 1000)); 
+      }
+
       setModalData({
         coverPreview,
         messagePreview,
@@ -771,6 +791,10 @@ function CreateStegoRoom() {
             <p className="loading-text">
               {'Embedding message, please wait...'}
             </p>
+            <div className="progress-container">
+              <div className="progress-bar" style={{ width: `${progress}%` }}></div>
+            </div>
+            <p className="progress-percent">{progress}%</p>
           </div>
         </div>
       )}
