@@ -40,6 +40,13 @@ function CreateStegoRoom() {
     setManualText("");
   }, [inputMode]);
 
+  // Scroll to top when error occurs
+  useEffect(() => {
+    if (error) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [error]);
+
   const handleCoverChange = (e) => {
     const file = e.target.files[0];
     const allowedFormats = ['image/png', 'image/tiff', 'image/bmp', 'image/jpeg']

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -38,6 +38,13 @@ function QuickStego() {
 
     // setError
     const [error, setError] = useState(null);
+
+    // Scroll to top when errors occur
+    useEffect(() => {
+        if (error || embedError || extractError) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, [error, embedError, extractError]);
 
     // Embedding handlers
     const handleEmbedImageUpload = (e) => {

@@ -58,6 +58,13 @@ function StegoRoom() {
       .catch(() => setError('Failed to load room data'));
   }, [roomId]);
 
+  // Scroll to top when error occurs
+  useEffect(() => {
+    if (error) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [error]);
+
   // Initialize slider position
   useEffect(() => {
     // Apply initial slider position
