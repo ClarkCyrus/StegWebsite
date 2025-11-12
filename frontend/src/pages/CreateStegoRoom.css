@@ -476,6 +476,32 @@ input:checked + .slider:before {
   color: #6b46c1;
 }
 
+/* Capacity Information */
+.capacity-info {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background-color: #e7f3ff;
+  border-left: 4px solid #6f42c1;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.capacity-info strong {
+  color: #6f42c1;
+  margin-right: 0.5rem;
+}
+
+.capacity-warning {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #856404;
+}
+
 @media (max-width: 768px) {
   .upload-placeholder {
     padding: 1rem;

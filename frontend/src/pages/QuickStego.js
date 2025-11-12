@@ -21,6 +21,9 @@ function QuickStego() {
     const [stegoPreview, setStegoPreview] = useState(null);
     const [metrics, setMetrics] = useState(null);
     const [encryptionData, setEncryptionData] = useState(null);
+    const [imageCapacity, setImageCapacity] = useState(null);
+    const [messageSize, setMessageSize] = useState(null);
+    const [capacityExceeded, setCapacityExceeded] = useState(false);
 
     // Extraction states
     const [extractStegoImage, setExtractStegoImage] = useState(null);
@@ -45,6 +48,7 @@ function QuickStego() {
             setError('Invalid format. Please upload a PNG, TIFF, BMP, or JPEG image.');
             e.target.value = null;
             setEmbedCoverImage(null);
+            setImageCapacity(null);
             return;
         }        
 
@@ -54,10 +58,20 @@ function QuickStego() {
             const reader = new FileReader();
             reader.onloadend = () => {
                 setEmbedImagePreview(reader.result);
+                
+                // Calculate capacity
+                const img = new Image();
+                img.onload = () => {
+                    const capacity = calculateCapacity(img);
+                    setImageCapacity(capacity);
+                    checkCapacity(capacity, messageSize);
+                };
+                img.src = reader.result;
             };
             reader.readAsDataURL(file);
         } else {
             setEmbedImagePreview(null);
+            setImageCapacity(null);
         }
     };
 
@@ -69,11 +83,14 @@ function QuickStego() {
             setError('Invalid file format. Please upload a TXT, MP3, JPEG, or PNG file.'); 
             e.target.value = null;
             setEmbedMessageFile(null);
+            setMessageSize(null);
             return;
         }
 
         setError(null)
         setEmbedMessageFile(file);
+        setMessageSize(file.size);
+        checkCapacity(imageCapacity, file.size);
         
         if (file) {
             const reader = new FileReader();
@@ -97,6 +114,7 @@ function QuickStego() {
             }
         } else {
             setEmbedMessagePreview(null);
+            setMessageSize(null);
         }
     };
 
@@ -297,6 +315,34 @@ function QuickStego() {
         return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
     };
 
+    // Calculate image capacity based on dimensions
+    const calculateCapacity = (img, rounds = 8) => {
+        const width = img.width;
+        const height = img.height;
+        const totalPixels = width * height;
+        const channels = 3; // RGB
+        
+        // Calculate total bits available
+        const totalBitsAvailable = totalPixels * rounds * channels;
+        
+        // Subtract metadata bits (3 bits for type + 32 bits for length)
+        const metadataBits = 35;
+        const availableBits = totalBitsAvailable - metadataBits;
+        
+        // Convert to bytes
+        const maxBytes = Math.floor(availableBits / 8);
+        return maxBytes;
+    };
+
+    // Check capacity when both files are uploaded
+    const checkCapacity = (capacity, msgSize) => {
+        if (capacity && msgSize) {
+            setCapacityExceeded(msgSize > capacity);
+        } else {
+            setCapacityExceeded(false);
+        }
+    };
+
     // Format metric labels for better display
     const formatMetricLabel = (key) => {
         switch (key) {
@@ -393,6 +439,11 @@ function QuickStego() {
                                                 alt="Cover Preview" 
                                                 className="preview-image"
                                             />
+                                            {imageCapacity && (
+                                                <div className="capacity-info">
+                                                    <strong>Image Capacity:</strong> {formatBytes(imageCapacity)}
+                                                </div>
+                                            )}
                                         </div>
                                     ) || (
                                         <div className="info-text">
@@ -424,6 +475,11 @@ function QuickStego() {
                                                     {embedMessagePreview.content}
                                                 </div>
                                             )}
+                                            {messageSize && (
+                                                <div className="capacity-info">
+                                                    <strong>Message Size:</strong> {formatBytes(messageSize)}
+                                                </div>
+                                            )}
                                         </div>
                                     ) || (
                                         <div className="info-text">
@@ -431,6 +487,12 @@ function QuickStego() {
                                             <p className="file-size-info">Max file size: 10MB</p>
                                             <p className="file-size-info">Stego image output will be in PNG format (≤100MB)</p>
                                         </div>
+                                    )}
+                                    {capacityExceeded && (
+                                        <Alert variant="danger" className="capacity-warning">
+                                            ⚠️ Message size ({formatBytes(messageSize)}) exceeds image capacity ({formatBytes(imageCapacity)})! 
+                                            Please use a larger image or smaller message.
+                                        </Alert>
                                     )}
                                 </div>
                               <div className="switch-container">
@@ -453,9 +515,9 @@ function QuickStego() {
                                 <button 
                                     className="submit-button"
                                     type="submit" 
-                                    disabled={embedLoading}
+                                    disabled={embedLoading || capacityExceeded}
                                 >
-                                    {embedLoading ? 'Processing...' : 'Embed Message'}
+                                    {embedLoading ? 'Processing...' : capacityExceeded ? 'Message Too Large' : 'Embed Message'}
                                 </button>
                             </Form>
                             {stegoPreview && (

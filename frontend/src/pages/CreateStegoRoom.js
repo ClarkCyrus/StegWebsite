@@ -20,6 +20,9 @@ function CreateStegoRoom() {
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(null);
   const [newRoomId, setNewRoomId] = useState(null);
+  const [imageCapacity, setImageCapacity] = useState(null);
+  const [messageSize, setMessageSize] = useState(null);
+  const [capacityExceeded, setCapacityExceeded] = useState(false);
   const navigate = useNavigate();
 
   const [manualInput, setManualInput] = useState(false); 
@@ -45,16 +48,29 @@ function CreateStegoRoom() {
       setError('Invalid format. Please upload a PNG, TIFF, BMP, or JPEG image.'); 
       e.target.value = null; 
       setCoverImage(null);
+      setImageCapacity(null);
       return; 
     }
 
     setCoverImage(file);
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => setCoverPreview(reader.result);
+      reader.onloadend = () => {
+        setCoverPreview(reader.result);
+        
+        // Calculate capacity
+        const img = new Image();
+        img.onload = () => {
+          const capacity = calculateCapacity(img);
+          setImageCapacity(capacity);
+          checkCapacity(capacity, messageSize);
+        };
+        img.src = reader.result;
+      };
       reader.readAsDataURL(file);
     } else {
       setCoverPreview(null);
+      setImageCapacity(null);
     }
   };
 
@@ -63,6 +79,7 @@ function CreateStegoRoom() {
     if (!file) {
       setMessageFile(null);
       setMessagePreview(null);
+      setMessageSize(null);
       return;
     }
 
@@ -71,11 +88,14 @@ function CreateStegoRoom() {
       setError('Invalid file format. Please upload a TXT, MP3, JPEG, or PNG file.'); 
       e.target.value = null;
       setMessageFile(null);
+      setMessageSize(null);
       return;
     }
   
     setError(null);
     setMessageFile(file);
+    setMessageSize(file.size);
+    checkCapacity(imageCapacity, file.size);
     setMessagePreview(null);
 
     const isText = file.type.startsWith('text/') || file.name.endsWith('.txt');
@@ -221,12 +241,42 @@ function CreateStegoRoom() {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
+
+  // Calculate image capacity based on dimensions
+  const calculateCapacity = (img, rounds = 8) => {
+    const width = img.width;
+    const height = img.height;
+    const totalPixels = width * height;
+    const channels = 3; // RGB
+    
+    // Calculate total bits available
+    const totalBitsAvailable = totalPixels * rounds * channels;
+    
+    // Subtract metadata bits (3 bits for type + 32 bits for length)
+    const metadataBits = 35;
+    const availableBits = totalBitsAvailable - metadataBits;
+    
+    // Convert to bytes
+    const maxBytes = Math.floor(availableBits / 8);
+    return maxBytes;
+  };
+
+  // Check capacity when both files are uploaded
+  const checkCapacity = (capacity, msgSize) => {
+    if (capacity && msgSize) {
+      setCapacityExceeded(msgSize > capacity);
+    } else {
+      setCapacityExceeded(false);
+    }
+  };
   
   const handleTextChange = (e) => {
     const value = e.target.value;
     setManualText(value);
     const textFile = new File([value], "message.txt", { type: "text/plain" });
     setMessageFile(textFile);
+    setMessageSize(textFile.size);
+    checkCapacity(imageCapacity, textFile.size);
     setMessagePreview(null); 
   };
 
@@ -275,6 +325,8 @@ function CreateStegoRoom() {
 
     const file = new File([blob], `recording-${Date.now()}.webm`, { type: blob.type });
     setMessageFile(file);
+    setMessageSize(file.size);
+    checkCapacity(imageCapacity, file.size);
 
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -355,7 +407,11 @@ function CreateStegoRoom() {
         }
         const file = new File([blob], `photo-${Date.now()}.png`, { type: 'image/png' });
         
-        if (setMessageFile) setMessageFile(file);
+        if (setMessageFile) {
+          setMessageFile(file);
+          setMessageSize(file.size);
+          checkCapacity(imageCapacity, file.size);
+        }
 
         if (setMessagePreview) {
           const reader = new FileReader();
@@ -505,14 +561,21 @@ function CreateStegoRoom() {
                   required
                   className="file-input"
                 />
-                {coverPreview ? (
-                  <img src={coverPreview} alt="cover preview" className="preview-image" />
-                ) : (
-                  <div className="upload-placeholder">
-                    <p>Upload a cover image (PNG, TIFF, BMP, JPEG)</p>
-                    <p className="file-size-info">Max file size: 10MB</p>
-                  </div>
-                )}
+                  {coverPreview ? (
+                    <>
+                      <img src={coverPreview} alt="cover preview" className="preview-image" />
+                      {imageCapacity && (
+                        <div className="capacity-info">
+                          <strong>Image Capacity:</strong> {formatBytes(imageCapacity)}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="upload-placeholder">
+                      <p>Upload a cover image (PNG, TIFF, BMP, JPEG)</p>
+                      <p className="file-size-info">Max file size: 10MB</p>
+                    </div>
+                  )}
               </div>
             </div>
 
@@ -669,7 +732,18 @@ function CreateStegoRoom() {
                       <p className="file-size-info">Max file size: 10MB</p>
                     </div>
                   )}
+                  {messageSize && (
+                    <div className="capacity-info">
+                      <strong>Message Size:</strong> {formatBytes(messageSize)}
+                    </div>
+                  )}
                   </>
+                )}
+                {capacityExceeded && (
+                  <div className="error-alert capacity-warning" style={{ marginTop: '1rem' }}>
+                    ⚠️ Message size ({formatBytes(messageSize)}) exceeds image capacity ({formatBytes(imageCapacity)})! 
+                    Please use a larger image or smaller message.
+                  </div>
                 )}
                 </div>
               </div>
@@ -688,8 +762,8 @@ function CreateStegoRoom() {
             </div>
           </div>
 
-          <button type="submit" className="create-button" disabled={loading}>
-            {loading ? 'Creating...' : 'Create Stego Room'}
+          <button type="submit" className="create-button" disabled={loading || capacityExceeded}>
+            {loading ? 'Creating...' : capacityExceeded ? 'Message Too Large' : 'Create Stego Room'}
           </button>
         </form>
       </div>
