@@ -125,11 +125,9 @@ function CreateStegoRoom() {
         },
         }
       );
-      
-      for (let i = progress; i <= 100; i++) {
-        setProgress(i);
-        await new Promise((r) => setTimeout(r, 1000)); 
-      }
+
+        setProgress(100);
+        await new Promise((r) => setTimeout(r, 1000));
 
       setModalData({
         coverPreview,
