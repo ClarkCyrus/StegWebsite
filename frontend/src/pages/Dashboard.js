@@ -290,27 +290,25 @@ function Dashboard() {
                 ) : (
                   <span>No Image</span>
                 )}
-                <div className="room-action-buttons">
-                  <button
-                    className="share-button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleShare(room);
-                    }}
-                    title="Share room"
-                  >
-                    <FiShare2 size={12} />
-                  </button>
-                  <button
-                    className="close-button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(room); 
-                    }}
-                  >
-                    <FiX size={14} />
-                  </button>
-                </div>
+                <button
+                  className="share-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleShare(room);
+                  }}
+                  title="Share room"
+                >
+                  <FiShare2 size={16} />
+                </button>
+                <button
+                  className="close-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(room); 
+                  }}
+                >
+                  <FiX size={18} />
+                </button>
               </div>
               <div className="room-footer">
                 <div className="d-flex justify-content-between align-items-center">
