@@ -534,22 +534,22 @@ function QuickStego() {
                                     )}
                                 </div>
                                 <div className="switch-container">
-    <label className="switch-label">
-        <input
-            type="checkbox"
-            id="extract-encryption"
-            checked={extractEncrypted}
-            onChange={(e) => setExtractEncrypted(e.target.checked)}
-            style={{ display: 'none' }}
-        />
-        <span className="slider"></span>
-        Enable Decryption
-    </label>
-    <div className="tooltip-container">
-        <FiInfo size={22} className='tooltip-icon'/>
-        <span className="tooltip-text">When enabled, you will be able to see the hidden message inside the image.</span>
-    </div>
-</div>
+                                    <label className="switch-label">
+                                        <input
+                                            type="checkbox"
+                                            id="extract-encryption"
+                                            checked={extractEncrypted}
+                                            onChange={(e) => setExtractEncrypted(e.target.checked)}
+                                            style={{ display: 'none' }}
+                                        />
+                                        <span className="slider"></span>
+                                        Enable Decryption
+                                    </label>
+                                    <div className="tooltip-container">
+                                        <FiInfo size={22} className='tooltip-icon'/>
+                                        <span className="tooltip-text">When enabled, allow the input of Encryption Key and IV to decrypt the hidden message in the image.</span>
+                                    </div>
+                                </div>
                                 {extractEncrypted && (
                                     <>
                                         <div className="form-group">

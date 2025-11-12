@@ -111,7 +111,7 @@ function CreateStegoRoom() {
     formData.append('storeKey', storeKey);
     if (coverImage) formData.append('image', coverImage);
     if (messageFile) formData.append('message', messageFile);
-    
+
     try {
       const res = await axios.post(
         `${config.API_BASE_URL}/api/create_stego_room`,
@@ -538,7 +538,7 @@ function CreateStegoRoom() {
                   <span className="switch-label">Manual Input</span>
                   <div className="tooltip-container">
                     <FiInfo size={22} className='tooltip-icon manual-input'/>
-                <span className="tooltip-text">When enabled, manually input your secret message by typing text, capturing a photo, or recording audio. </span>
+                <span className="tooltip-text">When enabled, manually input your secret message by typing a text, capturing a photo, or recording an audio. </span>
                 </div>
                 </label>
               </div>
