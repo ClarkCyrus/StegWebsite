@@ -116,13 +116,15 @@ function Dashboard() {
       return;
     }
 
+    const normalizedEmail = receiverEmail.trim().toLowerCase();
+
     setShareError(null);
     setShareSuccess(null);
 
     try {
       const response = await axios.post(
         `${config.API_BASE_URL}/api/steg_rooms/${roomToShare.id}/share`,
-        { receiver_email: receiverEmail },
+        { receiver_email: normalizedEmail },
         { withCredentials: true }
       );
       
